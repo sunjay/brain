@@ -1,5 +1,5 @@
 [package]
-name = "brainfuck"
+name = "brain"
 version = "0.1.0"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
 
