@@ -15,7 +15,10 @@ pub enum Expression {
     Text(String),
 }
 
-named!(pub parse< Vec<Statement> >, many0!(statement));
+named!(pub parse< Vec<Statement> >, fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
+    acc.push(item);
+    acc
+}));
 
 named!(statement<Statement>, ws!(alt!(
     comment => {|content: &str| Statement::Comment(content.to_owned())} |
@@ -35,6 +38,7 @@ named!(assignment<(Option<&str>, Expression)>,
         name: assignment_name >>
         char!(ASSIGNMENT_OPERATOR) >>
         expr: expression >>
+        char!('\n') >>
         (name, expr)
     )
 );
