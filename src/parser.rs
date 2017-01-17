@@ -1,5 +1,7 @@
 use std::str;
 
+use nom::simple_errors::Err;
+
 const COMMENT_START: char = '#';
 const STRING_BOUNDARY: char = '"';
 const ASSIGNMENT_OPERATOR: char = '=';
@@ -15,7 +17,11 @@ pub enum Expression {
     Text(String),
 }
 
-named!(pub parse< Vec<Statement> >, fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
+pub fn parse(input: &str) -> Result<Vec<Statement>, Err> {
+    parse_all_statements(input.as_bytes()).to_result()
+}
+
+named!(parse_all_statements< Vec<Statement> >, fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
     acc.push(item);
     acc
 }));

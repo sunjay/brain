@@ -9,5 +9,5 @@ fn main() {
 
     println!("Source Code:\n\n{}\n", source);
 
-    println!("AST:\n\n{:?}", brain::parse(source.as_bytes()));
+    println!("AST:\n\n{:?}", brain::parse(source));
 }
