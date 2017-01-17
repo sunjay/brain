@@ -10,6 +10,13 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
+macro_rules! println_stderr(
+    ($($arg:tt)*) => { {
+        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
+        r.expect("failed printing to stderr");
+    } }
+);
+
 fn main() {
     let args = App::new(crate_name!())
         .version(crate_version!())
@@ -31,13 +38,13 @@ fn main() {
         .get_matches();
 
     let source_file = Path::new(args.value_of("input-file").unwrap());
-    if !source_file.exists() {
-        println!("No such file: '{}'", source_file.display());
+    if !source_file.exists() || !source_file.is_file() {
+        println_stderr!("Not a valid file: '{}'", source_file.display());
         process::exit(1);
     }
 
     let output = args.value_of("output-file").map_or_else(|| {
-        let mut path = source_file.to_path_buf();
+        let mut path = PathBuf::from(source_file.file_name().and_then(|s| s.to_str()).unwrap_or(""));
         path.set_extension("bf");
         path
     }, |s| PathBuf::from(s));
