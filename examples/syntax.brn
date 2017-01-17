@@ -1,0 +1,27 @@
+/* one of two comment styles */
+// inferred size in bytes
+a[] = "Hello, world!";
+out a;
+out "Foo";
+
+// input requires explicit sizing
+// always reads exactly this many characters or panics if EOF is reached before then
+in b[5];
+out b;
+
+// 1 = 1 byte
+// Compiler error if the given string doesn't fit in the given size
+c[1] = "c";
+// Strings can be included in out statements
+out c "=";
+// Size is already declared, error if size is redefined on something that is already sized
+in c;
+out c;
+
+// Literal "true" corresponds to one byte with value 1
+// Literal "false" corresponds to one byte with value 0
+
+// Integers are 32-bit and are declared without sizing brackets
+int num;
+// inputs on integer variables are automatically coerced
+in int num2;

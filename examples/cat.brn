@@ -1,0 +1,6 @@
+// cat program
+// while condition can be an `in` statement, or valid expression of size 1 byte
+// Continues so long as the given byte is not zero
+while in ch[1] {
+    out ch;
+}
