@@ -1,3 +1,5 @@
+// As specified here: http://www.muppetlabs.com/~breadbox/bf/
+
 use std::fmt;
 use std::convert::Into;
 
@@ -5,21 +7,21 @@ use parser::Program;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
-    // >
+    // ">" - increment the pointer (move it to the "right")
     Right,
-    // <
+    // "<" - decrement the pointer (move it to the "left")
     Left,
-    // +
+    // "+" - increment the byte at the pointer
     Increment,
-    // -
+    // "-" - decrement the byte at the pointer
     Decrement,
-    // .
+    // "." - output the byte at the pointer
     Write,
-    // ,
+    // "," - input a byte and store it in the byte at the pointer
     Read,
-    // [
+    // "[" - jump forward past the matching ] if the byte at the pointer is zero
     JumpForwardIfZero,
-    // ]
+    // "]" - jump backward to the matching [ unless the byte at the pointer is zero
     JumpBackwardUnlessZero,
 }
 
