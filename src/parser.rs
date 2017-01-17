@@ -62,13 +62,13 @@ named!(expression<Expression>,
 );
 
 named!(expr_text<&str>,
-    map!(
+    map_res!(
         delimited!(
             char!(STRING_BOUNDARY),
-            take_while!(is_string_boundary),
+            take_till!(is_string_boundary),
             char!(STRING_BOUNDARY)
         ),
-        |s: &'a [u8]| str::from_utf8(s).unwrap()
+        |s: &'a [u8]| str::from_utf8(s)
     )
 );
 
