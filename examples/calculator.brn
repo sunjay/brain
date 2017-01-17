@@ -1,0 +1,26 @@
+// Simple calculator program
+
+// Welcome to the Brain Calculator!
+// Supported operations:
+//   a) a + b
+//   b) a - b
+//   c) a * b
+//   d) a / b
+//   e) a % b
+//
+// Which operation would you like to perform? a
+//
+// Enter inputs: (Ans = 5)
+// a = 34
+// b = 23
+//
+// Ans: 57
+//
+// Next operation:
+//   a) a + b
+//   b) a - b
+//   c) a * b
+//   d) a / b
+//   e) a % b
+//
+// Which operation would you like to perform? a
