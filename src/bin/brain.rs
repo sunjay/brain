@@ -10,10 +10,11 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
-macro_rules! println_stderr(
+macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
-        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
-        r.expect("failed printing to stderr");
+        writeln!(&mut ::std::io::stderr(), $($arg)*)
+            .expect("Failed while printing to stderr");
+        process::exit(1);
     } }
 );
 
@@ -37,24 +38,25 @@ fn main() {
         )
         .get_matches();
 
-    let source_file = Path::new(args.value_of("input-file").unwrap());
-    if !source_file.exists() || !source_file.is_file() {
-        println_stderr!("Not a valid file: '{}'", source_file.display());
-        process::exit(1);
+    let source_path = Path::new(args.value_of("input-file").unwrap());
+    if !source_path.exists() || !source_path.is_file() {
+        exit_with_error!("Not a valid file: '{}'", source_path.display());
     }
 
-    let output = args.value_of("output-file").map_or_else(|| {
-        let mut path = PathBuf::from(source_file.file_name().and_then(|s| s.to_str()).unwrap_or(""));
+    let output_path = args.value_of("output-file").map_or_else(|| {
+        let mut path = PathBuf::from(source_path.file_name().and_then(|s| s.to_str()).unwrap_or(""));
         path.set_extension("bf");
         path
     }, |s| PathBuf::from(s));
 
-    println!("{} -> {}", source_file.display(), output.display());
+    let mut f = File::open(source_path).unwrap_or_else(|e| {
+        exit_with_error!("Could not open source file: {}", e);
+    });
+    let mut source = String::new();
+    f.read_to_string(&mut source).unwrap_or_else(|e| {
+        exit_with_error!("Could not read source file: {}", e);
+    });
+    println!("Source Code:\n\n{}\n", source);
 
-//    println!("Source Code:\n\n{}\n", source);
-//
-//    let mut f = try!(File::open("foo.txt"));
-//    let mut s = String::new();
-//    try!(f.read_to_string(&mut s));
-//    println!("AST:\n\n{:#?}", brain::parse(source));
+    println!("AST:\n\n{:#?}", brain::parse(&source));
 }
