@@ -2,6 +2,8 @@
 name = "brain"
 version = "0.1.0"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
+description = "Compiler for the brain programming language. Compiles brain into optimized brainfuck code."
 
 [dependencies]
 nom = "^2.0"
+clap = "^2.0"
