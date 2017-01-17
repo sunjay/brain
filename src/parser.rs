@@ -1,10 +1,29 @@
-use std::str;
+use std::str::{self, FromStr};
 
 use nom::simple_errors::Err;
 
 const COMMENT_START: char = '#';
 const STRING_BOUNDARY: char = '"';
 const ASSIGNMENT_OPERATOR: char = '=';
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Program(Vec<Statement>);
+
+impl IntoIterator for Program {
+    type Item = Statement;
+    type IntoIter = ::std::vec::IntoIter<Statement>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl FromStr for Program {
+    type Err = Err;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        parse_all_statements(input.as_bytes()).to_result().map(|statements| Program(statements))
+    }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
@@ -15,10 +34,6 @@ pub enum Statement {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Text(String),
-}
-
-pub fn parse(input: &str) -> Result<Vec<Statement>, Err> {
-    parse_all_statements(input.as_bytes()).to_result()
 }
 
 named!(parse_all_statements< Vec<Statement> >, fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {

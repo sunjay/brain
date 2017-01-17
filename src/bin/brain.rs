@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
+use brain::{Program, Instructions};
+
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
         writeln!(&mut ::std::io::stderr(), $($arg)*)
@@ -58,5 +60,12 @@ fn main() {
     });
     println!("Source Code:\n\n{}\n", source);
 
-    println!("AST:\n\n{:#?}", brain::parse(&source));
+    let program: Program = source.parse().unwrap();
+    println!("AST:\n\n{:#?}\n", program);
+
+    let instructions = Instructions::from_program(program).unwrap();
+    println!("Instructions:\n\n{:#?}\n", instructions);
+
+    let generated_code: String = instructions.into();
+    println!("Generated:\n{}\n", generated_code);
 }
