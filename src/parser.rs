@@ -89,17 +89,43 @@ named!(output<Expression>,
 
 named!(expression<Expression>,
     ws!(alt!(
-        expr_string_literal => {|text: &str| Expression::StringLiteral(text.to_owned())}
+        expr_string_literal => {|text: String| Expression::StringLiteral(text)}
     ))
 );
 
-named!(expr_string_literal<&str>,
+named!(expr_string_literal<String>,
     map_res!(
         delimited!(
             tag!(STRING_BOUNDARY),
-            take_until!(STRING_BOUNDARY),
+            string_text,
             tag!(STRING_BOUNDARY)
         ),
-        |s: &'a [u8]| str::from_utf8(s)
+        |s: Vec<u8>| String::from_utf8(s)
+    )
+);
+
+named!(string_text<Vec<u8>>,
+    dbg_dmp!(fold_many0!(
+        unescaped_string_text,
+        Vec::new(),
+        |mut acc: Vec<u8>, bytes: &[u8]| {
+            acc.extend(bytes);
+            acc
+        }
+    ))
+);
+
+named!(unescaped_string_text<&[u8]>,
+    alt!(
+        // We need to take until \ so that the unescaping can work
+        // We also need to take until " so that we don't go past the string boundary
+        take_until_either!("\\\"") |
+        tag!("\\\\") => {|_| &b"\\"[..]} |
+        tag!("\\\"") => {|_| &b"\""[..]} |
+        tag!("\\\'") => {|_| &b"\'"[..]} |
+        tag!("\\n") => {|_| &b"\n"[..]} |
+        tag!("\\r") => {|_| &b"\r"[..]} |
+        tag!("\\t") => {|_| &b"\t"[..]} |
+        tag!("\\0") => {|_| &b"\0"[..]}
     )
 );
