@@ -51,21 +51,25 @@ fn main() {
         path
     }, |s| PathBuf::from(s));
 
-    let mut f = File::open(source_path).unwrap_or_else(|e| {
+    let mut source_file = File::open(source_path).unwrap_or_else(|e| {
         exit_with_error!("Could not open source file: {}", e);
     });
     let mut source = String::new();
-    f.read_to_string(&mut source).unwrap_or_else(|e| {
+    source_file.read_to_string(&mut source).unwrap_or_else(|e| {
         exit_with_error!("Could not read source file: {}", e);
     });
-    println!("Source Code:\n\n{}\n", source);
 
     let program: Program = source.parse().unwrap();
-    println!("AST:\n\n{:#?}\n", program);
-
     let instructions = Instructions::from_program(program).unwrap();
-    println!("Instructions:\n\n{:#?}\n", instructions);
-
     let generated_code: String = instructions.into();
-    println!("Generated:\n{}\n", generated_code);
+
+    let mut output_file = File::create(output_path).unwrap_or_else(|e| {
+        exit_with_error!("Could not create target file: {}", e);
+    });
+    output_file.write_all(generated_code.as_bytes()).and_then(|_| {
+        // Write a newline for asthetic reasons
+        output_file.write(&['\n' as u8])
+    }).unwrap_or_else(|e| {
+        exit_with_error!("Could not write target file: {}", e);
+    });
 }
