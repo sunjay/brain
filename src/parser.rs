@@ -2,9 +2,12 @@ use std::str::{self, FromStr};
 
 use nom::simple_errors::Err;
 
-const COMMENT_START: char = '#';
-const STRING_BOUNDARY: char = '"';
-const ASSIGNMENT_OPERATOR: char = '=';
+const LINE_COMMENT_START: &'static str = "//";
+const BLOCK_COMMENT_START: &'static str = "/*";
+const BLOCK_COMMENT_END: &'static str = "*/";
+const STRING_BOUNDARY: &'static str = "\"";
+const OUTPUT_KEYWORD: &'static str = "out";
+const STATEMENT_TERMINATOR: &'static str = ";";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
@@ -28,76 +31,75 @@ impl FromStr for Program {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Comment(String),
-    Assignment(Option<String>, Expression),
+    Output(Expression),
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    Text(String),
+    StringLiteral(String),
 }
 
-named!(parse_all_statements< Vec<Statement> >, fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
-    acc.push(item);
-    acc
-}));
+named!(parse_all_statements< Vec<Statement> >, complete!(do_parse!(
+    statements: fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
+        acc.push(item);
+        acc
+    }) >>
+    // Ensures that we reach EOF after all the statements
+    eof!() >>
+    (statements)
+)));
 
 named!(statement<Statement>, ws!(alt!(
     comment => {|content: &str| Statement::Comment(content.to_owned())} |
-    assignment => {|(name, expr): (Option<&str>, Expression)| Statement::Assignment(name.map(|s| s.to_owned()), expr)}
+    output => {|expr: Expression| Statement::Output(expr)}
 )));
 
-named!(comment<&str>,
-    do_parse!(
-        char!(COMMENT_START) >>
-        content: take_until_and_consume!("\n") >>
-        (str::from_utf8(content).unwrap())
-    )
-);
+named!(comment<&str>, alt!(line_comment | block_comment));
 
-named!(assignment<(Option<&str>, Expression)>,
-    do_parse!(
-        name: assignment_name >>
-        char!(ASSIGNMENT_OPERATOR) >>
-        expr: expression >>
-        char!('\n') >>
-        (name, expr)
-    )
-);
-
-named!(assignment_name< Option<&str> >,
-    map!(
-        opt!(assignment_name_impl),
-        |n: Option<&'a [u8]>| n.and_then(|s| str::from_utf8(s).ok())
-    )
-);
-
-// Without this separation, type inference fails
-named!(assignment_name_impl<&[u8]>,
-    take_while1_s!(is_valid_assignment_name_char)
-);
-
-named!(expression<Expression>,
-    alt!(
-        expr_text => {|text: &str| Expression::Text(text.to_owned())}
-    )
-);
-
-named!(expr_text<&str>,
+named!(line_comment<&str>,
     map_res!(
-        delimited!(
-            char!(STRING_BOUNDARY),
-            take_till!(is_string_boundary),
-            char!(STRING_BOUNDARY)
+        do_parse!(
+            tag!(LINE_COMMENT_START) >>
+            content: take_until_and_consume!("\n") >>
+            (content)
         ),
         |s: &'a [u8]| str::from_utf8(s)
     )
 );
 
-fn is_valid_assignment_name_char(c: u8) -> bool {
-    let ch = c as char;
-    ch.is_alphanumeric() || ch == '_'
-}
+named!(block_comment<&str>,
+    map_res!(
+        delimited!(
+            tag!(BLOCK_COMMENT_START),
+            take_until!(BLOCK_COMMENT_END),
+            tag!(BLOCK_COMMENT_END)
+        ),
+        |s: &'a [u8]| str::from_utf8(s)
+    )
+);
 
-fn is_string_boundary(c: u8) -> bool {
-    c as char == STRING_BOUNDARY
-}
+named!(output<Expression>,
+    do_parse!(
+        tag!(OUTPUT_KEYWORD) >>
+        expr: expression >>
+        tag!(STATEMENT_TERMINATOR) >>
+        (expr)
+    )
+);
+
+named!(expression<Expression>,
+    ws!(alt!(
+        expr_string_literal => {|text: &str| Expression::StringLiteral(text.to_owned())}
+    ))
+);
+
+named!(expr_string_literal<&str>,
+    map_res!(
+        delimited!(
+            tag!(STRING_BOUNDARY),
+            take_until!(STRING_BOUNDARY),
+            tag!(STRING_BOUNDARY)
+        ),
+        |s: &'a [u8]| str::from_utf8(s)
+    )
+);
