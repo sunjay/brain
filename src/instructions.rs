@@ -10,14 +10,62 @@ use codegen;
 pub struct Instructions(Vec<Instruction>);
 
 impl Instructions {
+    fn new() -> Instructions {
+        Instructions(Vec::new())
+    }
+
     pub fn from_program(program: Program) -> Result<Self, ()> {
-        let mut instrs = Vec::new();
+        let mut instrs = Instructions::new();
 
         for stmt in program {
             codegen::expand(&mut instrs, stmt);
         }
 
-        Ok(Instructions(instrs))
+        Ok(instrs)
+    }
+
+    pub fn right(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Right);
+        }
+    }
+
+    pub fn left(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Left);
+        }
+    }
+
+    pub fn increment(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Increment);
+        }
+    }
+
+    pub fn decrement(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Decrement);
+        }
+    }
+
+    pub fn write(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Write);
+        }
+    }
+
+    pub fn read(&mut self, n: usize) {
+        for _ in 0..n {
+            self.0.push(Instruction::Read);
+        }
+    }
+
+    pub fn jump_forward_if_zero(&mut self) {
+        self.0.push(Instruction::JumpForwardIfZero);
+    }
+
+    pub fn jump_backward_unless_zero(&mut self) {
+        self.0.push(Instruction::JumpBackwardUnlessZero);
     }
 }
 

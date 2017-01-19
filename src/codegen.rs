@@ -1,9 +1,8 @@
 use parser::{Statement, Expression};
-use instruction::Instruction;
-use instruction::Instruction::*;
+use instructions::Instructions;
 
 /// Expands the given statement into instructions
-pub fn expand(instructions: &mut Vec<Instruction>, stmt: Statement) {
+pub fn expand(instructions: &mut Instructions, stmt: Statement) {
     match stmt {
         Statement::Comment(_) => (),
         Statement::Output(expr) => output_expr(instructions, expr),
@@ -11,15 +10,13 @@ pub fn expand(instructions: &mut Vec<Instruction>, stmt: Statement) {
     }
 }
 
-fn output_expr(instructions: &mut Vec<Instruction>, expr: Expression) {
+fn output_expr(instructions: &mut Instructions, expr: Expression) {
     match expr {
         Expression::StringLiteral(text) => {
             for ch in text.as_bytes() {
-                instructions.push(Right);
-                for _ in 0..*ch {
-                    instructions.push(Increment);
-                }
-                instructions.push(Write);
+                instructions.right(1);
+                instructions.increment(*ch as usize);
+                instructions.write(1);
             }
         },
         Expression::Identifier(ident) => println!("{:?}", ident), //TODO
