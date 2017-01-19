@@ -7,3 +7,7 @@ description = "Compiler for the brain programming language. Compiles brain into 
 [dependencies]
 nom = "^2.0"
 clap = "^2.0"
+
+[[bin]]
+name = "brain"
+doc = false
