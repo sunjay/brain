@@ -1,0 +1,33 @@
+// automatically determine the length of the right
+a[] = "Hello, world\n";
+// Outputs "Hello, world\n"
+out a;
+// error if rhs is not the length declared on the left
+b[3] = "abc";
+out a;
+out b;
+out "\n";
+
+// invalid because different sizes (addressed in #3)
+//a = b;
+
+// redeclaration of the same name with a different size is an error:
+//a[1] = "q";
+
+// copies a to c. c is the same size as a.
+c = a;
+
+out "b = ";
+out b;
+out "\n";
+b = "dbd";
+out "b = ";
+out b;
+out "\n";
+
+// Should accept any [a-zA-z0-9_] as identifier names
+// Cannot start with a number
+qqq[] = "foo";
+_bar = "bar";
+// invalid:
+//12abc[] = "fail";

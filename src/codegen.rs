@@ -7,6 +7,7 @@ pub fn expand(instructions: &mut Vec<Instruction>, stmt: Statement) {
     match stmt {
         Statement::Comment(_) => (),
         Statement::Output(expr) => output_expr(instructions, expr),
+        declaration => println!("{:?}", declaration), //TODO
     }
 }
 
@@ -20,6 +21,7 @@ fn output_expr(instructions: &mut Vec<Instruction>, expr: Expression) {
                 }
                 instructions.push(Write);
             }
-        }
+        },
+        Expression::Identifier(ident) => println!("{:?}", ident), //TODO
     }
 }
