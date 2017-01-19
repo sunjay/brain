@@ -14,9 +14,9 @@ fn output_expr(instructions: &mut Instructions, expr: Expression) {
     match expr {
         Expression::StringLiteral(text) => {
             for ch in text.as_bytes() {
-                instructions.right(1);
-                instructions.increment(*ch as usize);
-                instructions.write(1);
+                instructions.move_right();
+                instructions.increment_by(*ch as usize);
+                instructions.write();
             }
         },
         Expression::Identifier(ident) => println!("{:?}", ident), //TODO
