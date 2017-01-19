@@ -1,7 +1,6 @@
 use std::str::{self, FromStr};
 
-use nom::simple_errors::Err;
-use nom::{is_alphabetic, is_digit, digit};
+use nom::{self, is_alphabetic, is_digit, digit};
 
 const LINE_COMMENT_START: &'static str = "//";
 const BLOCK_COMMENT_START: &'static str = "/*";
@@ -26,9 +25,15 @@ impl IntoIterator for Program {
 }
 
 impl FromStr for Program {
-    type Err = Err;
+    type Err = nom::Err<Vec<u8>>;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        parse_all_statements(input.as_bytes()).to_result().map(|statements| Program(statements))
+        parse_all_statements(input.as_bytes()).to_result().map(|statements| {
+            Program(statements)
+        }).map_err(|e| {
+            //TODO: Need to figure out how to turn nom::Err<&[u8]> into nom::Err<Vec<u8>>
+            println!("{:?}", e);
+            unimplemented!();
+        })
     }
 }
 
