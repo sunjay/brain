@@ -5,6 +5,7 @@ use std::iter;
 
 use instruction::Instruction;
 use parser::Program;
+use memory::MemoryLayout;
 use codegen;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,12 +19,24 @@ impl Instructions {
     /// Generate instructions from the given program syntax tree
     pub fn from_program(program: Program) -> Result<Self, ()> {
         let mut instrs = Instructions::new();
+        let mut mem = MemoryLayout::new();
 
         for stmt in program {
-            codegen::expand(&mut instrs, stmt);
+            codegen::expand(&mut instrs, &mut mem, stmt);
         }
 
         Ok(instrs)
+    }
+
+    /// Add instructions that move from a given offset to the other offset
+    /// using the fewest instructions possible
+    pub fn move_relative(&mut self, from: usize, to: usize) {
+        if to > from {
+            self.move_right_by(to - from);
+        }
+        else if from > to {
+            self.move_left_by(from - to);
+        }
     }
 
     /// Add an instruction to move one cell to the right
@@ -31,9 +44,30 @@ impl Instructions {
         self.0.push(Instruction::Right);
     }
 
+    /// Add instructions that move n cells to the right
+    pub fn move_right_by(&mut self, n: usize) {
+        self.0.extend(iter::repeat(Instruction::Right).take(n));
+    }
+
     /// Add an instruction to move one cell to the left
     pub fn move_left(&mut self) {
         self.0.push(Instruction::Left);
+    }
+
+    /// Add instructions that move n cells to the left
+    pub fn move_left_by(&mut self, n: usize) {
+        self.0.extend(iter::repeat(Instruction::Left).take(n));
+    }
+
+    /// Adds instructions that increment/decrement the current cell from the given value
+    /// to the other given value
+    pub fn increment_relative(&mut self, from: u8, to: u8) {
+        if to > from {
+            self.increment_by(to - from);
+        }
+        else if from > to {
+            self.decrement_by(from - to);
+        }
     }
 
     /// Add an instruction to increment the current cell once
@@ -42,8 +76,8 @@ impl Instructions {
     }
 
     /// Add instructions that increment the current cell n times
-    pub fn increment_by(&mut self, n: usize) {
-        self.0.extend(iter::repeat(Instruction::Increment).take(n));
+    pub fn increment_by(&mut self, n: u8) {
+        self.0.extend(iter::repeat(Instruction::Increment).take(n as usize));
     }
 
     /// Add an instruction to decrement the current cell once
@@ -52,8 +86,8 @@ impl Instructions {
     }
 
     /// Add instructions that decrement the current cell n times
-    pub fn decrement_by(&mut self, n: usize) {
-        self.0.extend(iter::repeat(Instruction::Decrement).take(n));
+    pub fn decrement_by(&mut self, n: u8) {
+        self.0.extend(iter::repeat(Instruction::Decrement).take(n as usize));
     }
 
     /// Add an instruction that will write the current cell
