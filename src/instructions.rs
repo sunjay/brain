@@ -17,12 +17,12 @@ impl Instructions {
     }
 
     /// Generate instructions from the given program syntax tree
-    pub fn from_program(program: Program) -> Result<Self, ()> {
+    pub fn from_program(program: Program) -> Result<Self, codegen::Error> {
         let mut instrs = Instructions::new();
         let mut mem = MemoryLayout::new();
 
         for stmt in program {
-            codegen::expand(&mut instrs, &mut mem, stmt);
+            codegen::expand(&mut instrs, &mut mem, stmt)?;
         }
 
         Ok(instrs)
@@ -88,6 +88,18 @@ impl Instructions {
     /// Add instructions that decrement the current cell n times
     pub fn decrement_by(&mut self, n: u8) {
         self.0.extend(iter::repeat(Instruction::Decrement).take(n as usize));
+    }
+
+    /// Stores the given bytes in each location starting at the current cell
+    /// The pointer ends up at the cell immediately after the last character
+    /// written
+    /// **IMPORTANT:** Assumes that the current cell and all consecutive cells to be
+    /// written into are zero to begin with
+    pub fn store_bytes(&mut self, bytes: &[u8]) {
+        for &ch in bytes {
+            self.increment_by(ch);
+            self.move_right();
+        }
     }
 
     /// Add an instruction that will write the current cell
