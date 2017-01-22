@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
-use brain::{Program, Instructions};
+use brain::{Program, Instructions, OptimizationLevel};
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
@@ -60,7 +60,8 @@ fn main() {
     });
 
     let program: Program = source.parse().unwrap();
-    let instructions = Instructions::from_program(program).unwrap();
+    let mut instructions = Instructions::from_program(program).unwrap();
+    instructions.optimize(OptimizationLevel::On);
     let generated_code: String = instructions.into();
 
     let mut output_file = File::create(output_path).unwrap_or_else(|e| {

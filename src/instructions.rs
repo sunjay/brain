@@ -6,6 +6,7 @@ use std::iter;
 use instruction::Instruction;
 use parser::Program;
 use memory::MemoryLayout;
+use optimizations::{OptimizationLevel, apply_optimizations};
 use codegen;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -26,6 +27,11 @@ impl Instructions {
         }
 
         Ok(instrs)
+    }
+
+    /// Optimize the instructions based on the given optimization level
+    pub fn optimize(&mut self, level: OptimizationLevel) {
+        apply_optimizations(self, level);
     }
 
     /// Add instructions that move from a given offset to the other offset
