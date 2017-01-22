@@ -7,7 +7,7 @@ repository = "https://github.com/sunjay/brain"
 readme = "README.md"
 keywords = ["brain", "brainfuck", "compiler", "interpreter", "optimizer"]
 # crates.io/category_slugs
-categores = ["command-line-interface"]
+categories = ["command-line-interface"]
 license = "MIT"
 
 [dependencies]
