@@ -1,4 +1,0 @@
-// This file is automatically included in all modules
-
-use std::math::*;
-use std::text::*;
