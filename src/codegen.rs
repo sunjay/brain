@@ -37,9 +37,11 @@ fn output_expr(
     match expr {
         Expression::StringLiteral(text) => {
             let cell = mem.next_available_cell();
-            instructions.move_relative(mem.current_cell(), cell);
+            let start_cell = mem.current_cell();
 
+            instructions.move_relative(start_cell, cell);
             write_string_literal(instructions, text.as_bytes());
+            instructions.move_relative(cell, start_cell);
 
             Ok(())
         },

@@ -4,7 +4,9 @@ a[] = "Hello, world\n";
 out a;
 // error if rhs is not the length declared on the left
 b[3] = "abc";
+out "a: ";
 out a;
+out "b: ";
 out b;
 out "\n";
 
