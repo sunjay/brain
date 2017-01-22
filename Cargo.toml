@@ -1,8 +1,14 @@
 [package]
 name = "brain"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
-description = "Compiler for the brain programming language. Compiles brain into optimized brainfuck code."
+description = "Compiler for the brain programming language. Compiles brain into optimized brainfuck code. Also includes a brainfuck interpreter."
+repository = "https://github.com/sunjay/brain"
+readme = "README.md"
+keywords = ["brain", "brainfuck", "compiler", "interpreter", "optimizer"]
+# crates.io/category_slugs
+categores = ["command-line-interface"]
+license = "MIT"
 
 [dependencies]
 clap = "^2.0"
