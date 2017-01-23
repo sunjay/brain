@@ -22,6 +22,15 @@ out "\n";
 c[] = a;
 out c;
 
+// Invalid:
+//a = a;
+
+// Explicitly declaring the size here even though its a copy
+d[3] = b;
+out "d = ";
+out d;
+out "\n";
+
 out "b = ";
 out b;
 out "\n";
@@ -29,14 +38,14 @@ b = "dbd";
 out "b = ";
 out b;
 out "\n";
-
-// Explicitly declaring the size here even though its a copy
-d[3] = b;
-out d;
+b = d;
+out "b = ";
+out b;
+out "\n";
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number
 qqq[] = "foo";
-_bar = "bar";
+_bar[] = "bar";
 // invalid:
 //12abc[] = "fail";

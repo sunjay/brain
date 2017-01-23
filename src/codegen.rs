@@ -22,6 +22,17 @@ pub enum Error {
         expected: usize,
         actual: usize,
     },
+    // The expression assigned to a variable `name` was the incorrect size
+    IncorrectSizedExpression {
+        name: String,
+        expected: usize,
+        actual: usize,
+    },
+
+    // Cannot assign a name to itself since that doesn't make any sense
+    SelfAssignment {
+        name: String,
+    },
 }
 
 /// Expands the given statement into instructions
@@ -97,16 +108,62 @@ fn declare(
     expr: Expression
 ) -> Result<(), Error> {
     if mem.is_declared(&name) {
-        if slice.is_some() {
-            return Err(Error::IllegalRedeclaration {name: name});
-        }
-
-        unimplemented!();
+        assignment(instructions, mem, name, slice, expr)
     }
-
-    // Name is not declared
     else {
         declare_undeclared(instructions, mem, name, slice, expr)
+    }
+}
+
+/// Assigns a new value to a previously declared identifier
+fn assignment(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    name: String,
+    slice: Option<Slice>,
+    expr: Expression
+) -> Result<(), Error> {
+    if slice.is_some() {
+        return Err(Error::IllegalRedeclaration {name: name});
+    }
+
+    let (position, size) = mem.get_cell_contents(&name).unwrap();
+
+    match expr {
+        Expression::StringLiteral(value) => {
+            if value.len() != size {
+                return Err(Error::IncorrectSizedExpression {
+                    name: name,
+                    expected: size,
+                    actual: value.len(),
+                });
+            }
+
+            instructions.move_relative(mem.current_cell(), position);
+            instructions.store_bytes(value.as_bytes());
+            mem.set_current_cell(position + value.len());
+            Ok(())
+        },
+        Expression::Identifier(value_name) => {
+            if name == value_name {
+                return Err(Error::SelfAssignment {
+                    name: name,
+                });
+            }
+
+            let (source_position, source_size) = mem.get_cell_contents(&value_name).ok_or_else(|| Error::UndeclaredIdentifier {name: value_name})?;
+
+            if size != source_size {
+                return Err(Error::IncorrectSizedExpression {
+                    name: name,
+                    expected: size,
+                    actual: source_size,
+                });
+            }
+
+            copy_cells(instructions, mem, source_position, position, size);
+            Ok(())
+        },
     }
 }
 
