@@ -1,3 +1,12 @@
+//! **THE MOST IMPORTANT RULE:** ALL OPERATIONS MUST RETURN TO THE CELL WHERE THEY STARTED.
+//! That means that if you move right by 10, you must move left by 10 at the end of your operation
+//! The extra movement instructions will be optimized away as needed
+//! This constraint exists because it makes writing code generation for brainfuck sane
+//! You don't have to know where the pointer currently is because you can always trust this reference
+//! This constraint does not need to hold *during* an operation. Only
+//! enforce it before and after. We just need a consistent reference between operations.
+//! That is all.
+
 use parser::{Statement, Slice, Expression};
 use instructions::Instructions;
 use memory::MemoryLayout;
@@ -56,11 +65,10 @@ fn output_expr(
     match expr {
         Expression::StringLiteral(text) => {
             let cell = mem.next_available_cell();
-            let start_cell = mem.current_cell();
 
-            instructions.move_relative(start_cell, cell);
+            instructions.move_right_by(cell);
             write_string_literal(instructions, text.as_bytes());
-            instructions.move_relative(cell, start_cell);
+            instructions.move_left_by(cell);
 
             Ok(())
         },
@@ -69,11 +77,9 @@ fn output_expr(
                 Error::UndeclaredIdentifier {name: ident}
             })?;
 
-            instructions.move_relative(mem.current_cell(), position);
+            instructions.move_right_by(position);
             instructions.write_consecutive(size);
-            // This way we end up one cell after the last written one
-            instructions.move_right();
-            mem.set_current_cell(position + size);
+            instructions.move_left_by(position);
 
             Ok(())
         },
@@ -139,9 +145,9 @@ fn assignment(
                 });
             }
 
-            instructions.move_relative(mem.current_cell(), position);
+            instructions.move_right_by(position);
             instructions.store_bytes(value.as_bytes());
-            mem.set_current_cell(position + value.len());
+            instructions.move_left_by(position);
             Ok(())
         },
         Expression::Identifier(value_name) => {
@@ -201,9 +207,9 @@ fn declare_undeclared(
             }
 
             let position = mem.declare(&name, size);
-            instructions.move_relative(mem.current_cell(), position);
+            instructions.move_right_by(position);
             instructions.store_bytes(value.as_bytes());
-            mem.set_current_cell(position + value.len());
+            instructions.move_left_by(position);
             Ok(())
         },
         Expression::Identifier(value_name) => {
@@ -238,7 +244,6 @@ fn copy_cells(
     target: usize,
     size: usize
 ) {
-    let start = mem.current_cell();
     // We need a hold cell to temporarily hold the value of the source
     // while we move it to the target
     // Once that initial move is done, we move the value of the hold cell back
@@ -250,7 +255,7 @@ fn copy_cells(
     // in a loop like this. We can't just store size in a cell and then use it to do these
     // instructions in a loop
     for i in 0..size {
-        instructions.move_relative(start, source + i);
+        instructions.move_right_by(source + i);
 
         instructions.jump_forward_if_zero();
         instructions.decrement();
@@ -280,6 +285,6 @@ fn copy_cells(
         instructions.jump_backward_unless_zero();
 
         // Return to the starting position
-        instructions.move_relative(hold, start);
+        instructions.move_left_by(hold);
     }
 }

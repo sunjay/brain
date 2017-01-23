@@ -106,6 +106,8 @@ impl Instructions {
             self.increment_by(ch);
             self.move_right();
         }
+        // Return back to the reference position
+        self.move_left_by(bytes.len());
     }
 
     /// Add an instruction that will write the current cell
@@ -119,6 +121,8 @@ impl Instructions {
         let write_next = [Instruction::Write, Instruction::Right];
         // by putting -1 here, we don't move to the right after writing n times
         self.0.extend(write_next.iter().cycle().take(n * write_next.len() - 1));
+        // Return back to the reference
+        self.move_left_by(n - 1);
     }
 
     /// Add an instruction that will read a single byte into the current cell

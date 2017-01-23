@@ -3,7 +3,6 @@ use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MemoryLayout {
-    current: usize,
     available_cells: VecDeque<bool>,
     named_cells: HashMap<String, Cell>,
 }
@@ -18,21 +17,9 @@ impl MemoryLayout {
     /// Creates a new blank memory layout
     pub fn new() -> MemoryLayout {
         MemoryLayout {
-            current: 0,
             available_cells: VecDeque::new(),
             named_cells: HashMap::new(),
         }
-    }
-
-    /// Returns the position of the current cell to be used
-    /// as the reference for all operations
-    pub fn current_cell(&self) -> usize {
-        self.current
-    }
-
-    /// Updates the current cell position to be the given value
-    pub fn set_current_cell(&mut self, position: usize) {
-        self.current = position;
     }
 
     /// Returns the (position, size) of a cell with the given name
