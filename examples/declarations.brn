@@ -15,9 +15,12 @@ out "\n";
 
 // redeclaration of the same name with a different size is an error:
 //a[1] = "q";
+// Invalid:
+//a[0] = "";
 
-// copies a to c. c is the same size as a.
-c = a;
+// copies a to a new variable c. c is the same size as a.
+c[] = a;
+out c;
 
 out "b = ";
 out b;
@@ -26,6 +29,10 @@ b = "dbd";
 out "b = ";
 out b;
 out "\n";
+
+// Explicitly declaring the size here even though its a copy
+d[3] = b;
+out d;
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number

@@ -5,15 +5,23 @@ use memory::MemoryLayout;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     // Illegal redeclaration of a name
-    IllegalRedeclaration(String),
+    IllegalRedeclaration {
+        name: String,
+    },
     // Name used before it was declared
-    UndeclaredIdentifier(String),
+    UndeclaredIdentifier {
+        name: String,
+    },
+    // Tried to declare a zero size variable
+    DeclaredZeroSize {
+        name: String,
+    },
     // Declaration contained a size, but it was invalid
     DeclaredIncorrectSize {
         name: String,
         expected: usize,
         actual: usize,
-    }
+    },
 }
 
 /// Expands the given statement into instructions
@@ -47,7 +55,7 @@ fn output_expr(
         },
         Expression::Identifier(ident) => {
             let (position, size) = mem.get_cell_contents(&ident).ok_or_else(|| {
-                Error::UndeclaredIdentifier(ident)
+                Error::UndeclaredIdentifier {name: ident}
             })?;
 
             instructions.move_relative(mem.current_cell(), position);
@@ -90,7 +98,7 @@ fn declare(
 ) -> Result<(), Error> {
     if mem.is_declared(&name) {
         if slice.is_some() {
-            return Err(Error::IllegalRedeclaration(name));
+            return Err(Error::IllegalRedeclaration {name: name});
         }
 
         unimplemented!();
@@ -98,38 +106,123 @@ fn declare(
 
     // Name is not declared
     else {
-        let (position, value): (Option<usize>, Vec<u8>) = match expr {
-            Expression::StringLiteral(s) => (None, s.into_bytes()),
-            Expression::Identifier(value_name) => unimplemented!(),
-        };
+        declare_undeclared(instructions, mem, name, slice, expr)
+    }
+}
 
-        if slice.is_none() && position.is_none() {
-            return Err(Error::UndeclaredIdentifier(name));
-        }
+/// Declares a new identifier that was previously undeclared
+fn declare_undeclared(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    name: String,
+    slice: Option<Slice>,
+    expr: Expression
+) -> Result<(), Error> {
+    if slice.is_none() {
+        return Err(Error::UndeclaredIdentifier {name: name});
+    }
+    let slice = slice.unwrap();
 
-        let slice = slice.unwrap();
-        let size = match slice {
-            Slice::SingleValue(s) => s,
-            Slice::Unspecified => value.len(),
-        };
+    match expr {
+        Expression::StringLiteral(value) => {
+            let size = match slice {
+                Slice::SingleValue(s) => s,
+                Slice::Unspecified => value.len(),
+            };
 
-        if size != value.len() {
-            return Err(Error::DeclaredIncorrectSize {
-                name: name,
-                expected: value.len(),
-                actual: size,
-            });
-        }
+            if size == 0 {
+                return Err(Error::DeclaredZeroSize {
+                    name: name,
+                });
+            }
+            else if size != value.len() {
+                return Err(Error::DeclaredIncorrectSize {
+                    name: name,
+                    expected: value.len(),
+                    actual: size,
+                });
+            }
 
-        if position.is_none() {
             let position = mem.declare(&name, size);
             instructions.move_relative(mem.current_cell(), position);
-            instructions.store_bytes(value.as_slice());
+            instructions.store_bytes(value.as_bytes());
             mem.set_current_cell(position + value.len());
             Ok(())
+        },
+        Expression::Identifier(value_name) => {
+            let (source_position, source_size) = mem.get_cell_contents(&value_name).ok_or_else(|| Error::UndeclaredIdentifier {name: value_name})?;
+
+            let size = match slice {
+                Slice::SingleValue(s) => s,
+                Slice::Unspecified => source_size,
+            };
+
+            if size != source_size {
+                return Err(Error::DeclaredIncorrectSize {
+                    name: name,
+                    expected: source_size,
+                    actual: size,
+                });
+            }
+
+            let position = mem.declare(&name, size);
+            copy_cells(instructions, mem, source_position, position, size);
+            Ok(())
         }
-        else {
-            unimplemented!();
-        }
+    }
+}
+
+/// Generates brainfuck instructions to copy `size` cells from
+/// the source position to the target position
+fn copy_cells(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    source: usize,
+    target: usize,
+    size: usize
+) {
+    let start = mem.current_cell();
+    // We need a hold cell to temporarily hold the value of the source
+    // while we move it to the target
+    // Once that initial move is done, we move the value of the hold cell back
+    // to the source
+    // These two moves with a temporary cell simulate a copy in brainfuck
+    let hold = mem.next_available_cell();
+
+    // Since size can be more than u8, we need to generate instructions for every cell
+    // in a loop like this. We can't just store size in a cell and then use it to do these
+    // instructions in a loop
+    for i in 0..size {
+        instructions.move_relative(start, source + i);
+
+        instructions.jump_forward_if_zero();
+        instructions.decrement();
+
+        //TODO: This could be a source of optimization since we're potentially
+        //TODO: doing extra movement instructions we don't need to
+        instructions.move_relative(source + i, hold);
+        instructions.increment();
+
+        instructions.move_relative(hold, target + i);
+        instructions.increment();
+
+        instructions.move_relative(target + i, source + i);
+        instructions.jump_backward_unless_zero();
+
+        // Move from hold back to source leaving everything as it was with
+        // source copied into target
+        // hold is zero again at the end of this process
+        instructions.move_relative(source + i, hold);
+        instructions.jump_forward_if_zero();
+
+        instructions.decrement();
+        instructions.move_relative(hold, source + i);
+        instructions.increment();
+        instructions.move_relative(source + i, hold);
+
+        instructions.jump_backward_unless_zero();
+
+        // Return to the starting position
+        instructions.move_relative(hold, start);
     }
 }
