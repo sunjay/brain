@@ -1,0 +1,18 @@
+// It's likely that this file isn't even necessary. All of this can
+// be placed in the top-level App component's stylesheet
+
+@import './partials/variables';
+
+@import '~bootstrap-sass/assets/stylesheets/bootstrap/mixins';
+@import '~bootstrap-sass/assets/stylesheets/bootstrap/normalize';
+
+:global {
+  @import '~bootstrap-sass/assets/stylesheets/bootstrap/scaffolding';
+  @import '~bootstrap-sass/assets/stylesheets/bootstrap/type';
+  @import '~bootstrap-sass/assets/stylesheets/bootstrap/grid';
+  @import './partials/buttons';
+
+  // Font awesome
+  $fa-font-path: '~font-awesome/fonts';
+  @import '~font-awesome/scss/font-awesome';
+}

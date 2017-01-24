@@ -2,18 +2,27 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>Brainfuck Visualizer</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-  </body>
+    <div id="app-container">
+      <style type='text/css'>
+        /* These styles are inlined so we have something to show while the page loads the JavaScript */
+        body {
+          overflow: hidden;
+        }
+        #loading {
+          width: 100vw;
+          height: 100vh;
+          line-height: 100vh;
+          font-family: sans-serif;
+          font-size: 40px;
+          text-align: center;
+        }
+      </style>
+      <div id="loading">Loading...</div>
+    </div>
 
-  <script>
-    // You can also require other files to run in this process
-    require('./renderer.js')
-  </script>
+    <script src='http://localhost:8080/bundle.js'></script>
+  </body>
 </html>
