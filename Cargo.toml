@@ -20,3 +20,6 @@ features = ["verbose-errors"]
 [[bin]]
 name = "brain"
 doc = false
+
+[[bin]]
+name = "brainfuck"

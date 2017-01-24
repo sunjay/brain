@@ -1,37 +1,80 @@
 /// Brainfuck language interpreter
 /// As specified here: http://www.muppetlabs.com/~breadbox/bf/
+#[macro_use]
+extern crate clap;
 
-use std::env;
 use std::process;
-
+use std::path::{Path};
 use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
+use clap::{Arg, App};
+
 const BUF_SIZE: usize = 30_000;
 
-fn main() {
-    let argv = env::args().collect::<Vec<_>>();
-    assert!(argv.len() > 0);
-
-    if argv.len() != 2 {
-        println!("Usage: {} filename", argv[0]);
+macro_rules! exit_with_error(
+    ($($arg:tt)*) => { {
+        writeln!(&mut ::std::io::stderr(), $($arg)*)
+            .expect("Failed while printing to stderr");
         process::exit(1);
+    } }
+);
+
+macro_rules! println_stderr(
+    ($($arg:tt)*) => { {
+        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
+        r.expect("failed printing to stderr");
+    } }
+);
+
+fn main() {
+    let args = App::new(crate_name!())
+        .version(crate_version!())
+        .version_short("v")
+        .author(crate_authors!())
+        .about("Brainfuck interpreter companion to the brain language compiler")
+        .arg(Arg::with_name("input-file")
+            .help("The brainfuck file to process. Should contain brainfuck instructions")
+            .value_name("file")
+            .takes_value(true)
+            .required(true)
+        )
+        .arg(Arg::with_name("debug-enabled")
+            .short("D")
+            .long("debug")
+            .help("Enables debug mode which outputs debugging information to stderr")
+        )
+        .get_matches();
+
+    let source_path = Path::new(args.value_of("input-file").unwrap());
+    if !source_path.exists() || !source_path.is_file() {
+        exit_with_error!("Not a valid file: '{}'", source_path.display());
     }
 
-    let f = File::open(argv[1].clone()).expect("Could not open file");
+    let debug_mode = args.is_present("debug-enabled");
+
+    let f = File::open(source_path).unwrap_or_else(|e| {
+        exit_with_error!("Could not open source file: {}", e);
+    });
 
     let program = f.bytes().map(
-        |c| c.expect("Could not read char") as char
+        |c| c.expect("Fatal: Could not read char") as char
     ).collect::<Vec<char>>();
 
-    interpret(program);
+    interpret(program, debug_mode);
 }
 
-fn interpret(program: Vec<char>) {
+fn interpret(program: Vec<char>, debug: bool) {
+    if debug {
+        println_stderr!("last instruction number,last instruction,current pointer,memory dump");
+    }
+
     let mut buffer = [0u8; BUF_SIZE];
 
+    // p is the position "pointer" in the buffer
     let mut p: usize = 0;
+    // i is the instruction index in the program
     let mut i: usize = 0;
 
     loop {
@@ -64,6 +107,11 @@ fn interpret(program: Vec<char>) {
                 }
             },
             _ => continue,
+        }
+
+        if debug {
+            println_stderr!("{},{},{},{}", i-1, c, p,
+                buffer.iter().fold(String::new(), |acc, v| format!("{} {}", acc, v)));
         }
     }
 }
