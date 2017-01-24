@@ -11,26 +11,46 @@ const {
 const Panel = require('./Panel');
 const Button = require('./Button');
 
-const SettingsPanel = ({command, file}) => (
-  <Panel>
-    <div className={formGroup}>
-      <label className={formLabel}>Brainfuck Command:</label>
-      <input type='text' value={command} className={formControl} />
-    </div>
+const SettingsPanel = ({command, file, onSubmit}) => {
+  let commandInput, fileInput;
 
-    <div className={formGroup}>
-      <label className={formLabel}>Brainfuck file:</label>
-      <input type='text' value={file} className={formControl} />
-    </div>
+  const submit = (e) => {
+    e.preventDefault();
+    const command = commandInput.value;
+    const file = fileInput.value;
+    if (!command || !command.trim() || !file || !file.trim()) {
+      return;
+    }
+    onSubmit(command, file);
+  };
+  return (
+    <Panel>
+      <form onSubmit={submit}>
+        <div className={formGroup}>
+          <label className={formLabel}>Brainfuck Command:</label>
+          <input type='text' defaultValue={command} className={formControl}
+            ref={(node) => commandInput = node}/>
+        </div>
 
-    <div className={classNames(formGroup, formGroupRight)}>
-      <Button style='primary' block>Run</Button>
-    </div>
-  </Panel>
-);
+        <div className={formGroup}>
+          <label className={formLabel}>Brainfuck File:</label>
+          <input type='text' defaultValue={file} className={formControl}
+            ref={(node) => fileInput = node}/>
+        </div>
+
+        <div className={classNames(formGroup, formGroupRight)}>
+          <Button style='primary' type='submit' block>
+            Start
+          </Button>
+        </div>
+      </form>
+    </Panel>
+  );
+};
 
 SettingsPanel.propTypes = {
-  className: React.PropTypes.string,
+  command: React.PropTypes.string,
+  file: React.PropTypes.string,
 };
 
 module.exports = SettingsPanel;

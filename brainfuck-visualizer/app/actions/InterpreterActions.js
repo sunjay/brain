@@ -1,7 +1,11 @@
 const Actions = require('./Actions');
 
-export const ACTION_RELOAD = Actions.register('exec-reload');
+export const ACTION_START = Actions.register('interpreter-start');
 
-exports.reload = Actions.registerActionCreator(
-  exports.ACTION_RELOAD
+exports.start = Actions.registerActionCreator(
+  exports.ACTION_START,
+  [
+    'command',
+    'file',
+  ]
 );
