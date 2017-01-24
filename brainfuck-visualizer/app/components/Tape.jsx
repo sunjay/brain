@@ -2,7 +2,6 @@ const React = require('react');
 
 const Tape = ({children, className}) => (
   <div className={className}>
-    <h1>Tape!</h1>
     {children}
   </div>
 );

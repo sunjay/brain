@@ -1,0 +1,7 @@
+@import '../partials/variables';
+
+.panel {
+  background: $panel-background;
+  border: $panel-border;
+  padding: $padding-base-vertical $padding-base-horizontal;
+}

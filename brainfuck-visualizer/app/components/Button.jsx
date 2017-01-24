@@ -35,7 +35,7 @@ Button.propTypes = {
   type: React.PropTypes.string,
   style: React.PropTypes.oneOf([
     'default', 'primary', 'secondary', 'success',
-    'info', 'warning', 'danger', 'link', 'navbar',
+    'info', 'warning', 'danger', 'link',
   ]),
   size: React.PropTypes.oneOf(['xs', 'sm', 'lg']),
   block: React.PropTypes.bool,

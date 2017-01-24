@@ -5,11 +5,9 @@ $brand-success: #4caf50;
 $brand-info: #03a9f4;
 
 // Panel styles
-$panel-color: #e0e0e0;
-$panel-background: #424242;
+$panel-background: #fff;
 $panel-border-color: #616161;
 $panel-border: 1px solid $panel-border-color;
-$panel-padding: 4px 8px;
 
 // Bootstrap variable overrides
 
@@ -22,6 +20,7 @@ $headings-font-weight: 600;
 $input-height-small: 20px;
 $padding-small-vertical: 2px;
 $padding-small-horizontal: 4px;
+$border-radius-base: 0;
 
 // Button Styles
 $btn-font-weight: normal;

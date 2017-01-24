@@ -1,0 +1,20 @@
+@import '../partials/variables';
+
+.formGroup {
+  margin-bottom: 10px;
+
+  &.formGroupRight {
+    text-align: right;
+  }
+}
+
+.formLabel {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.formControl {
+  padding: $padding-base-vertical $padding-base-horizontal;
+  width: 100%;
+}
