@@ -8,10 +8,9 @@ use std::path::{Path};
 use std::io;
 use std::io::prelude::*;
 use std::fs::File;
+use std::collections::VecDeque;
 
 use clap::{Arg, App};
-
-const BUF_SIZE: usize = 30_000;
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
@@ -70,7 +69,9 @@ fn interpret(program: Vec<char>, debug: bool) {
         println_stderr!("last instruction number,last instruction,current pointer,memory dump");
     }
 
-    let mut buffer = [0u8; BUF_SIZE];
+    let mut buffer: VecDeque<u8> = VecDeque::new();
+    // Make sure there is at least one cell to begin with
+    buffer.push_back(0u8);
 
     // p is the position "pointer" in the buffer
     let mut p: usize = 0;
@@ -85,13 +86,26 @@ fn interpret(program: Vec<char>, debug: bool) {
         i += 1;
 
         match c {
-            '>' => p = (p + 1) % BUF_SIZE,
-            '<' => p = (p - 1) % BUF_SIZE,
+            '>' => {
+                p += 1;
+                if p >= buffer.len() {
+                    buffer.push_back(0u8);
+                }
+            },
+            '<' => {
+                if p == 0 {
+                    buffer.push_front(0u8);
+                }
+                else {
+                    p -= 1;
+                }
+            },
             '+' => buffer[p] = buffer[p].wrapping_add(1),
             '-' => buffer[p] = buffer[p].wrapping_sub(1),
             '.' => print!("{}", buffer[p] as char),
             ',' => {
-                let chr = io::stdin().bytes().next(); if chr.is_none() {
+                let chr = io::stdin().bytes().next();
+                if chr.is_none() {
                     break;
                 }
                 buffer[p] = chr.unwrap().expect("Could not read input");
