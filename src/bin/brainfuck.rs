@@ -133,7 +133,7 @@ fn interpret(program: Vec<char>, debug: bool, delay: u64) {
         }
 
         if debug {
-            println_stderr!("{{lastInstructionIndex: {}, lastInstruction: \"{}\", currentPointer: {}, memory: \"{}\"}}", i-1, c, p,
+            println_stderr!("{{\"lastInstructionIndex\": {}, \"lastInstruction\": \"{}\", \"currentPointer\": {}, \"memory\": \"{}\"}}", i-1, c, p,
                 buffer.iter().fold(String::new(), |acc, v| format!("{} {}", acc, v)));
         }
 
