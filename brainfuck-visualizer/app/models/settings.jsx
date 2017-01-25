@@ -1,10 +1,12 @@
 const {createRecord} = require('./model');
 
 const SettingsRecord = createRecord({
-  DEFAULT_BRAINFUCK_EXECUTABLE: 'brainfuck',
+  DEFAULT_BRAINFUCK_COMMAND: 'brainfuck --debug --delay 50',
 }, (constants) => ({
-  command: constants.DEFAULT_BRAINFUCK_EXECUTABLE,
+  command: constants.DEFAULT_BRAINFUCK_COMMAND,
   file: undefined,
+  source: undefined,
+  setup: false,
 }));
 
 class Settings extends SettingsRecord {

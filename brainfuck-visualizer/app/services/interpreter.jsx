@@ -1,6 +1,27 @@
-const spawn = require('child_process').spawn;
+const {spawn} = require('child_process');
+const fs = require('fs');
 
-const actionHandlers = {};
+const {
+  ACTION_START,
+  appendOutput,
+  appendError,
+  addHistory,
+  setSource,
+} = require('../actions/InterpreterActions');
+
+const actionHandlers = {
+  [ACTION_START]({command, file}, {dispatch}) {
+    command = command.split(/\s+/);
+    command.push(file);
+
+    fs.readFile(file, (err, source) => {
+      if (err) throw err;
+
+      dispatch(setSource(source));
+      this.spawnWorker(command);
+    });
+  },
+};
 
 class Interpreter {
   constructor() {
@@ -12,14 +33,11 @@ class Interpreter {
   start({dispatch}) {
     // Lazily load the worker since not every process that starts this server
     // will need this process right away or at all
-    this.spawnWorker = () => {
+    this.spawnWorker = ([command, ...args]) => {
       console.info('Spawning interpreter');
-      //TODO: Update this
-      this.worker = spawn('cargo', ['run', '--quiet'], {
-        cwd: './image-worker',
-      });
+      this.worker = spawn(command, args);
 
-      this.worker.stdout.on('data', (data) => {
+      this.worker.stderr.on('data', (data) => {
         // The data that comes in is not guarenteed to be a complete command line
         // To account for this, we maintain a queue of commands since we
         // may get several complete commands or no complete commands in this data
@@ -42,8 +60,9 @@ class Interpreter {
         this.queue = this.queue.slice(this.queue.length - 1);
       });
 
-      this.worker.stderr.on('data', (data) => {
-        console.error(`image worker stderr: ${data}`);
+      this.worker.stdout.on('data', (data) => {
+        console.info(`interpreter stdout: ${data}`);
+        dispatch(appendOutput(data.toString()));
       });
 
       this.worker.on('close', (code) => {
@@ -55,33 +74,25 @@ class Interpreter {
       });
 
       this.worker.on('error', (error) => {
-        console.error(`image worker error: ${error}`);
+        console.error(`interpreter error: ${error}`);
       });
     };
   }
 
   processResponse(dispatch, data) {
-    const response = JSON.parse(data);
+    let response;
+    try {
+      response = JSON.parse(data);
+    }
+    catch (e) {
+      dispatch(appendError(data));
+      return;
+    }
 
-    if (response === 'ProjectClosed') {
-      dispatch(destroyImage());
-    }
-    else if (response.Success) {
-      const {
-        path,
-        width,
-        height,
-        data,
-        can_undo,
-        can_redo,
-      } = response.Success;
-      dispatch(updateImage(path, width, height, can_undo, can_redo, data));
-    }
-    else {
-      console.error('image worker response', response);
-      //TODO: Implement something better here in #36
-      alert('Something went wrong. Check console for more information.');
-    }
+    dispatch(addHistory({
+      ...response,
+      memory: response.memory.trim().split(/\s+/).map(parseFloat),
+    }));
   }
 
   middleware() {
@@ -97,10 +108,9 @@ class Interpreter {
 
   send(message) {
     if (!this.worker) {
-      // Spawn only as necessary
-      this.spawnWorker();
+      throw new Error('Worker not spawned before message sent out');
     }
-    console.info('Sending to image worker', message);
+    console.info('Sending to interpreter', message);
     this.worker.stdin.write(JSON.stringify(message) + '\n');
   }
 }

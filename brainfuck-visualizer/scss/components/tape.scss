@@ -1,0 +1,44 @@
+@import '../partials/variables';
+
+.tapeContainer {
+  background: $panel-background;
+  border: $panel-border;
+  box-shadow: 1px 1px 0 $panel-border-color;
+  padding: $padding-base-vertical $padding-base-horizontal;
+}
+
+.tape {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  margin-bottom: 5px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.tapeCell {
+  border: $panel-border;
+  min-width: 40px;
+  padding: ($padding-base-vertical / 2) ($padding-base-horizontal / 2);
+  text-align: center;
+
+  &.tapeCurrent {
+    background: #e3f2fd;
+    font-weight: bold;
+    position: relative;
+
+    &::before {
+      $size: 20px;
+      border-bottom: ($size / 2) solid #f44336;
+      border-left: ($size / 2) solid transparent;
+      border-right: ($size / 2) solid transparent;
+      bottom: -($size / 4);
+      content: ' ';
+      height: 0;
+      left: calc(50% - #{$size / 2});
+      position: absolute;
+      width: 0;
+    }
+  }
+}

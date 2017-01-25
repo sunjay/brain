@@ -1,8 +1,25 @@
 const React = require('react');
+const classNames = require('classnames');
 
-const Tape = ({children, className}) => (
-  <div className={className}>
-    {children}
+const {
+  tapeContainer,
+  tape,
+  tapeCell,
+  tapeCurrent,
+} = require('../../scss/components/tape.scss');
+
+const Tape = ({currentPointer, memory}) => (
+  <div className={tapeContainer}>
+    <div className={tape}>
+      {(memory || []).map((cell, index) => (
+        <div key={index} className={classNames({
+          [tapeCell]: true,
+          [tapeCurrent]: index === currentPointer,
+        })}>
+          {cell}
+        </div>
+      ))}
+    </div>
   </div>
 );
 

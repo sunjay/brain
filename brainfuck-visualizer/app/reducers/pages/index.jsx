@@ -1,9 +1,11 @@
 const {combineReducers} = require('redux');
 
-const interpreterState = require('../interpreterState');
+const history = require('../history');
+const output = require('../output');
 const settings = require('../settings');
 
 module.exports = combineReducers({
-  interpreterState,
+  history,
+  output,
   settings,
 });

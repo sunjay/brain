@@ -1,13 +1,13 @@
 const React = require('react');
 
 const Settings = require('../../containers/Settings');
-const Tape = require('../../containers/Tape');
+const Interpreter = require('../../containers/Interpreter');
 
 const Page = require('../Page');
 
 const Editor = () => (
   <Page>
-    <Tape />
+    <Interpreter />
     <Settings />
   </Page>
 );

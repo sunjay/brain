@@ -1,9 +1,9 @@
 const {connect} = require('react-redux');
 
-const Tape = require('../components/Tape');
+const InterpreterLayout = require('../components/InterpreterLayout');
 
-const mapStateToProps = ({page: {history}}) => ({
-  ...(history.length ? history[history.length - 1] : null),
+const mapStateToProps = ({page: {settings: {setup}}}) => ({
+  setup,
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -12,4 +12,4 @@ const mapDispatchToProps = (dispatch) => ({
 module.exports = connect(
   mapStateToProps,
   mapDispatchToProps
-)(Tape);
+)(InterpreterLayout);

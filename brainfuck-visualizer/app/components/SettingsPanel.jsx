@@ -11,7 +11,7 @@ const {
 const Panel = require('./Panel');
 const Button = require('./Button');
 
-const SettingsPanel = ({command, file, onSubmit}) => {
+const SettingsPanel = ({command, file, setup, onSubmit}) => {
   let commandInput, fileInput;
 
   const submit = (e) => {
@@ -23,7 +23,7 @@ const SettingsPanel = ({command, file, onSubmit}) => {
     }
     onSubmit(command, file);
   };
-  return (
+  return setup ? null : (
     <Panel>
       <form onSubmit={submit}>
         <div className={formGroup}>
