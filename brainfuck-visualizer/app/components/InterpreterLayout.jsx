@@ -1,10 +1,12 @@
 const React = require('react');
 
 const Tape = require('../containers/Tape');
+const Output = require('../containers/Output');
 
 const InterpreterLayout = ({setup}) => setup ? (
   <div>
     <Tape />
+    <Output />
   </div>
 ) : null;
 

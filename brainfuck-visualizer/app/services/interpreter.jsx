@@ -61,7 +61,7 @@ class Interpreter {
       });
 
       this.worker.stdout.on('data', (data) => {
-        console.info(`interpreter stdout: ${data}`);
+        console.info(`interpreter stdout: ${data.toString()}`);
         dispatch(appendOutput(data.toString()));
       });
 

@@ -13,10 +13,15 @@ const createRouter = require('./router');
 const appReducer = require('./reducers/app');
 
 const Interpreter = require('./services/interpreter');
+const {ACTION_ADD_HISTORY} = require('./actions/InterpreterActions');
 
 const interpreter = new Interpreter();
 
-const logger = createLogger();
+const logger = createLogger({
+  predicate(getState, {type}) {
+    return type !== ACTION_ADD_HISTORY;
+  },
+});
 const store = createStore(
   appReducer,
   compose(

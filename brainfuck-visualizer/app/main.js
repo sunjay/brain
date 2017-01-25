@@ -23,7 +23,7 @@ function createWindow() {
   mainWindow.setMenu(null);
 
   globalShortcut.register('CommandOrControl+Shift+I', () => {
-    mainWindow.webContents.openDevTools();
+    mainWindow.webContents.toggleDevTools();
   });
 
   mainWindow.once('ready-to-show', () => {

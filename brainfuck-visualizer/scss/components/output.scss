@@ -1,0 +1,15 @@
+@import '../partials/variables';
+
+.outputContainer {
+  align-items: stretch;
+  background: $panel-background;
+  border: $panel-border;
+  box-shadow: 1px 1px 0 $panel-border-color;
+  display: flex;
+  min-height: 33px;
+  padding: $padding-base-vertical $padding-base-horizontal;
+}
+
+.outputError {
+  color: #f44336;
+}
