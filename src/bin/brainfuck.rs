@@ -9,6 +9,8 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 use std::collections::VecDeque;
+use std::thread;
+use std::time::Duration;
 
 use clap::{Arg, App};
 
@@ -44,6 +46,11 @@ fn main() {
             .long("debug")
             .help("Enables debug mode which outputs debugging information to stderr")
         )
+        .arg(Arg::with_name("delay")
+            .long("delay")
+            .takes_value(true)
+            .help("Delays execution of each instruction by this amount in ms")
+        )
         .get_matches();
 
     let source_path = Path::new(args.value_of("input-file").unwrap());
@@ -53,6 +60,12 @@ fn main() {
 
     let debug_mode = args.is_present("debug-enabled");
 
+    let delay: u64 = if let Some(delay_str) = args.value_of("delay") {
+        delay_str.parse().unwrap_or_else(|e: std::num::ParseIntError| exit_with_error!("Invalid delay: {}", e))
+    } else {
+        0
+    };
+
     let f = File::open(source_path).unwrap_or_else(|e| {
         exit_with_error!("Could not open source file: {}", e);
     });
@@ -61,14 +74,10 @@ fn main() {
         |c| c.expect("Fatal: Could not read char") as char
     ).collect::<Vec<char>>();
 
-    interpret(program, debug_mode);
+    interpret(program, debug_mode, delay);
 }
 
-fn interpret(program: Vec<char>, debug: bool) {
-    if debug {
-        println_stderr!("last instruction number,last instruction,current pointer,memory dump");
-    }
-
+fn interpret(program: Vec<char>, debug: bool, delay: u64) {
     let mut buffer: VecDeque<u8> = VecDeque::new();
     // Make sure there is at least one cell to begin with
     buffer.push_back(0u8);
@@ -123,8 +132,11 @@ fn interpret(program: Vec<char>, debug: bool) {
             _ => continue,
         }
 
+        thread::sleep(Duration::from_millis(delay));
+
+
         if debug {
-            println_stderr!("{},{},{},{}", i-1, c, p,
+            println_stderr!("{{lastInstructionIndex: {}, lastInstruction: \"{}\", currentPointer: {}, memory: \"{}\"}}", i-1, c, p,
                 buffer.iter().fold(String::new(), |acc, v| format!("{} {}", acc, v)));
         }
     }
