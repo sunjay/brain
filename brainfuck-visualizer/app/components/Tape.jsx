@@ -6,17 +6,24 @@ const {
   tape,
   tapeCell,
   tapeCurrent,
+  tapeCellIndex,
+  tapeCellValue,
 } = require('../../scss/components/tape.scss');
 
 const Tape = ({currentPointer, memory}) => (
   <div className={tapeContainer}>
     <div className={tape}>
       {(memory || []).map((cell, index) => (
-        <div key={index} className={classNames({
-          [tapeCell]: true,
-          [tapeCurrent]: index === currentPointer,
-        })}>
-          {cell}
+        <div key={index} className={tapeCell}>
+          <div className={tapeCellIndex}>
+            {index}
+          </div>
+          <div className={classNames({
+            [tapeCellValue]: true,
+            [tapeCurrent]: index === currentPointer,
+          })}>
+            {cell}
+          </div>
         </div>
       ))}
     </div>

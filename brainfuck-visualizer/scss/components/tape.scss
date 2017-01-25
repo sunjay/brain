@@ -10,18 +10,24 @@
 .tape {
   align-items: center;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: flex-start;
   margin-bottom: 5px;
   margin-top: 5px;
-  white-space: nowrap;
 }
 
 .tapeCell {
-  border: $panel-border;
   min-width: 40px;
-  padding: ($padding-base-vertical / 2) ($padding-base-horizontal / 2);
   text-align: center;
+}
+
+.tapeCellIndex {
+  padding: ($padding-base-vertical / 2) ($padding-base-horizontal / 2);
+}
+
+.tapeCellValue {
+  border: $panel-border;
+  padding: ($padding-base-vertical / 2) ($padding-base-horizontal / 2);
 
   &.tapeCurrent {
     background: #e3f2fd;
