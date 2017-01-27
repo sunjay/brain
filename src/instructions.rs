@@ -1,7 +1,8 @@
 // As specified here: http://www.muppetlabs.com/~breadbox/bf/
 
-use std::convert::Into;
 use std::iter;
+use std::convert::Into;
+use std::ops::Index;
 
 use instruction::Instruction;
 use parser::Program;
@@ -32,6 +33,11 @@ impl Instructions {
     /// Optimize the instructions based on the given optimization level
     pub fn optimize(&mut self, level: OptimizationLevel) {
         apply_optimizations(self, level);
+    }
+
+    /// The number of instructions in this instructions set
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 
     /// Add instructions that move from a given offset to the other offset
@@ -149,6 +155,10 @@ impl Instructions {
     pub fn jump_backward_unless_zero(&mut self) {
         self.0.push(Instruction::JumpBackwardUnlessZero);
     }
+
+    pub fn remove(&mut self, index: usize) -> Instruction {
+        self.0.remove(index)
+    }
 }
 
 impl Into<String> for Instructions {
@@ -163,5 +173,13 @@ impl IntoIterator for Instructions {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl Index<usize> for Instructions {
+    type Output = Instruction;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }

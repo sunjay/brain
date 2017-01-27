@@ -1,3 +1,4 @@
+use instruction::Instruction::*;
 use instructions::Instructions;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -26,5 +27,33 @@ pub fn apply_optimizations(instructions: &mut Instructions, level: OptimizationL
 }
 
 fn remove_opposites(instructions: &mut Instructions) {
-    //TODO
+    let mut i = 1;
+    while i < instructions.len() {
+        let prev = instructions[i - 1];
+        let current = instructions[i];
+
+        // Cancel out opposites
+        match (prev, current) {
+            (Left, Right) | (Right, Left) => {
+                instructions.remove(i);
+                instructions.remove(i - 1);
+                i -= 1;
+            },
+
+            (Increment, Decrement) | (Decrement, Increment) => {
+                instructions.remove(i);
+                instructions.remove(i - 1);
+                i -= 1;
+            },
+
+            (JumpForwardIfZero, JumpBackwardUnlessZero) | (JumpBackwardUnlessZero, JumpForwardIfZero) => {
+                instructions.remove(i);
+                instructions.remove(i - 1);
+                i -= 1;
+            },
+
+            // Otherwise just move on
+            _ => i += 1,
+        }
+    }
 }
