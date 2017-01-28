@@ -2,16 +2,21 @@ use std::str::{self, FromStr};
 
 use nom::{self, is_alphabetic, is_digit, digit};
 
-const LINE_COMMENT_START: &'static str = "//";
-const BLOCK_COMMENT_START: &'static str = "/*";
-const BLOCK_COMMENT_END: &'static str = "*/";
 const STRING_BOUNDARY: &'static str = "\"";
-const OUTPUT_KEYWORD: &'static str = "out";
-const INPUT_KEYWORD: &'static str = "in";
 const STATEMENT_TERMINATOR: &'static str = ";";
 const ASSIGNMENT_OPERATOR: &'static str = "=";
-const SLICE_OPEN: &'static str = "[";
-const SLICE_CLOSE: &'static str = "]";
+const LINE_COMMENT: &'static str = "//";
+
+const START_BLOCK_COMMENT: &'static str = "/*";
+const END_BLOCK_COMMENT: &'static str = "*/";
+const BEGIN_SLICE: &'static str = "[";
+const END_SLICE: &'static str = "]";
+const BEGIN_BLOCK: &'static str = "{";
+const END_BLOCK: &'static str = "}";
+
+const OUTPUT_KEYWORD: &'static str = "out";
+const INPUT_KEYWORD: &'static str = "in";
+const WHILE_KEYWORD: &'static str = "while";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
@@ -51,6 +56,10 @@ pub enum Statement {
         slice: Option<Slice>,
         expr: Expression,
     },
+    WhileLoop {
+        condition: WhileCondition,
+        body: Vec<Statement>,
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,6 +67,15 @@ pub enum Slice {
     SingleValue(usize),
     //Range(Option<usize>, Option<usize>),
     Unspecified,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum WhileCondition {
+    Input {
+        name: String,
+        slice: Option<Slice>,
+    },
+    Expression(Expression),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -81,6 +99,9 @@ named!(statement<Statement>, ws!(alt!(
     }} |
     declaration => {|(name, slice, expr): (String, Option<Slice>, Expression)| {
         Statement::Declaration {name: name, slice: slice, expr: expr}
+    }} |
+    while_loop => {|(cond, body): (WhileCondition, Vec<Statement>)| {
+        Statement::WhileLoop {condition: cond, body: body}
     }}
 )));
 
@@ -89,7 +110,7 @@ named!(comment<&str>, alt!(line_comment | block_comment));
 named!(line_comment<&str>,
     map_res!(
         do_parse!(
-            tag!(LINE_COMMENT_START) >>
+            tag!(LINE_COMMENT) >>
             content: take_until_and_consume!("\n") >>
             (content)
         ),
@@ -100,9 +121,9 @@ named!(line_comment<&str>,
 named!(block_comment<&str>,
     map_res!(
         delimited!(
-            tag!(BLOCK_COMMENT_START),
-            take_until!(BLOCK_COMMENT_END),
-            tag!(BLOCK_COMMENT_END)
+            tag!(START_BLOCK_COMMENT),
+            take_until!(END_BLOCK_COMMENT),
+            tag!(END_BLOCK_COMMENT)
         ),
         |s: &'a [u8]| str::from_utf8(s)
     )
@@ -136,6 +157,35 @@ named!(declaration<(String, Option<Slice>, Expression)>,
     ))
 );
 
+named!(while_loop<(WhileCondition, Vec<Statement>)>,
+    ws!(do_parse!(
+        tag!(WHILE_KEYWORD) >>
+        cond: while_condition >>
+        statements: block_statements >>
+        (cond, statements)
+    ))
+);
+
+named!(while_condition<WhileCondition>,
+    alt_complete!(
+        map!(ws!(do_parse!(
+            tag!(INPUT_KEYWORD) >>
+            declaration: type_declaration >>
+            (declaration.0, declaration.1)
+        )), |(name, slice): (String, Option<Slice>)| WhileCondition::Input {name: name, slice: slice}) |
+        map!(expression, |expr: Expression| WhileCondition::Expression(expr))
+    )
+);
+
+named!(block_statements< Vec<Statement> >,
+    ws!(do_parse!(
+        tag!(BEGIN_BLOCK) >>
+        statements: many0!(statement) >>
+        tag!(END_BLOCK) >>
+        (statements)
+    ))
+);
+
 named!(type_declaration<(String, Option<Slice>)>,
     do_parse!(
         declaration: identifier_slice >>
@@ -154,14 +204,14 @@ named!(identifier_slice<(String, Option<Slice>)>,
 named!(slice_variants<Slice>,
     alt_complete!(
         do_parse!(
-            tag!(SLICE_OPEN) >>
-            tag!(SLICE_CLOSE) >>
+            tag!(BEGIN_SLICE) >>
+            tag!(END_SLICE) >>
             (Slice::Unspecified)
         ) |
         delimited!(
-            tag!(SLICE_OPEN),
+            tag!(BEGIN_SLICE),
             slice_single_value,
-            tag!(SLICE_CLOSE)
+            tag!(END_SLICE)
         )
     )
 );

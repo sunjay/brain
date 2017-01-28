@@ -69,6 +69,10 @@ pub fn expand(
         },
         Statement::Input {name, slice} => read_into_name(instructions, mem, name, slice),
         Statement::Declaration {name, slice, expr} => declare(instructions, mem, name, slice, expr),
+        Statement::WhileLoop {condition, body} => {
+            println!("{:?}", (condition, body));
+            Ok(())
+        },
     }
 }
 
