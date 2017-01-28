@@ -67,10 +67,7 @@ pub enum Expression {
 }
 
 named!(parse_all_statements< Vec<Statement> >, complete!(do_parse!(
-    statements: fold_many0!(statement, Vec::new(), |mut acc: Vec<_>, item| {
-        acc.push(item);
-        acc
-    }) >>
+    statements: many0!(statement) >>
     // Ensures that we reach EOF after all the statements
     eof!() >>
     (statements)
