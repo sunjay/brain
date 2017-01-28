@@ -12,6 +12,7 @@ mod statements;
 mod declarations;
 mod input;
 mod output;
+mod while_loop;
 
 pub use self::errors::*;
 pub use self::statements::*;

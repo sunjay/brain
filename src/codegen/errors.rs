@@ -37,5 +37,15 @@ pub enum Error {
     // We do not support `in foo[]` since we do not have dynamic strings
     UnspecifiedInputSizeUnsupported {
         name: String,
-    }
+    },
+
+    // We do not support string literals as loop conditions since this doesn't
+    // really make any sense
+    LoopStringLiteralUnsupported {},
+
+    // Conditions must be size one so we can tell if they are zero or non-zero
+    ConditionSizeInvalid {
+        expected: usize,
+        actual: usize,
+    },
 }

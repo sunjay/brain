@@ -62,7 +62,7 @@ pub enum Statement {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Slice {
     SingleValue(usize),
     //Range(Option<usize>, Option<usize>),

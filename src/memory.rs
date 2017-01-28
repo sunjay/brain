@@ -31,6 +31,8 @@ impl MemoryLayout {
         self.named_cells.contains_key(name)
     }
 
+    /// Declares a variable with the given name and size
+    /// Returns the position of that variable in the memory
     pub fn declare(&mut self, name: &str, size: usize) -> usize {
         let mut current = 0;
         'search: loop {
@@ -63,6 +65,22 @@ impl MemoryLayout {
     fn reserve(&mut self, start: usize, size: usize) {
         for i in 0..size {
             self.available_cells[start + i] = false;
+        }
+    }
+
+    /// Undeclares a name and frees the used space
+    /// If found, returns the (position, size) of the name
+    /// Otherwise, returns None
+    pub fn undeclare(&mut self, name: &str) -> Option<(usize, usize)> {
+        self.named_cells.remove(name).and_then(|Cell {position, size}| {
+            self.free(position, size);
+            Some((position, size))
+        })
+    }
+
+    fn free(&mut self, start: usize, size: usize) {
+        for i in 0..size {
+            self.available_cells[start + i] = true;
         }
     }
 
