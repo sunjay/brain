@@ -18,6 +18,17 @@ const Tape = ({currentPointer, memory}) => (
           <div className={tapeCellIndex}>
             {index}
           </div>
+          <div className={tapeCellIndex}>
+            <code>'{
+              String.fromCharCode(cell)
+                .replace('\n', '\\n')
+                .replace('\t', '\\t')
+                .replace('\b', '\\b')
+                .replace('\r', '\\r')
+                .replace('\r', '\\r')
+                .replace('\v', '\\v')
+            }'</code>
+          </div>
           <div className={classNames({
             [tapeCellValue]: true,
             [tapeCurrent]: index === currentPointer,
