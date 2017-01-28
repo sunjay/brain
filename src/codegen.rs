@@ -17,20 +17,24 @@ pub enum Error {
     IllegalRedeclaration {
         name: String,
     },
+
     // Name used before it was declared
     UndeclaredIdentifier {
         name: String,
     },
+
     // Tried to declare a zero size variable
     DeclaredZeroSize {
         name: String,
     },
+
     // Declaration contained a size, but it was invalid
     DeclaredIncorrectSize {
         name: String,
         expected: usize,
         actual: usize,
     },
+
     // The expression assigned to a variable `name` was the incorrect size
     IncorrectSizedExpression {
         name: String,
@@ -42,6 +46,11 @@ pub enum Error {
     SelfAssignment {
         name: String,
     },
+
+    // We do not support `in foo[]` since we do not have dynamic strings
+    UnspecifiedInputSizeUnsupported {
+        name: String,
+    }
 }
 
 /// Expands the given statement into instructions
@@ -58,6 +67,7 @@ pub fn expand(
             }
             Ok(())
         },
+        Statement::Input {name, slice} => read_into_name(instructions, mem, name, slice),
         Statement::Declaration {name, slice, expr} => declare(instructions, mem, name, slice, expr),
     }
 }
@@ -111,6 +121,69 @@ fn write_string_literal(instructions: &mut Instructions, bytes: &[u8]) {
     instructions.increment_relative(last_char, 0);
 }
 
+fn read_into_name(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    name: String,
+    slice: Option<Slice>,
+) -> Result<(), Error> {
+    if mem.is_declared(&name) {
+        read_into_existing_name(instructions, mem, name, slice)
+    }
+    else {
+        read_into_new_name(instructions, mem, name, slice)
+    }
+}
+
+fn read_into_existing_name(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    name: String,
+    slice: Option<Slice>,
+) -> Result<(), Error> {
+    if slice.is_some() {
+        return Err(Error::IllegalRedeclaration {name: name});
+    }
+
+    let (position, size) = mem.get_cell_contents(&name).unwrap();
+
+    instructions.move_right_by(position);
+    instructions.read_consecutive(size);
+    instructions.move_left_by(position);
+    Ok(())
+}
+
+fn read_into_new_name(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    name: String,
+    slice: Option<Slice>,
+) -> Result<(), Error> {
+    if slice.is_none() {
+        return Err(Error::UndeclaredIdentifier {name: name});
+    }
+    let slice = slice.unwrap();
+
+    let size = match slice {
+        Slice::SingleValue(s) => s,
+        Slice::Unspecified => {
+            return Err(Error::UnspecifiedInputSizeUnsupported {name: name});
+        },
+    };
+
+    if size == 0 {
+        return Err(Error::DeclaredZeroSize {
+            name: name,
+        });
+    }
+
+    let position = mem.declare(&name, size);
+    instructions.move_right_by(position);
+    instructions.read_consecutive(size);
+    instructions.move_left_by(position);
+    Ok(())
+}
+
 fn declare(
     instructions: &mut Instructions,
     mem: &mut MemoryLayout,
@@ -153,9 +226,6 @@ fn assignment(
             // Zero the cells first, then write the new value
             instructions.move_right_by(position);
             instructions.zero_cells(size);
-            instructions.move_left_by(position);
-
-            instructions.move_right_by(position);
             instructions.store_bytes(value.as_bytes());
             instructions.move_left_by(position);
             Ok(())

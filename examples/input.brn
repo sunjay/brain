@@ -14,3 +14,9 @@ out "b = " b "\n";
 
 // Error because we don't support dynamic length strings
 //in input[];
+
+// Error because you can't redeclare an existing name
+//in b[5];
+
+// Error because you aren't requesting any characters
+//in zero[0];

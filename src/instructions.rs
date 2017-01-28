@@ -146,7 +146,7 @@ impl Instructions {
         let write_next = [Instruction::Write, Instruction::Right];
         // by putting -1 here, we don't move to the right after writing n times
         self.0.extend(write_next.iter().cycle().take(n * write_next.len() - 1));
-        // Return back to the reference
+        // Return back to the starting position
         self.move_left_by(n - 1);
     }
 
@@ -161,6 +161,8 @@ impl Instructions {
         let read_next = [Instruction::Read, Instruction::Right];
         // by putting -1 here, we don't move to the right after reading n times
         self.0.extend(read_next.iter().cycle().take(n * read_next.len() - 1));
+        // Return back to the starting position
+        self.move_left_by(n - 1);
     }
 
     /// Add an instruction which will only jump forward to the matching
