@@ -145,6 +145,11 @@ fn assignment(
                 });
             }
 
+            // Zero the cells first, then write the new value
+            instructions.move_right_by(position);
+            instructions.zero_cells(size);
+            instructions.move_left_by(position);
+
             instructions.move_right_by(position);
             instructions.store_bytes(value.as_bytes());
             instructions.move_left_by(position);
@@ -166,6 +171,11 @@ fn assignment(
                     actual: source_size,
                 });
             }
+
+            // Zero the cells first, then write the new value
+            instructions.move_right_by(position);
+            instructions.zero_cells(size);
+            instructions.move_left_by(position);
 
             copy_cells(instructions, mem, source_position, position, size);
             Ok(())

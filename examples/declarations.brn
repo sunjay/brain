@@ -29,19 +29,19 @@ out c;
 d[3] = b;
 out "d = ";
 out d;
-out "\n";
+out " (should be abc)\n";
 
 out "b = ";
 out b;
-out "\n";
+out " (should be abc)\n";
 b = "dbd";
 out "b = ";
 out b;
-out "\n";
+out " (should be dbd)\n";
 b = d;
 out "b = ";
 out b;
-out "\n";
+out " (should be abc)\n";
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number

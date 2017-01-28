@@ -102,6 +102,25 @@ impl Instructions {
         self.0.extend(iter::repeat(Instruction::Decrement).take(n as usize));
     }
 
+    /// Adds instructions which set the cell at the current position to zero regardless of
+    /// its current value
+    pub fn zero(&mut self) {
+        self.jump_forward_if_zero();
+        self.decrement();
+        self.jump_backward_unless_zero();
+    }
+
+    /// Adds instructions which set the next n cells (including the current one) to zero
+    /// Example: zero_cells(3) will set the current cell and the next two to zero
+    pub fn zero_cells(&mut self, n: usize) {
+        for _ in 0..n {
+            self.zero();
+            self.move_right();
+        }
+
+        self.move_left_by(n);
+    }
+
     /// Stores the given bytes in each location starting at the current cell
     /// The pointer ends up at the cell immediately after the last character
     /// written
