@@ -1,194 +1,10 @@
-//! **THE MOST IMPORTANT RULE:** ALL OPERATIONS MUST RETURN TO THE CELL WHERE THEY STARTED.
-//! That means that if you move right by 10, you must move left by 10 at the end of your operation
-//! The extra movement instructions will be optimized away as needed
-//! This constraint exists because it makes writing code generation for brainfuck sane
-//! You don't have to know where the pointer currently is because you can always trust this reference
-//! This constraint does not need to hold *during* an operation. Only
-//! enforce it before and after. We just need a consistent reference between operations.
-//! That is all.
-
-use parser::{Statement, Slice, Expression};
+use parser::{Slice, Expression};
 use instructions::Instructions;
 use memory::MemoryLayout;
 
-#[derive(Debug, PartialEq, Clone)]
-pub enum Error {
-    // Illegal redeclaration of a name
-    IllegalRedeclaration {
-        name: String,
-    },
+use super::errors::Error;
 
-    // Name used before it was declared
-    UndeclaredIdentifier {
-        name: String,
-    },
-
-    // Tried to declare a zero size variable
-    DeclaredZeroSize {
-        name: String,
-    },
-
-    // Declaration contained a size, but it was invalid
-    DeclaredIncorrectSize {
-        name: String,
-        expected: usize,
-        actual: usize,
-    },
-
-    // The expression assigned to a variable `name` was the incorrect size
-    IncorrectSizedExpression {
-        name: String,
-        expected: usize,
-        actual: usize,
-    },
-
-    // Cannot assign a name to itself since that doesn't make any sense
-    SelfAssignment {
-        name: String,
-    },
-
-    // We do not support `in foo[]` since we do not have dynamic strings
-    UnspecifiedInputSizeUnsupported {
-        name: String,
-    }
-}
-
-/// Expands the given statement into instructions
-pub fn expand(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    stmt: Statement
-) -> Result<(), Error> {
-    match stmt {
-        Statement::Comment(_) => Ok(()),
-        Statement::Output(exprs) => {
-            for expr in exprs {
-                output_expr(instructions, mem, expr)?;
-            }
-            Ok(())
-        },
-        Statement::Input {name, slice} => read_into_name(instructions, mem, name, slice),
-        Statement::Declaration {name, slice, expr} => declare(instructions, mem, name, slice, expr),
-        Statement::WhileLoop {condition, body} => {
-            println!("{:?}", (condition, body));
-            Ok(())
-        },
-    }
-}
-
-fn output_expr(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    expr: Expression
-) -> Result<(), Error> {
-    match expr {
-        Expression::StringLiteral(text) => {
-            let cell = mem.next_available_cell();
-
-            instructions.move_right_by(cell);
-            write_string_literal(instructions, text.as_bytes());
-            instructions.move_left_by(cell);
-
-            Ok(())
-        },
-        Expression::Identifier(ident) => {
-            let (position, size) = mem.get_cell_contents(&ident).ok_or_else(|| {
-                Error::UndeclaredIdentifier {name: ident}
-            })?;
-
-            instructions.move_right_by(position);
-            instructions.write_consecutive(size);
-            instructions.move_left_by(position);
-
-            Ok(())
-        },
-    }
-}
-
-fn write_string_literal(instructions: &mut Instructions, bytes: &[u8]) {
-    // Writing string literals are special because you don't necessarily
-    // need to store the string literal in any location outside of what is necessary
-    // for the write. The memory is to be allocated briefly, then freed.
-    // Because of this, we don't split allocation and writing into separate steps.
-    // We keep this special routine specifically designed to write string literals
-
-    let mut last_char: u8 = 0;
-    for ch in bytes {
-        let ch = *ch;
-        instructions.increment_relative(last_char, ch);
-        instructions.write();
-
-        last_char = ch;
-    }
-
-    // always reset this cell because we don't need it anymore
-    instructions.increment_relative(last_char, 0);
-}
-
-fn read_into_name(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    name: String,
-    slice: Option<Slice>,
-) -> Result<(), Error> {
-    if mem.is_declared(&name) {
-        read_into_existing_name(instructions, mem, name, slice)
-    }
-    else {
-        read_into_new_name(instructions, mem, name, slice)
-    }
-}
-
-fn read_into_existing_name(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    name: String,
-    slice: Option<Slice>,
-) -> Result<(), Error> {
-    if slice.is_some() {
-        return Err(Error::IllegalRedeclaration {name: name});
-    }
-
-    let (position, size) = mem.get_cell_contents(&name).unwrap();
-
-    instructions.move_right_by(position);
-    instructions.read_consecutive(size);
-    instructions.move_left_by(position);
-    Ok(())
-}
-
-fn read_into_new_name(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    name: String,
-    slice: Option<Slice>,
-) -> Result<(), Error> {
-    if slice.is_none() {
-        return Err(Error::UndeclaredIdentifier {name: name});
-    }
-    let slice = slice.unwrap();
-
-    let size = match slice {
-        Slice::SingleValue(s) => s,
-        Slice::Unspecified => {
-            return Err(Error::UnspecifiedInputSizeUnsupported {name: name});
-        },
-    };
-
-    if size == 0 {
-        return Err(Error::DeclaredZeroSize {
-            name: name,
-        });
-    }
-
-    let position = mem.declare(&name, size);
-    instructions.move_right_by(position);
-    instructions.read_consecutive(size);
-    instructions.move_left_by(position);
-    Ok(())
-}
-
-fn declare(
+pub fn declare(
     instructions: &mut Instructions,
     mem: &mut MemoryLayout,
     name: String,
@@ -196,7 +12,7 @@ fn declare(
     expr: Expression
 ) -> Result<(), Error> {
     if mem.is_declared(&name) {
-        assignment(instructions, mem, name, slice, expr)
+        assign_previously_declarated(instructions, mem, name, slice, expr)
     }
     else {
         declare_undeclared(instructions, mem, name, slice, expr)
@@ -204,7 +20,7 @@ fn declare(
 }
 
 /// Assigns a new value to a previously declared identifier
-fn assignment(
+fn assign_previously_declarated(
     instructions: &mut Instructions,
     mem: &mut MemoryLayout,
     name: String,
