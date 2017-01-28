@@ -4,11 +4,8 @@ a[] = "Hello, world\n";
 out a;
 // error if rhs is not the length declared on the left
 b[3] = "abc";
-out "a: ";
-out a;
-out "b: ";
-out b;
-out "\n";
+out "a: " a;
+out "b: " b "\n";
 
 // invalid because different sizes (addressed in #3)
 //a = b;
@@ -27,21 +24,13 @@ out c;
 
 // Explicitly declaring the size here even though its a copy
 d[3] = b;
-out "d = ";
-out d;
-out " (should be abc)\n";
+out "d = " d " (should be abc)\n";
 
-out "b = ";
-out b;
-out " (should be abc)\n";
+out "b = " b " (should be abc)\n";
 b = "dbd";
-out "b = ";
-out b;
-out " (should be dbd)\n";
+out "b = " b " (should be dbd)\n";
 b = d;
-out "b = ";
-out b;
-out " (should be abc)\n";
+out "b = " b " (should be abc)\n";
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number

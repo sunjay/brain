@@ -40,7 +40,7 @@ impl FromStr for Program {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Comment(String),
-    Output(Expression),
+    Output(Vec<Expression>),
     Declaration {
         name: String,
         slice: Option<Slice>,
@@ -73,7 +73,7 @@ named!(parse_all_statements< Vec<Statement> >, complete!(do_parse!(
 
 named!(statement<Statement>, ws!(alt!(
     comment => {|content: &str| Statement::Comment(content.to_owned())} |
-    output => {|expr: Expression| Statement::Output(expr)} |
+    outputs => {|exprs: Vec<Expression>| Statement::Output(exprs)} |
     declaration => {|(name, slice, expr): (String, Option<Slice>, Expression)| {
         Statement::Declaration {name: name, slice: slice, expr: expr}
     }}
@@ -103,10 +103,10 @@ named!(block_comment<&str>,
     )
 );
 
-named!(output<Expression>,
+named!(outputs< Vec<Expression> >,
     do_parse!(
         tag!(OUTPUT_KEYWORD) >>
-        expr: expression >>
+        expr: many1!(expression) >>
         tag!(STATEMENT_TERMINATOR) >>
         (expr)
     )

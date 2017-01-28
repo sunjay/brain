@@ -52,7 +52,12 @@ pub fn expand(
 ) -> Result<(), Error> {
     match stmt {
         Statement::Comment(_) => Ok(()),
-        Statement::Output(expr) => output_expr(instructions, mem, expr),
+        Statement::Output(exprs) => {
+            for expr in exprs {
+                output_expr(instructions, mem, expr)?;
+            }
+            Ok(())
+        },
         Statement::Declaration {name, slice, expr} => declare(instructions, mem, name, slice, expr),
     }
 }
