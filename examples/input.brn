@@ -1,0 +1,16 @@
+// input requires explicit sizing
+// always reads exactly this many characters or panics if EOF is reached before then
+// if this many characters aren't available yet, it waits for you to send that many
+in b[5];
+out "b = " b "\n";
+
+c[1] = "c";
+in c;
+out "c = " c "\n";
+
+// You can reuse allocated space again
+in b;
+out "b = " b "\n";
+
+// Error because we don't support dynamic length strings
+//in input[];
