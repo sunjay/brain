@@ -46,7 +46,7 @@ fn remove_opposites(instructions: &mut Instructions) {
                 i -= 1;
             },
 
-            (JumpForwardIfZero, JumpBackwardUnlessZero) | (JumpBackwardUnlessZero, JumpForwardIfZero) => {
+            (JumpForwardIfZero, JumpBackwardUnlessZero) => {
                 instructions.remove(i);
                 instructions.remove(i - 1);
                 i -= 1;
