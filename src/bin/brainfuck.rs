@@ -115,9 +115,11 @@ fn interpret(program: Vec<char>, debug: bool, delay: u64) {
             ',' => {
                 let chr = io::stdin().bytes().next();
                 if chr.is_none() {
-                    panic!("EOF while attempting to read character");
+                    buffer[p] = 0;
                 }
-                buffer[p] = chr.unwrap().expect("Could not read input");
+                else {
+                    buffer[p] = chr.unwrap().expect("Could not read input");
+                }
             },
             '[' => {
                 if buffer[p] == 0 {
