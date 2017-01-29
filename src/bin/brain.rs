@@ -68,7 +68,8 @@ fn main() {
         exit_with_error!("Could not create target file: {}", e);
     });
     output_file.write_all(generated_code.as_bytes()).and_then(|_| {
-        // Write a newline for asthetic reasons
+        // Write a newline because that's how a line is defined
+        // http://stackoverflow.com/a/729795/551904
         output_file.write(&['\n' as u8])
     }).unwrap_or_else(|e| {
         exit_with_error!("Could not write target file: {}", e);
