@@ -1,6 +1,6 @@
 use std::str::{self, FromStr};
 
-use nom::{self, is_alphabetic, is_digit, digit};
+use nom::{is_alphabetic, is_digit, digit, Err};
 
 const STRING_BOUNDARY: &'static str = "\"";
 const STATEMENT_TERMINATOR: &'static str = ";";
@@ -31,14 +31,27 @@ impl IntoIterator for Program {
 }
 
 impl FromStr for Program {
-    type Err = nom::Err<Vec<u8>>;
+    type Err = Err<String>;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         parse_all_statements(input.as_bytes()).to_result().map(|statements| {
             Program(statements)
-        }).map_err(|e| {
-            //TODO: Need to figure out how to turn nom::Err<&[u8]> into nom::Err<Vec<u8>>
-            println!("{:?}", e);
-            unimplemented!();
+        }).map_err(|e| match e {
+            Err::Code(kind) => {
+                println!("Code({:?})", kind);
+                unimplemented!();
+            },
+            Err::Node(kind, _) => {
+                println!("Node({:?}, ..)", kind);
+                unimplemented!();
+            },
+            Err::Position(kind, input) => {
+                println!("Position({:?}, {:?})", kind, str::from_utf8(input));
+                Err::Position(kind, str::from_utf8(input).unwrap().to_string())
+            },
+            Err::NodePosition(kind, input, _) => {
+                println!("NodePosition({:?}, {:?}, ..)", kind, str::from_utf8(input));
+                unimplemented!();
+            }
         })
     }
 }
