@@ -34,19 +34,8 @@ fn remove_opposites(instructions: &mut Instructions) {
 
         // Cancel out opposites
         match (prev, current) {
-            (Left, Right) | (Right, Left) => {
-                instructions.remove(i);
-                instructions.remove(i - 1);
-                i -= 1;
-            },
-
+            (Left, Right) | (Right, Left) |
             (Increment, Decrement) | (Decrement, Increment) => {
-                instructions.remove(i);
-                instructions.remove(i - 1);
-                i -= 1;
-            },
-
-            (JumpForwardIfZero, JumpBackwardUnlessZero) => {
                 instructions.remove(i);
                 instructions.remove(i - 1);
                 i -= 1;
