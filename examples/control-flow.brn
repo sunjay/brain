@@ -1,0 +1,5 @@
+in b[1];
+if b {
+  out b "\n";
+}
+out "Done.\n";
