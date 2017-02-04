@@ -40,14 +40,18 @@ pub fn loop_condition(
             }
 
             read_input(instructions, mem, name.clone(), slice)?;
-            let (_, size) = mem.get_cell_contents(name).expect("read_input didn't declare name");
+            let (position, size) = mem.get_cell_contents(name).expect("read_input didn't declare name");
+            // Make sure we're at the right cell for the result of the condition
+            instructions.move_right_by(position);
             size
         },
         &WhileCondition::Expression(Expression::StringLiteral(_)) => {
             return Err(Error::LoopStringLiteralUnsupported {});
         },
         &WhileCondition::Expression(Expression::Identifier(ref name)) => {
-            let (_, size) = mem.get_cell_contents(name).ok_or_else(|| Error::UndeclaredIdentifier {name: name.clone()})?;
+            let (position, size) = mem.get_cell_contents(name).ok_or_else(|| Error::UndeclaredIdentifier {name: name.clone()})?;
+            // Make sure we're at the right cell for the result of the condition
+            instructions.move_right_by(position);
             size
         },
     };
