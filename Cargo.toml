@@ -1,6 +1,6 @@
 [package]
 name = "brain"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
 description = "Compiler for the brain programming language. Compiles brain into optimized brainfuck code. Also includes a brainfuck interpreter."
 repository = "https://github.com/sunjay/brain"
