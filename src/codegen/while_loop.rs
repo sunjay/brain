@@ -12,15 +12,23 @@ pub fn while_loop(
     condition: WhileCondition,
     body: Vec<Statement>,
 ) -> Result<(), Error> {
-    loop_condition(instructions, mem, &condition)?;
+    let cond_cell = loop_condition(instructions, mem, &condition)?;
 
+    // Make sure we're at the right cell for the result of the condition
+    instructions.move_right_by(cond_cell);
     instructions.jump_forward_if_zero();
+    instructions.move_left_by(cond_cell);
 
-    loop_body(instructions, mem, body)?;
+    for stmt in body {
+        expand(instructions, mem, stmt)?;
+    }
 
-    loop_condition(instructions, mem, &condition)?;
+    let cond_cell = loop_condition(instructions, mem, &condition)?;
 
+    // Make sure we're at the right cell for the result of the condition
+    instructions.move_right_by(cond_cell);
     instructions.jump_backward_unless_zero();
+    instructions.move_left_by(cond_cell);
 
     Ok(())
 }
@@ -29,8 +37,8 @@ pub fn loop_condition(
     instructions: &mut Instructions,
     mem: &mut MemoryLayout,
     condition: &WhileCondition,
-) -> Result<(), Error> {
-    let size = match condition {
+) -> Result<usize, Error> {
+    let (position, size) = match condition {
         &WhileCondition::Input {ref name, slice} => {
             // We only need to undeclare if we did the declaration in the loop condition
             if slice.is_some() {
@@ -40,22 +48,20 @@ pub fn loop_condition(
             }
 
             read_input(instructions, mem, name.clone(), slice)?;
-            let (position, size) = mem.get_cell_contents(name).expect("read_input didn't declare name");
-            // Make sure we're at the right cell for the result of the condition
-            instructions.move_right_by(position);
-            size
+            mem.get_cell_contents(name).expect("read_input didn't declare name")
         },
+
         &WhileCondition::Expression(Expression::StringLiteral(_)) => {
             return Err(Error::LoopStringLiteralUnsupported {});
         },
+
         &WhileCondition::Expression(Expression::Identifier(ref name)) => {
-            let (position, size) = mem.get_cell_contents(name).ok_or_else(|| Error::UndeclaredIdentifier {name: name.clone()})?;
-            // Make sure we're at the right cell for the result of the condition
-            instructions.move_right_by(position);
-            size
+            mem.get_cell_contents(name).ok_or_else(|| Error::UndeclaredIdentifier {name: name.clone()})?
         },
     };
 
+    // We check for this error here because it doesn't really matter whether we do it before
+    // any code generation or not
     if size != 1 {
         return Err(Error::ConditionSizeInvalid {
             expected: 1,
@@ -63,17 +69,5 @@ pub fn loop_condition(
         });
     }
 
-    Ok(())
-}
-
-fn loop_body(
-    instructions: &mut Instructions,
-    mem: &mut MemoryLayout,
-    body: Vec<Statement>,
-) -> Result<(), Error> {
-    for stmt in body {
-        expand(instructions, mem, stmt)?;
-    }
-
-    Ok(())
+    Ok(position)
 }

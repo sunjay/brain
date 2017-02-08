@@ -1,0 +1,8 @@
+prompt[] = "Enter something, or don't enter anything:\n";
+out prompt;
+
+in b[1];
+if b {
+  out b "\n";
+}
+out "Done.\n";

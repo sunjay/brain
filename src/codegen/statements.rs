@@ -6,6 +6,7 @@ use super::errors::Error;
 use super::output::output_expr;
 use super::input::read_input;
 use super::declarations::declare;
+use super::if_condition::if_condition;
 use super::while_loop::while_loop;
 
 /// Expands the given statement into instructions
@@ -24,6 +25,7 @@ pub fn expand(
         },
         Statement::Input {name, slice} => read_input(instructions, mem, name, slice),
         Statement::Declaration {name, slice, expr} => declare(instructions, mem, name, slice, expr),
+        Statement::IfCondition {condition, body} => if_condition(instructions, mem, condition, body),
         Statement::WhileLoop {condition, body} => while_loop(instructions, mem, condition, body),
     }
 }

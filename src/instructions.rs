@@ -177,6 +177,8 @@ impl Instructions {
         self.0.push(Instruction::JumpBackwardUnlessZero);
     }
 
+    /// Removes the cell at the given index
+    // TODO: Remove me in favor of pure optimization functions
     pub fn remove(&mut self, index: usize) -> Instruction {
         self.0.remove(index)
     }

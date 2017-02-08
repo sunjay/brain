@@ -27,6 +27,7 @@ impl MemoryLayout {
         self.named_cells.get(name).map(|c| (c.position, c.size))
     }
 
+    /// Returns whether a given name has been declared yet
     pub fn is_declared(&self, name: &str) -> bool {
         self.named_cells.contains_key(name)
     }
@@ -34,6 +35,18 @@ impl MemoryLayout {
     /// Declares a variable with the given name and size
     /// Returns the position of that variable in the memory
     pub fn declare(&mut self, name: &str, size: usize) -> usize {
+        let position = self.allocate(size);
+
+        self.named_cells.insert(name.to_owned(), Cell {
+            position: position,
+            size: size,
+        });
+
+        position
+    }
+
+    /// Allocates a set of consecutive cells of the given size
+    pub fn allocate(&mut self, size: usize) -> usize {
         let mut current = 0;
         'search: loop {
             self.ensure_available_cells(current + size);
@@ -54,11 +67,6 @@ impl MemoryLayout {
             }
         }
 
-        self.named_cells.insert(name.to_owned(), Cell {
-            position: current,
-            size: size,
-        });
-
         current
     }
 
@@ -78,7 +86,7 @@ impl MemoryLayout {
         })
     }
 
-    fn free(&mut self, start: usize, size: usize) {
+    pub fn free(&mut self, start: usize, size: usize) {
         for i in 0..size {
             self.available_cells[start + i] = true;
         }

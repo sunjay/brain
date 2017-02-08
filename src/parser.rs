@@ -17,6 +17,7 @@ const END_BLOCK: &'static str = "}";
 const OUTPUT_KEYWORD: &'static str = "out";
 const INPUT_KEYWORD: &'static str = "in";
 const WHILE_KEYWORD: &'static str = "while";
+const IF_KEYWORD: &'static str = "if";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
@@ -72,7 +73,11 @@ pub enum Statement {
     WhileLoop {
         condition: WhileCondition,
         body: Vec<Statement>,
-    }
+    },
+    IfCondition {
+        condition: Expression,
+        body: Vec<Statement>,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -112,6 +117,9 @@ named!(statement<Statement>, ws!(alt!(
     }} |
     declaration => {|(name, slice, expr): (String, Option<Slice>, Expression)| {
         Statement::Declaration {name: name, slice: slice, expr: expr}
+    }} |
+    if_condition => {|(cond, body): (Expression, Vec<Statement>)| {
+        Statement::IfCondition {condition: cond, body: body}
     }} |
     while_loop => {|(cond, body): (WhileCondition, Vec<Statement>)| {
         Statement::WhileLoop {condition: cond, body: body}
@@ -167,6 +175,15 @@ named!(declaration<(String, Option<Slice>, Expression)>,
         expr: expression >>
         tag!(STATEMENT_TERMINATOR) >>
         (declaration.0, declaration.1, expr)
+    ))
+);
+
+named!(if_condition<(Expression, Vec<Statement>)>,
+    ws!(do_parse!(
+        tag!(IF_KEYWORD) >>
+        cond: expression >>
+        statements: block_statements >>
+        (cond, statements)
     ))
 );
 
