@@ -180,7 +180,7 @@ overwriting the cells from the beginning.
 Moves the pointer to the previous cell (to the left of the current cell).
 
 This instruction is almost identical in implementation to the move right
-instruction. See the description of the [Move Right](#move-right)
+instruction. See the description of the [Move Right](#move-right-)
 instruction for more details.
 
 ## Increment (+)
@@ -265,7 +265,7 @@ It is important to jump to the *matching* `[` instruction so that these jumps
 can be nested when necessary. If a matching `[` is not found, the program
 should abort with an error message.
 
-See the [Jump If Zero](#jump-if-zero) section for more information and an
+See the [Jump If Zero](#jump-if-zero-) section for more information and an
 example.
 
 ## Other Characters
