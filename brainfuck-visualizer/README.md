@@ -1,5 +1,8 @@
 # brainfuck-visualizer
 
+Brainfuck Visualizer specialized for use with the brain programming language.
+Requires the brainfuck-brain interpreter to be installed.
+
 ## Usage
 
 You may need to install [Yarn](https://yarnpkg.com/).
