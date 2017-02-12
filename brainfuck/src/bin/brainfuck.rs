@@ -34,7 +34,7 @@ fn main() {
         .version(crate_version!())
         .version_short("v")
         .author(crate_authors!())
-        .about("Brainfuck interpreter companion to the brain language compiler")
+        .about(crate_description!())
         .arg(Arg::with_name("input-file")
             .help("The brainfuck file to process. Should contain brainfuck instructions")
             .value_name("file")

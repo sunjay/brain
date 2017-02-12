@@ -1,0 +1,17 @@
+[package]
+name = "brain-brainfuck"
+version = "0.1.2"
+authors = ["Sunjay Varma <varma.sunjay@gmail.com>"]
+description = "Brainfuck interpreter companion to the brain programming language"
+repository = "https://github.com/brain-lang/brainfuck"
+readme = "README.md"
+keywords = ["brain", "brainfuck", "compiler", "interpreter", "optimizer"]
+# crates.io/category_slugs
+categories = ["command-line-interface"]
+license = "MIT"
+
+[dependencies]
+clap = "^2.0"
+
+[[bin]]
+name = "brainfuck"
