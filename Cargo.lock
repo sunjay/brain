@@ -1,8 +1,9 @@
 [root]
-name = "brain-brainfuck"
+name = "brain"
 version = "0.1.2"
 dependencies = [
  "clap 2.20.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nom 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -14,14 +15,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "bitflags"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "brain"
-version = "0.1.2"
-dependencies = [
- "clap 2.20.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "nom 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "clap"
