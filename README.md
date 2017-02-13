@@ -112,12 +112,14 @@ Then in your terminal run:
 
 ```
 cargo install brain
+cargo install brain-brainfuck
 ```
 
 If you are upgrading from a previous version, run:
 
 ```
 cargo install brain --force
+cargo install brain-brainfuck --force
 ```
 
 ## Usage
@@ -153,19 +155,6 @@ cargo run --bin brain -- --help
 **If the brain compiler seems to be taking too long or "hanging", try running
 `cargo build` first to see if the rust compiler is just taking too long for
 some reason.**
-
-### brainfuck interpreter
-
-The brain compiler only officially targets this brainfuck interpreter. You may
-experience varying results with other brainfuck interpreters/compilers. There
-really isn't a definitive spec on how brainfuck should behave so it is just
-easier to have a static compilation target that won't vary in how it behaves.
-
-To run brainfuck programs:
-```
-cargo run --bin brainfuck -- filename
-```
-where `filename` is the brainfuck program you want to run
 
 ## Examples
 
