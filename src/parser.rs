@@ -104,8 +104,6 @@ pub enum Expression {
 
 impl_rdp! {
     grammar! {
-        // All rules should be silent rules (_{}) unless they can be in tokens
-        // That is, we only want the smallest unit tokens to not be silent
         program = _{ statement* ~ eoi }
 
         statement = _{ comment | declaration | while_loop | (expr ~ ";") }
@@ -114,10 +112,7 @@ impl_rdp! {
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-        declaration = _{ declaration_lhs ~ declaration_rhs? ~ [";"] }
-
-        declaration_lhs = _{ ["let"] ~ identifier ~ [":"] ~ type }
-        declaration_rhs = _{ ["="] ~ expr }
+        declaration = _{ ["let"] ~ identifier ~ [":"] ~ type ~ (["="] ~ expr)? ~ [";"] }
 
         type = _{ identifier | array_type }
         array_type = _{ ["["] ~ identifier ~ [";"] ~ array_size ~ ["]"] }
@@ -182,6 +177,11 @@ impl_rdp! {
             ["out"] | ["pub"] | ["raw"] | ["read"] | ["ref"] | ["return"] | ["self"] | ["static"] |
             ["struct"] | ["super"] | ["trait"] | ["true"] | ["typeof"] | ["type"] | ["unsafe"] |
             ["use"] | ["where"] | ["while"] | ["yield"]
+        }
+    }
+
+    process! {
+        program(&self) -> Program {
         }
     }
 }
