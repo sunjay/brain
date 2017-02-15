@@ -1,0 +1,50 @@
+statement := comment | declaration | loop | expr
+
+comment := line_comment | block_comment
+line_comment := "//" any "\n"
+block_comment := "/*" any "*/"
+
+declaration := declaration_lhs declaration_rhs? ";"
+
+declaration_lhs := "let" identifier ":" type
+declaration_rhs := "=" expr
+
+type := identifier | array_type
+array_type := "[" identifier ";" array_size "]"
+array_size := "_" | positive_integer
+
+loop := "while" expr block
+
+expr := conditional | string_literal | number | range | comparison | block | group | func_call | method_calls
+
+conditional := "if" expr block ("else" conditional)? ("else" block)?
+
+block := "{" expr* "}"
+group := "(" expr ")"
+range := number ("," number)? ".." number
+
+func_call := identifier func_args
+
+method_calls := identifier method_call*
+method_call := "." identifier func_args
+
+// This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
+func_args := "(" (func_arg ",")* func_arg? ")"
+func_arg := expr
+
+string_literal := '"' literal_char* '"'
+literal_char := escape_sequence | (!(['"'] | ["\\"]) any)+
+escape_sequence := "\\" | '\"' | "\'" | "\n" | "\r" | "\t" | "\0" | "\f" | "\v" | "\e"
+
+identifier := (alpha | "_") (alphanumeric | "_")*
+alpha := ['a'..'z']
+alphanumeric := alpha | ['0'..'9']
+
+comparison := expr comparison_op expr
+comparison_op := "==" | ">=" | ">" | "<" | "<="
+
+number := "-"? positive_integer
+positive_integer := "0" | (nonzero digit*)
+// Allow "_" in numbers for grouping: 1_000_000 == 1000000
+digit := '0' | nonzero | "_"
+nonzero := ['1'..'9']
