@@ -12,10 +12,7 @@ license = "MIT"
 
 [dependencies]
 clap = "^2.0"
-
-[dependencies.nom]
-version = "^2.0"
-features = ["verbose-errors"]
+pest = "0.4"
 
 [[bin]]
 name = "brain"

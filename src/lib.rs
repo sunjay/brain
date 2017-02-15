@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate nom;
+extern crate pest;
 
 mod parser;
 mod instruction;

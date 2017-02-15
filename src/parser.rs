@@ -102,228 +102,86 @@ pub enum Expression {
     Identifier(String),
 }
 
-named!(parse_all_statements< Vec<Statement> >, complete!(do_parse!(
-    statements: many0!(statement) >>
-    // Ensures that we reach EOF after all the statements
-    eof!() >>
-    (statements)
-)));
+impl_rdp! {
+    grammar! {
+        // All rules should be silent rules (_{}) unless they can be in tokens
+        // That is, we only want the smallest unit tokens to not be silent
+        program = _{ statement* ~ eoi }
 
-named!(statement<Statement>, ws!(alt!(
-    comment => {|content: &str| Statement::Comment(content.to_owned())} |
-    outputs => {|exprs: Vec<Expression>| Statement::Output(exprs)} |
-    input => {|(name, slice): (String, Option<Slice>)| {
-        Statement::Input {name: name, slice: slice}
-    }} |
-    declaration => {|(name, slice, expr): (String, Option<Slice>, Expression)| {
-        Statement::Declaration {name: name, slice: slice, expr: expr}
-    }} |
-    if_condition => {|(cond, body): (Expression, Vec<Statement>)| {
-        Statement::IfCondition {condition: cond, body: body}
-    }} |
-    while_loop => {|(cond, body): (WhileCondition, Vec<Statement>)| {
-        Statement::WhileLoop {condition: cond, body: body}
-    }}
-)));
+        statement = _{ comment | declaration | while_loop | (expr ~ ";") }
 
-named!(comment<&str>, alt!(line_comment | block_comment));
+        comment = _{ line_comment | block_comment }
+        line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
+        block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-named!(line_comment<&str>,
-    map_res!(
-        do_parse!(
-            tag!(LINE_COMMENT) >>
-            content: take_until_and_consume!("\n") >>
-            (content)
-        ),
-        |s: &'a [u8]| str::from_utf8(s)
-    )
-);
+        declaration = _{ declaration_lhs ~ declaration_rhs? ~ [";"] }
 
-named!(block_comment<&str>,
-    map_res!(
-        delimited!(
-            tag!(START_BLOCK_COMMENT),
-            take_until!(END_BLOCK_COMMENT),
-            tag!(END_BLOCK_COMMENT)
-        ),
-        |s: &'a [u8]| str::from_utf8(s)
-    )
-);
+        declaration_lhs = _{ ["let"] ~ identifier ~ [":"] ~ type }
+        declaration_rhs = _{ ["="] ~ expr }
 
-named!(outputs< Vec<Expression> >,
-    ws!(do_parse!(
-        tag!(OUTPUT_KEYWORD) >>
-        expr: many1!(expression) >>
-        tag!(STATEMENT_TERMINATOR) >>
-        (expr)
-    ))
-);
+        type = _{ identifier | array_type }
+        array_type = _{ ["["] ~ identifier ~ [";"] ~ array_size ~ ["]"] }
+        array_size = _{ ["_"] | positive_integer }
 
-named!(input<(String, Option<Slice>)>,
-    ws!(do_parse!(
-        tag!(INPUT_KEYWORD) >>
-        declaration: type_declaration >>
-        tag!(STATEMENT_TERMINATOR) >>
-        (declaration.0, declaration.1)
-    ))
-);
+        while_loop = _{ ["while"] ~ expr ~ block }
 
-named!(declaration<(String, Option<Slice>, Expression)>,
-    ws!(do_parse!(
-        declaration: type_declaration >>
-        tag!(ASSIGNMENT_OPERATOR) >>
-        expr: expression >>
-        tag!(STATEMENT_TERMINATOR) >>
-        (declaration.0, declaration.1, expr)
-    ))
-);
+        expr = _{
+            { conditional | string_literal | number | constant | range | block | group | func_call | method_calls }
 
-named!(if_condition<(Expression, Vec<Statement>)>,
-    ws!(do_parse!(
-        tag!(IF_KEYWORD) >>
-        cond: expression >>
-        statements: block_statements >>
-        (cond, statements)
-    ))
-);
-
-named!(while_loop<(WhileCondition, Vec<Statement>)>,
-    ws!(do_parse!(
-        tag!(WHILE_KEYWORD) >>
-        cond: while_condition >>
-        statements: block_statements >>
-        (cond, statements)
-    ))
-);
-
-named!(while_condition<WhileCondition>,
-    alt_complete!(
-        map!(ws!(do_parse!(
-            tag!(INPUT_KEYWORD) >>
-            declaration: type_declaration >>
-            (declaration.0, declaration.1)
-        )), |(name, slice): (String, Option<Slice>)| WhileCondition::Input {name: name, slice: slice}) |
-        map!(expression, |expr: Expression| WhileCondition::Expression(expr))
-    )
-);
-
-named!(block_statements< Vec<Statement> >,
-    ws!(do_parse!(
-        tag!(BEGIN_BLOCK) >>
-        statements: many0!(statement) >>
-        tag!(END_BLOCK) >>
-        (statements)
-    ))
-);
-
-named!(type_declaration<(String, Option<Slice>)>,
-    do_parse!(
-        declaration: identifier_slice >>
-        (declaration.0, declaration.1)
-    )
-);
-
-named!(identifier_slice<(String, Option<Slice>)>,
-    ws!(do_parse!(
-        name: identifier >>
-        slice: opt!(slice_variants) >>
-        (name, slice)
-    ))
-);
-
-named!(slice_variants<Slice>,
-    alt_complete!(
-        do_parse!(
-            tag!(BEGIN_SLICE) >>
-            tag!(END_SLICE) >>
-            (Slice::Unspecified)
-        ) |
-        delimited!(
-            tag!(BEGIN_SLICE),
-            slice_single_value,
-            tag!(END_SLICE)
-        )
-    )
-);
-
-named!(slice_single_value<Slice>,
-    map!(ws!(index_value), |value: usize| Slice::SingleValue(value))
-);
-
-named!(index_value<usize>,
-    map_res!(digit_s, |n: &str| n.parse())
-);
-
-named!(digit_s<&str>,
-    map_res!(digit, |n: &'a [u8]| str::from_utf8(n))
-);
-
-named!(expression<Expression>,
-    ws!(alt!(
-        expr_string_literal => {|text: String| Expression::StringLiteral(text)} |
-        identifier => {|ident: String| Expression::Identifier(ident)}
-    ))
-);
-
-named!(identifier<String>,
-    map_res!(
-        do_parse!(
-            // must start with a non-digit
-            start: take_while!(is_identifier_start) >>
-            rest: take_while!(is_identifier_char) >>
-            (start, rest)
-        ),
-        |(start, rest): (&[u8], &[u8])| {
-            str::from_utf8(start).and_then(|start| {
-                str::from_utf8(rest).map(|rest| {
-                    format!("{}{}", start, rest)
-                })
-            })
+            // Ordered from lowest precedence to highest precedence
+            bool_or = {< ["||"] }
+            bool_and = {< ["&&"] }
+            // NOTE: Order matters! { ["<"] | ["<="] } will never match "<="
+            comparison = { ["=="] | ["!="] | [">="] | ["<="] | [">"] | ["<"] }
+            concatenation = {< ["++"] }
+            term = { ["+"] | ["-"] }
+            factor = { ["/"] | ["*"] | ["%"] }
+            pow = { ["**"] }
         }
-    )
-);
 
-named!(expr_string_literal<String>,
-    map_res!(
-        delimited!(
-            tag!(STRING_BOUNDARY),
-            string_text,
-            tag!(STRING_BOUNDARY)
-        ),
-        |s: Vec<u8>| String::from_utf8(s)
-    )
-);
+        conditional = _{ ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
 
-named!(string_text<Vec<u8>>,
-    fold_many0!(
-        unescaped_string_text,
-        Vec::new(),
-        |mut acc: Vec<u8>, bytes: &[u8]| {
-            acc.extend(bytes);
-            acc
+        // This allows {} and {expr; expr} and {expr; expr;} and {expr}
+        block = _{ ["{"] ~ (expr ~ [";"])* ~ expr? ~ ["}"] }
+        group = _{ ["("] ~ expr ~ [")"] }
+        range = _{ number ~ ([","] ~ number)? ~ [".."] ~ number }
+
+        func_call = _{ identifier ~ func_args }
+
+        method_calls = _{ identifier ~ method_call* }
+        method_call = _{ ["."] ~ identifier ~ func_args }
+
+        // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
+        func_args = _{ ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
+        func_arg = _{ expr }
+
+        string_literal = _{ ["\""] ~ literal_char* ~ ["\""] }
+        literal_char = _{ escape_sequence | any+ }
+        escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | "\\t" | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
+
+        identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
+        alpha = _{ ['a'..'z'] }
+        alphanumeric = _{ alpha | ['0'..'9'] }
+
+        number = @{ (["-"] | ["+"])? ~ positive_integer }
+        positive_integer = _{ ["0"] | (nonzero ~ digit*) }
+        // Allow "_" in numbers for grouping: 1_000_000 == 1000000
+        digit = _{ ["0"] | nonzero | ["_"] }
+        nonzero = _{ ['1'..'9'] }
+
+        constant = @{ ["true"] | ["false"] }
+
+        whitespace = { [" "] | ["\t"] | ["\u{000C}"] | ["\r"] | ["\n"] }
+        // NOTE: When changing this code, make sure you don't have a subset of a word before
+        // another word. For example: { ["type"] | ["typeof"] } will never match "typeof"
+        keyword = @{
+            ["abstract"] | ["as"] | ["become"] | ["break"] | ["byte"] | ["class"] | ["clear"] |
+            ["const"] | ["continue"] | ["do"] | ["else"] | ["enum"] | ["eval"] | ["export"] |
+            ["extern"] | ["false"] | ["final"] | ["fn"] | ["for"] | ["if"] | ["impl"] | ["import"] |
+            ["in"] | ["let"] | ["loop"] | ["match"] | ["mod"] | ["move"] | ["mut"] | ["of"] |
+            ["out"] | ["pub"] | ["raw"] | ["read"] | ["ref"] | ["return"] | ["self"] | ["static"] |
+            ["struct"] | ["super"] | ["trait"] | ["true"] | ["typeof"] | ["type"] | ["unsafe"] |
+            ["use"] | ["where"] | ["while"] | ["yield"]
         }
-    )
-);
-
-named!(unescaped_string_text<&[u8]>,
-    alt!(
-        // We need to take until \ so that the unescaping can work
-        // We also need to take until " so that we don't go past the string boundary
-        take_until_either!("\\\"") |
-        tag!("\\\\") => {|_| &b"\\"[..]} |
-        tag!("\\\"") => {|_| &b"\""[..]} |
-        tag!("\\\'") => {|_| &b"\'"[..]} |
-        tag!("\\n") => {|_| &b"\n"[..]} |
-        tag!("\\r") => {|_| &b"\r"[..]} |
-        tag!("\\t") => {|_| &b"\t"[..]} |
-        tag!("\\0") => {|_| &b"\0"[..]}
-    )
-);
-
-fn is_identifier_start(c: u8) -> bool {
-    is_alphabetic(c) || c == '_' as u8
-}
-
-fn is_identifier_char(c: u8) -> bool {
-    is_identifier_start(c) || is_digit(c)
+    }
 }
