@@ -1,6 +1,6 @@
 use std::str::{self, FromStr};
 
-use nom::{is_alphabetic, is_digit, digit, Err};
+use pest::prelude::*;
 
 const STRING_BOUNDARY: &'static str = "\"";
 const STATEMENT_TERMINATOR: &'static str = ";";
@@ -32,28 +32,15 @@ impl IntoIterator for Program {
 }
 
 impl FromStr for Program {
-    type Err = Err<String>;
+    type Err = String;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        parse_all_statements(input.as_bytes()).to_result().map(|statements| {
-            Program(statements)
-        }).map_err(|e| match e {
-            Err::Code(kind) => {
-                println!("Code({:?})", kind);
-                unimplemented!();
-            },
-            Err::Node(kind, _) => {
-                println!("Node({:?}, ..)", kind);
-                unimplemented!();
-            },
-            Err::Position(kind, input) => {
-                println!("Position({:?}, {:?})", kind, str::from_utf8(input));
-                Err::Position(kind, str::from_utf8(input).unwrap().to_string())
-            },
-            Err::NodePosition(kind, input, _) => {
-                println!("NodePosition({:?}, {:?}, ..)", kind, str::from_utf8(input));
-                unimplemented!();
-            }
-        })
+      let mut parser = Rdp::new(StringInput::new(input));
+
+      println!("{:?}", (parser.program(), parser.end()));
+      println!("{:#?}", parser.queue());
+      println!("{:?}", parser.stack());
+      println!("{:?}", parser.expected());
+      unimplemented!();
     }
 }
 
@@ -104,24 +91,24 @@ pub enum Expression {
 
 impl_rdp! {
     grammar! {
-        program = _{ statement* ~ eoi }
+        program = { statement* }
 
-        statement = _{ comment | declaration | while_loop | (expr ~ ";") }
+        statement = { comment | declaration | while_loop | (expr ~ [";"]) }
 
-        comment = _{ line_comment | block_comment }
+        comment = { line_comment | block_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-        declaration = _{ ["let"] ~ identifier ~ [":"] ~ type ~ (["="] ~ expr)? ~ [";"] }
+        declaration = { ["let"] ~ identifier ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ [";"] }
 
-        type = _{ identifier | array_type }
-        array_type = _{ ["["] ~ identifier ~ [";"] ~ array_size ~ ["]"] }
-        array_size = _{ ["_"] | positive_integer }
+        type_def = { identifier | array_type }
+        array_type = { ["["] ~ identifier ~ [";"] ~ array_size ~ ["]"] }
+        array_size = { ["_"] | positive_integer }
 
-        while_loop = _{ ["while"] ~ expr ~ block }
+        while_loop = { ["while"] ~ expr ~ block }
 
-        expr = _{
-            { conditional | string_literal | number | constant | range | block | group | func_call | method_calls }
+        expr = {
+            { block | group | method_calls | func_call | conditional | string_literal | range | number | constant }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -134,25 +121,25 @@ impl_rdp! {
             pow = { ["**"] }
         }
 
-        conditional = _{ ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
+        conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
 
         // This allows {} and {expr; expr} and {expr; expr;} and {expr}
-        block = _{ ["{"] ~ (expr ~ [";"])* ~ expr? ~ ["}"] }
-        group = _{ ["("] ~ expr ~ [")"] }
-        range = _{ number ~ ([","] ~ number)? ~ [".."] ~ number }
+        block = { ["{"] ~ (expr ~ [";"])* ~ expr? ~ ["}"] }
+        group = { ["("] ~ expr ~ [")"] }
+        range = { number ~ ([","] ~ number)? ~ [".."] ~ number }
 
-        func_call = _{ identifier ~ func_args }
+        func_call = { identifier ~ func_args }
 
-        method_calls = _{ identifier ~ method_call* }
-        method_call = _{ ["."] ~ identifier ~ func_args }
+        method_calls = { identifier ~ method_call* }
+        method_call = { ["."] ~ identifier ~ func_args }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
-        func_args = _{ ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
-        func_arg = _{ expr }
+        func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
+        func_arg = { expr }
 
-        string_literal = _{ ["\""] ~ literal_char* ~ ["\""] }
+        string_literal = { ["\""] ~ literal_char* ~ ["\""] }
         literal_char = _{ escape_sequence | any+ }
-        escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | "\\t" | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
+        escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
 
         identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
         alpha = _{ ['a'..'z'] }
@@ -166,7 +153,7 @@ impl_rdp! {
 
         constant = @{ ["true"] | ["false"] }
 
-        whitespace = { [" "] | ["\t"] | ["\u{000C}"] | ["\r"] | ["\n"] }
+        whitespace = _{ [" "] | ["\t"] | ["\u{000C}"] | ["\r"] | ["\n"] }
         // NOTE: When changing this code, make sure you don't have a subset of a word before
         // another word. For example: { ["type"] | ["typeof"] } will never match "typeof"
         keyword = @{
@@ -177,11 +164,6 @@ impl_rdp! {
             ["out"] | ["pub"] | ["raw"] | ["read"] | ["ref"] | ["return"] | ["self"] | ["static"] |
             ["struct"] | ["super"] | ["trait"] | ["true"] | ["typeof"] | ["type"] | ["unsafe"] |
             ["use"] | ["where"] | ["while"] | ["yield"]
-        }
-    }
-
-    process! {
-        program(&self) -> Program {
         }
     }
 }
