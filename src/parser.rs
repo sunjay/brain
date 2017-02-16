@@ -91,11 +91,11 @@ pub enum Expression {
 
 impl_rdp! {
     grammar! {
-        program = { statement* }
+        program = _{ statement* ~ eoi }
 
-        statement = { comment | declaration | while_loop | (expr ~ [";"]) }
+        statement = { declaration | while_loop | (expr ~ [";"]) | comment }
 
-        comment = { line_comment | block_comment }
+        comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
@@ -108,7 +108,7 @@ impl_rdp! {
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { block | group | method_calls | func_call | conditional | string_literal | range | number | constant }
+            { block | group | constant | method_calls | func_call | conditional | string_literal | range | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -138,11 +138,11 @@ impl_rdp! {
         func_arg = { expr }
 
         string_literal = { ["\""] ~ literal_char* ~ ["\""] }
-        literal_char = _{ escape_sequence | any+ }
+        literal_char = _{ escape_sequence | (!["\""] ~ any) }
         escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
 
         identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
-        alpha = _{ ['a'..'z'] }
+        alpha = _{ ['a'..'z'] | ['A'..'Z'] }
         alphanumeric = _{ alpha | ['0'..'9'] }
 
         number = @{ (["-"] | ["+"])? ~ positive_integer }

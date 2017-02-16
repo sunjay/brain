@@ -5,4 +5,4 @@
 // This beginner program is traditionally used to demonstrate
 // basic functionality by showing a simple message on the screen
 
-out "Hello, world!\n";
+stdout.writeln("Hello, world!");
