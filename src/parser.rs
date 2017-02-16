@@ -34,13 +34,16 @@ impl IntoIterator for Program {
 impl FromStr for Program {
     type Err = String;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-      let mut parser = Rdp::new(StringInput::new(input));
+        let mut parser = Rdp::new(StringInput::new(input));
 
-      println!("{:?}", (parser.program(), parser.end()));
-      println!("{:#?}", parser.queue());
-      println!("{:?}", parser.stack());
-      println!("{:?}", parser.expected());
-      unimplemented!();
+        println!("{:?}", (parser.program(), parser.end()));
+        println!("{:#?}", parser.queue());
+        println!("{:?}", parser.stack());
+        let (expected, pos) = parser.expected();
+        let (line, col) = parser.input().line_col(pos);
+        println!("Expected: {:?} at line {} col {}", expected, line, col);
+        println!("{:?}", parser.expected());
+        unimplemented!();
     }
 }
 
