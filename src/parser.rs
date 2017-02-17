@@ -95,12 +95,13 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
-        statement = _{ declaration | while_loop | for_loop | conditional | (expr ~ semi) | comment }
+        statement = _{ declaration | assignment | while_loop | for_loop | conditional | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
+        assignment = { identifier ~ ["="] ~ expr ~ semi}
         declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
         pattern = { identifier }
 
@@ -130,7 +131,7 @@ impl_rdp! {
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
         block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
         group = { ["("] ~ expr ~ [")"] }
-        range = { number ~ ([","] ~ number)? ~ [".."] ~ number }
+        range = { number ~ (comma ~ number)? ~ [".."] ~ number }
 
         func_call = { identifier ~ func_args }
 
@@ -138,7 +139,7 @@ impl_rdp! {
         prop_get_call = { ["."] ~ identifier ~ func_args? }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
-        func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
+        func_args = { ["("] ~ (func_arg ~ comma)* ~ func_arg? ~ [")"] }
         func_arg = { expr }
 
         string_literal = { ["\""] ~ literal_char* ~ ["\""] }
@@ -170,6 +171,9 @@ impl_rdp! {
             ["use"] | ["where"] | ["while"] | ["yield"]
         }
 
+        // These are separate rules because we can use the generated rules and tokens to provide
+        // better error messages
+        comma = { [","] }
         semi = { [";"] }
     }
 }
