@@ -113,7 +113,7 @@ impl_rdp! {
         for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
 
         expr = {
-            { block | group | constant | func_call | call_chain | conditional | string_literal | range | number }
+            { block | group | constant | func_call | call_chain | conditional | bool_not | string_literal | range | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -130,7 +130,9 @@ impl_rdp! {
 
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
         block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
+
         group = { ["("] ~ expr ~ [")"] }
+        bool_not = { ["!"] ~ expr }
         range = { number ~ (comma ~ number)? ~ [".."] ~ number }
 
         func_call = { identifier ~ func_args }
