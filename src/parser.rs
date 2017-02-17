@@ -95,19 +95,21 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
-        statement = { declaration | while_loop | (expr ~ semi) | comment }
+        statement = _{ declaration | while_loop | for_loop | conditional | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-        declaration = { ["let"] ~ identifier ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
+        declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
+        pattern = { identifier }
 
         type_def = { identifier | array_type }
         array_type = { ["["] ~ identifier ~ semi ~ array_size ~ ["]"] }
         array_size = { ["_"] | number }
 
         while_loop = { ["while"] ~ expr ~ block }
+        for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
 
         expr = {
             { block | group | constant | func_call | call_chain | conditional | string_literal | range | number }
@@ -125,15 +127,15 @@ impl_rdp! {
 
         conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
 
-        // This allows {} and {expr; expr} and {expr; expr;} and {expr}
-        block = { ["{"] ~ (expr ~ semi)* ~ expr? ~ ["}"] }
+        // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
+        block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
         group = { ["("] ~ expr ~ [")"] }
         range = { number ~ ([","] ~ number)? ~ [".."] ~ number }
 
         func_call = { identifier ~ func_args }
 
-        call_chain = { identifier ~ property_access* }
-        property_access = { ["."] ~ identifier ~ func_args? }
+        call_chain = { identifier ~ prop_get_call* }
+        prop_get_call = { ["."] ~ identifier ~ func_args? }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
         func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }

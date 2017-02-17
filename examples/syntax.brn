@@ -1,27 +1,55 @@
-/* one of two comment styles */
-// inferred size in bytes
-a[] = "Hello, world!";
-out a;
-out "Foo";
+/*
+one of two comment styles
+*/
 
-// input requires explicit sizing
-// always reads exactly this many characters or panics if EOF is reached before then
-in b[5];
-out b;
+// complete type inference isn't currently supported, so this doesn't work:
+//let foo = "bar";
+// statically allocated array of bytes initialized to the given string
+// length is automatically determined by the compiler
+let s: [u8; _] = "foo bar";
+// We can get the length of a string using the len() property
+// The type that len() returns is `usize` and for the time-being that is u8
+// This mean
+// writeln outputs a "\n" at the end
+stdout.writeln(s.len());
+// The write statement supports a variable number of both identifier and string literal arguments
+stdout.write(s, "\n");
 
-// 1 = 1 byte
-// Compiler error if the given string doesn't fit in the given size
-c[1] = "c";
-// Strings can be included in out statements
-out c "=";
-// Size is already declared, error if size is redefined on something that is already sized
-in c;
-out c;
+// if the length cannot be determined automatically, it must be specified
+let a: [u8; 4];
+// length must be greater than zero
+let b: [u8; 1];
+// read needs to be a statement so the type information can be used to determine the length
+stdin.read(a, b);
 
-// Literal "true" corresponds to one byte with value 1
-// Literal "false" corresponds to one byte with value 0
+// both sides have to have the same length
+if b == "a" {
+    stdout.writeln("equal");
+}
+else if a == "fooo" {
+    stdout.writeln("foo");
+}
+else {
+    stdout.writeln("not equal");
+}
 
-// Integers are 32-bit and are declared without sizing brackets
-int num;
-// inputs on integer variables are automatically coerced
-in int num2;
+// A single byte-sized numeric type is supported
+// value must be in the range for the type
+let counter: u8 = 200;
+// the while condition must evaluate to a boolean
+while counter > 0 {
+    // This is a placeholder function that mutates counter and subtracts one
+    // This exists because we don't want to implement a complete set of numeric operations right now
+    decrement(counter);
+    stdout.writeln(counter);
+}
+
+// the type of i is usize
+// i goes from 1 <= i < 10
+// This currently must be a static, finite counter
+// variables are not supported as counter limits
+// This is basically implemented as a brainfuck loop that goes from
+// 0 to (end-start) and start is added to the cell *within* the loop
+for i in 1..10 {
+    stdout.writeln("i = ", counter);
+}
