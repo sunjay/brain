@@ -42,7 +42,6 @@ impl FromStr for Program {
         let (expected, pos) = parser.expected();
         let (line, col) = parser.input().line_col(pos);
         println!("Expected: {:?} at line {} col {}", expected, line, col);
-        println!("{:?}", parser.expected());
         unimplemented!();
     }
 }
@@ -96,22 +95,22 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
-        statement = { declaration | while_loop | (expr ~ [";"]) | comment }
+        statement = { declaration | while_loop | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-        declaration = { ["let"] ~ identifier ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ [";"] }
+        declaration = { ["let"] ~ identifier ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
 
         type_def = { identifier | array_type }
-        array_type = { ["["] ~ identifier ~ [";"] ~ array_size ~ ["]"] }
-        array_size = { ["_"] | positive_integer }
+        array_type = { ["["] ~ identifier ~ semi ~ array_size ~ ["]"] }
+        array_size = { ["_"] | number }
 
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { block | group | constant | method_calls | func_call | conditional | string_literal | range | number }
+            { block | group | constant | func_call | call_chain | conditional | string_literal | range | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -127,14 +126,14 @@ impl_rdp! {
         conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
 
         // This allows {} and {expr; expr} and {expr; expr;} and {expr}
-        block = { ["{"] ~ (expr ~ [";"])* ~ expr? ~ ["}"] }
+        block = { ["{"] ~ (expr ~ semi)* ~ expr? ~ ["}"] }
         group = { ["("] ~ expr ~ [")"] }
         range = { number ~ ([","] ~ number)? ~ [".."] ~ number }
 
         func_call = { identifier ~ func_args }
 
-        method_calls = { identifier ~ method_call* }
-        method_call = { ["."] ~ identifier ~ func_args }
+        call_chain = { identifier ~ property_access* }
+        property_access = { ["."] ~ identifier ~ func_args? }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
         func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
@@ -164,9 +163,11 @@ impl_rdp! {
             ["const"] | ["continue"] | ["do"] | ["else"] | ["enum"] | ["eval"] | ["export"] |
             ["extern"] | ["false"] | ["final"] | ["fn"] | ["for"] | ["if"] | ["impl"] | ["import"] |
             ["in"] | ["let"] | ["loop"] | ["match"] | ["mod"] | ["move"] | ["mut"] | ["of"] |
-            ["out"] | ["pub"] | ["raw"] | ["read"] | ["ref"] | ["return"] | ["self"] | ["static"] |
+            ["out"] | ["pub"] | ["raw"] | ["ref"] | ["return"] | ["self"] | ["static"] |
             ["struct"] | ["super"] | ["trait"] | ["true"] | ["typeof"] | ["type"] | ["unsafe"] |
             ["use"] | ["where"] | ["while"] | ["yield"]
         }
+
+        semi = { [";"] }
     }
 }
