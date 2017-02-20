@@ -2,23 +2,6 @@ use std::str::{self, FromStr};
 
 use pest::prelude::*;
 
-const STRING_BOUNDARY: &'static str = "\"";
-const STATEMENT_TERMINATOR: &'static str = ";";
-const ASSIGNMENT_OPERATOR: &'static str = "=";
-const LINE_COMMENT: &'static str = "//";
-
-const START_BLOCK_COMMENT: &'static str = "/*";
-const END_BLOCK_COMMENT: &'static str = "*/";
-const BEGIN_SLICE: &'static str = "[";
-const END_SLICE: &'static str = "]";
-const BEGIN_BLOCK: &'static str = "{";
-const END_BLOCK: &'static str = "}";
-
-const OUTPUT_KEYWORD: &'static str = "out";
-const INPUT_KEYWORD: &'static str = "in";
-const WHILE_KEYWORD: &'static str = "while";
-const IF_KEYWORD: &'static str = "if";
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
 
@@ -49,47 +32,56 @@ impl FromStr for Program {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Comment(String),
-    Output(Vec<Expression>),
-    Input {
-        name: String,
-        slice: Option<Slice>,
-    },
     Declaration {
-        name: String,
-        slice: Option<Slice>,
+        pattern: Pattern,
+        type_def: TypeDefinition,
+        expr: Expression,
+    },
+    Assignment {
+        lhs: Identifier,
         expr: Expression,
     },
     WhileLoop {
-        condition: WhileCondition,
-        body: Vec<Statement>,
-    },
-    IfCondition {
         condition: Expression,
-        body: Vec<Statement>,
+        body: Block,
     },
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum Slice {
-    SingleValue(usize),
-    //Range(Option<usize>, Option<usize>),
-    Unspecified,
+    ConditionGroup {
+        // Condition expression and body block
+        branches: Vec<(Expression, Block)>,
+        // "default" or "else" branch body
+        default: Option<Block>,
+    },
+    Expression {
+        expr: Expression,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum WhileCondition {
-    Input {
-        name: String,
-        slice: Option<Slice>,
+pub enum Pattern {
+    Identifier(Identifier),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum TypeDefinition {
+    Name {
+        name: Identifier,
     },
-    Expression(Expression),
+    Array {
+        type_def: Box<TypeDefinition>,
+        //TODO: This probably isn't the right type since this should accept anything and then get
+        // statically checked to ensure the correct number was put here
+        size: usize,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     StringLiteral(String),
-    Identifier(String),
+    Identifier(Identifier),
 }
+
+pub type Identifier = String;
+pub type Block = Vec<Statement>;
 
 impl_rdp! {
     grammar! {
