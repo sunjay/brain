@@ -1,4 +1,5 @@
 use std::str::{self, FromStr};
+use std::collections::VecDeque;
 
 use pest::prelude::*;
 
@@ -35,7 +36,7 @@ pub enum Statement {
     Declaration {
         pattern: Pattern,
         type_def: TypeDefinition,
-        expr: Expression,
+        expr: Option<Expression>,
     },
     Assignment {
         lhs: Identifier,
@@ -70,7 +71,7 @@ pub enum TypeDefinition {
         type_def: Box<TypeDefinition>,
         //TODO: This probably isn't the right type since this should accept anything and then get
         // statically checked to ensure the correct number was put here
-        size: usize,
+        size: Option<Number>,
     },
 }
 
@@ -82,6 +83,7 @@ pub enum Expression {
 
 pub type Identifier = String;
 pub type Block = Vec<Statement>;
+pub type Number = i32;
 
 impl_rdp! {
     grammar! {
@@ -97,9 +99,10 @@ impl_rdp! {
         declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
         pattern = { identifier }
 
-        type_def = { identifier | array_type }
-        array_type = { ["["] ~ identifier ~ semi ~ array_size ~ ["]"] }
-        array_size = { ["_"] | number }
+        type_def = _{ identifier | array_type }
+        array_type = { ["["] ~ type_def ~ semi ~ array_size ~ ["]"] }
+        array_size = _{ unspecified | number }
+        unspecified = { ["_"] }
 
         while_loop = { ["while"] ~ expr ~ block }
         for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
@@ -169,5 +172,77 @@ impl_rdp! {
         // better error messages
         comma = { [","] }
         semi = { [";"] }
+    }
+
+    process! {
+        parse_program(&self) -> Program {
+            (list: _program()) => {
+                Program(list.into_iter().collect())
+            },
+        }
+
+        _program(&self) -> VecDeque<Statement> {
+            (head: _statement(), mut tail: _program()) => {
+                tail.push_front(head);
+
+                tail
+            },
+            () => {
+                VecDeque::new()
+            },
+        }
+
+        _statement(&self) -> Statement {
+            (&text: comment) => Statement::Comment(text.to_owned()),
+            (_: declaration, pattern: _pattern(), type_def: _type_def(), expr: _optional_expr(), _: semi) => {
+                Statement::Declaration {pattern: pattern, type_def: type_def, expr: expr}
+            },
+        }
+
+        _pattern(&self) -> Pattern {
+            (_: pattern, ident: _identifier()) => {
+                Pattern::Identifier(ident)
+            },
+        }
+
+        _type_def(&self) -> TypeDefinition {
+            (ident: _identifier()) => {
+                TypeDefinition::Name {name: ident}
+            },
+            (_: array_type, type_def: _type_def(), _: semi, size: _array_size()) => {
+                TypeDefinition::Array {type_def: Box::new(type_def), size: size}
+            },
+        }
+
+        _array_size(&self) -> Option<Number> {
+            (_: unspecified) => {
+                None
+            },
+            (n: _number()) => {
+                Some(n)
+            }
+        }
+
+        _optional_expr(&self) -> Option<Expression> {
+            (e: _expr()) => Some(e),
+            () => None,
+        }
+
+        _expr(&self) -> Expression {
+            () => unimplemented!(),
+        }
+
+        _identifier(&self) -> Identifier {
+            (&ident: identifier) => {
+                ident.into()
+            }
+        }
+
+        _number(&self) -> Number {
+            (&s: number) => {
+                // If our grammar is correct, we are guarenteed that this will work
+                s.parse().unwrap()
+            }
+        }
     }
 }
