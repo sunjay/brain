@@ -1,9 +1,8 @@
 // cat program
-// Continues so long as the given byte is not zero
 let ch: u8;
 
-stdin.read(ch);
-while ch > 0 {
+// stdin.read returns false when EOF is reached
+while stdin.read(ch) {
   stdout.write(ch);
   stdin.read(ch);
 }
