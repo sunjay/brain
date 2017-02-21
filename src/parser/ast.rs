@@ -86,8 +86,19 @@ pub enum TypeDefinition {
 pub enum Expression {
     StringLiteral(String),
     Identifier(Identifier),
+    Number(Number),
+    Call {
+        method: Box<Expression>,
+        args: FuncArgs,
+    },
+    Access {
+        target: Box<Expression>,
+        field: Box<Expression>,
+    }
 }
 
 pub type Identifier = String;
 pub type Block = Vec<Statement>;
 pub type Number = i32;
+pub type FuncArgs = Vec<FuncArg>;
+pub type FuncArg = Expression;
