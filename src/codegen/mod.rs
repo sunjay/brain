@@ -7,14 +7,29 @@
 //! enforce it before and after. We just need a consistent reference between operations.
 //! That is all.
 
-mod errors;
-mod cells;
-mod statements;
-mod declarations;
-mod input;
-mod output;
-mod if_condition;
-mod while_loop;
+//mod errors;
+//mod cells;
+//mod statements;
+//mod declarations;
+//mod input;
+//mod output;
+//mod if_condition;
+//mod while_loop;
+//
+//pub use self::errors::*;
+//pub use self::statements::*;
 
-pub use self::errors::*;
-pub use self::statements::*;
+//TODO: Remove everything below this comment
+use parser::{Statement};
+use instructions::Instructions;
+use memory::MemoryLayout;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Error;
+pub fn expand(
+    instructions: &mut Instructions,
+    mem: &mut MemoryLayout,
+    stmt: Statement
+) -> Result<(), Error> {
+    unimplemented!();
+}
