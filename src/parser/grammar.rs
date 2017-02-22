@@ -20,14 +20,14 @@ impl_rdp! {
 
         type_def = _{ identifier | array_type }
         array_type = { ["["] ~ type_def ~ semi ~ array_size ~ ["]"] }
-        array_size = _{ unspecified | number }
+        array_size = _{ unspecified | expr }
         unspecified = { ["_"] }
 
         while_loop = { ["while"] ~ expr ~ block }
         for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
 
         expr = _{
-            { block | group | constant | func_call | conditional | bool_not | string_literal | range | number }
+            { constant | field_access | func_call | group | block | conditional | bool_not | string_literal | number | negation }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -35,11 +35,10 @@ impl_rdp! {
             // NOTE: Order matters! { ["<"] | ["<="] } will never match "<="
             comparison = { ["=="] | ["!="] | [">="] | ["<="] | [">"] | ["<"] }
             concatenation = {< ["++"] }
+            range = { [".."] }
             term = { ["+"] | ["-"] }
             factor = { ["/"] | ["*"] | ["%"] }
             pow = { ["**"] }
-
-            field_access = {< ["."] }
         }
 
         conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
@@ -48,13 +47,17 @@ impl_rdp! {
         block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
 
         group = { ["("] ~ expr ~ [")"] }
-        bool_not = { ["!"] ~ expr }
-        range = { number ~ ([","] ~ number)? ~ [".."] ~ number }
 
-        func_call = { expr ~ func_args }
+        bool_not = { ["!"] ~ expr }
+        negation = { ["-"] ~ expr }
+
+        func_call = { (group | identifier) ~ func_args }
+        field_access = { (identifier | group | block) ~ field_access_rest }
+        field_access_rest = _{ op_access ~ identifier ~ func_args? ~ field_access_rest* }
+        op_access = { ["."] }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
-        func_args = _{ ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
+        func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
         func_arg = _{ expr }
 
         string_literal = { ["\""] ~ literal_char* ~ ["\""] }
@@ -138,18 +141,9 @@ impl_rdp! {
             (ident: _identifier()) => {
                 TypeDefinition::Name {name: ident}
             },
-            (_: array_type, type_def: _type_def(), _: semi, size: _array_size()) => {
+            (_: array_type, type_def: _type_def(), _: semi, size: _optional_expr()) => {
                 TypeDefinition::Array {type_def: Box::new(type_def), size: size}
             },
-        }
-
-        _array_size(&self) -> Option<Number> {
-            (_: unspecified) => {
-                None
-            },
-            (n: _number()) => {
-                Some(n)
-            }
         }
 
         _optional_expr(&self) -> Option<Expression> {
@@ -161,14 +155,24 @@ impl_rdp! {
             (_: func_call, method: _expr(), args: _func_args()) => {
                 Expression::Call {method: Box::new(method), args: args}
             },
-            (_: field_access, target: _expr(), field: _expr()) => {
-                Expression::Access {target: Box::new(target), field: Box::new(field)}
+            (_: field_access, target: _expr(), field: _field_access_rest()) => {
+                let mut exprs = vec![target];
+                exprs.extend(field);
+
+                println!("{:?}", exprs);
+                unimplemented!();
+
+                //Expression::Access {target: Box::new(target), field: Box::new(field)}
+            },
+            (&ident: identifier) => {
+                Expression::Identifier(ident.into())
             },
             (&s: string_literal) => {
                 Expression::StringLiteral(s.into())
             },
-            (n: _number()) => {
-                Expression::Number(n)
+            (&s: number) => {
+                // If our grammar is correct, we are guarenteed that this will work
+                Expression::Number(s.parse().unwrap())
             },
         }
 
@@ -189,6 +193,25 @@ impl_rdp! {
             },
         }
 
+        _field_access_rest(&self) -> VecDeque<Expression> {
+            (_: op_access, ident: _identifier(), args: _func_args(), mut rest: _field_access_rest()) => {
+                rest.push_front(Expression::Call {
+                    method: Box::new(Expression::Identifier(ident)),
+                    args: args,
+                });
+
+                rest
+            },
+            (_: op_access, ident: _identifier(), mut rest: _field_access_rest()) => {
+                rest.push_front(Expression::Identifier(ident));
+
+                rest
+            },
+            () => {
+                VecDeque::new()
+            },
+        }
+
         _block(&self) -> Block {
             (_: block, deque: _block_deque()) => {
                 deque.into_iter().collect()
@@ -201,6 +224,11 @@ impl_rdp! {
 
                 tail
             },
+            (head: _expr(), mut tail: _block_deque()) => {
+                tail.push_front(Statement::Expression {expr: head});
+
+                tail
+            },
             () => {
                 VecDeque::new()
             },
@@ -209,14 +237,7 @@ impl_rdp! {
         _identifier(&self) -> Identifier {
             (&ident: identifier) => {
                 ident.into()
-            }
-        }
-
-        _number(&self) -> Number {
-            (&s: number) => {
-                // If our grammar is correct, we are guarenteed that this will work
-                s.parse().unwrap()
-            }
+            },
         }
     }
 }

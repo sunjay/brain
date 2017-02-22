@@ -33,6 +33,11 @@ impl FromStr for Program {
         let (expected, pos) = parser.expected();
         let (line, col) = parser.input().line_col(pos);
         println!("Expected: {:?} at line {} col {}", expected, line, col);
+
+        println!("{:?}", {
+            let mut parser = Rdp::new(StringInput::new(input));
+            parser.parse_program()
+        });
         unimplemented!();
     }
 }
@@ -78,7 +83,7 @@ pub enum TypeDefinition {
         type_def: Box<TypeDefinition>,
         //TODO: This probably isn't the right type since this should accept anything and then get
         // statically checked to ensure the correct number was put here
-        size: Option<Number>,
+        size: Option<Expression>,
     },
 }
 
