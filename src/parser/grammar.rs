@@ -8,7 +8,7 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
-        statement = _{ declaration | assignment | while_loop | for_loop | conditional | (expr ~ semi) | comment }
+        statement = _{ declaration | assignment | while_loop | conditional | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
@@ -24,10 +24,9 @@ impl_rdp! {
         unspecified = { ["_"] }
 
         while_loop = { ["while"] ~ expr ~ block }
-        for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
 
         expr = _{
-            { field_access | func_call | conditional | string_literal | number | negation | bool_not }
+            { field_access | func_call | conditional | string_literal | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -40,9 +39,6 @@ impl_rdp! {
 
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
         block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
-
-        bool_not = { ["!"] ~ expr }
-        negation = { ["-"] ~ expr }
 
         func_call = { identifier ~ func_args }
         field_access = { identifier ~ op_access ~ identifier ~ func_args? }
@@ -141,17 +137,26 @@ impl_rdp! {
         }
 
         _expr(&self) -> Expression {
-            (_: func_call, method: _expr(), args: _func_args()) => {
-                Expression::Call {method: Box::new(method), args: args}
+            (_: func_call, method: _identifier(), args: _func_args()) => {
+                Expression::Call {
+                    method: Box::new(Expression::Identifier(method)),
+                    args: args,
+                }
             },
-            (_: field_access, target: _expr(), field: _field_access_rest()) => {
-                let mut exprs = vec![target];
-                exprs.extend(field);
-
-                println!("{:?}", exprs);
-                unimplemented!();
-
-                //Expression::Access {target: Box::new(target), field: Box::new(field)}
+            (_: field_access, target: _identifier(), _: op_access, field: _identifier(), args: _func_args()) => {
+                Expression::Call {
+                    method: Box::new(Expression::Access {
+                        target: Box::new(Expression::Identifier(target)),
+                        field: Box::new(Expression::Identifier(field)),
+                    }),
+                    args: args,
+                }
+            },
+            (_: field_access, target: _identifier(), _: op_access, field: _identifier()) => {
+                Expression::Access {
+                    target: Box::new(Expression::Identifier(target)),
+                    field: Box::new(Expression::Identifier(field)),
+                }
             },
             (&ident: identifier) => {
                 Expression::Identifier(ident.into())
@@ -177,25 +182,6 @@ impl_rdp! {
                 tail.push_front(head);
 
                 tail
-            },
-            () => {
-                VecDeque::new()
-            },
-        }
-
-        _field_access_rest(&self) -> VecDeque<Expression> {
-            (_: op_access, ident: _identifier(), args: _func_args(), mut rest: _field_access_rest()) => {
-                rest.push_front(Expression::Call {
-                    method: Box::new(Expression::Identifier(ident)),
-                    args: args,
-                });
-
-                rest
-            },
-            (_: op_access, ident: _identifier(), mut rest: _field_access_rest()) => {
-                rest.push_front(Expression::Identifier(ident));
-
-                rest
             },
             () => {
                 VecDeque::new()
