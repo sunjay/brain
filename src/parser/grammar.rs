@@ -60,7 +60,7 @@ impl_rdp! {
         func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
         func_arg = _{ expr }
 
-        string_literal = { ["\""] ~ literal_char* ~ ["\""] }
+        string_literal = @{ ["\""] ~ literal_char* ~ ["\""] }
         literal_char = _{ escape_sequence | (!["\""] ~ any) }
         escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
 
@@ -239,5 +239,56 @@ impl_rdp! {
                 ident.into()
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use pest::prelude::*;
+
+    #[test]
+    fn string_literal() {
+        test_parse(r#""foo""#, |p| p.string_literal(), vec![
+            Token::new(Rule::string_literal, 0, 5),
+        ]);
+    }
+
+    #[test]
+    fn number() {
+        test_parse(r#"0"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 1),
+        ]);
+
+        test_parse(r#"100"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 3),
+        ]);
+
+        test_parse(r#"-100"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 4),
+        ]);
+
+        test_parse(r#"+100"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 4),
+        ]);
+
+        test_parse(r#"1_000_000"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 9),
+        ]);
+    }
+
+    fn test_parse<F>(input: &'static str, parse: F, tokens: Vec<Token<Rule>>)
+        where F: FnOnce(&mut Rdp<StringInput>) -> bool {
+
+        let mut parser = parser_from(input);
+        assert!(parse(&mut parser), "Parsing failed");
+        assert!(parser.end(), "Parser did not reach eoi");
+
+        assert_eq!(parser.queue(), &tokens);
+    }
+
+    fn parser_from(s: &'static str) -> Rdp<StringInput> {
+        Rdp::new(StringInput::new(s))
     }
 }
