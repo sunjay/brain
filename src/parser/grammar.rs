@@ -27,18 +27,13 @@ impl_rdp! {
         for_loop = { ["for"] ~ pattern ~ ["in"] ~ expr ~ block }
 
         expr = _{
-            { constant | field_access | func_call | group | block | conditional | bool_not | string_literal | number | negation }
+            { field_access | func_call | conditional | string_literal | number | negation | bool_not }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
             bool_and = {< ["&&"] }
             // NOTE: Order matters! { ["<"] | ["<="] } will never match "<="
             comparison = { ["=="] | ["!="] | [">="] | ["<="] | [">"] | ["<"] }
-            concatenation = {< ["++"] }
-            range = { [".."] }
-            term = { ["+"] | ["-"] }
-            factor = { ["/"] | ["*"] | ["%"] }
-            pow = { ["**"] }
         }
 
         conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
@@ -46,14 +41,11 @@ impl_rdp! {
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
         block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
 
-        group = { ["("] ~ expr ~ [")"] }
-
         bool_not = { ["!"] ~ expr }
         negation = { ["-"] ~ expr }
 
-        func_call = { (group | identifier) ~ func_args }
-        field_access = { (identifier | group | block) ~ field_access_rest }
-        field_access_rest = _{ op_access ~ identifier ~ func_args? ~ field_access_rest* }
+        func_call = { identifier ~ func_args }
+        field_access = { identifier ~ op_access ~ identifier ~ func_args? }
         op_access = { ["."] }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
@@ -68,13 +60,10 @@ impl_rdp! {
         alpha = _{ ['a'..'z'] | ['A'..'Z'] }
         alphanumeric = _{ alpha | ['0'..'9'] }
 
-        number = @{ (["-"] | ["+"])? ~ positive_integer }
-        positive_integer = _{ ["0"] | (nonzero ~ digit*) }
+        number = @{ ["0"] | (nonzero ~ digit*) }
         // Allow "_" in numbers for grouping: 1_000_000 == 1000000
         digit = _{ ["0"] | nonzero | ["_"] }
         nonzero = _{ ['1'..'9'] }
-
-        constant = @{ ["true"] | ["false"] }
 
         whitespace = _{ [" "] | ["\t"] | ["\u{000C}"] | ["\r"] | ["\n"] }
         // NOTE: When changing this code, make sure you don't have a subset of a word before
@@ -168,7 +157,8 @@ impl_rdp! {
                 Expression::Identifier(ident.into())
             },
             (&s: string_literal) => {
-                Expression::StringLiteral(s.into())
+                // The first and last quotes need to be removed
+                Expression::StringLiteral(s[1..s.len()-2].into())
             },
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
@@ -250,6 +240,10 @@ mod tests {
 
     #[test]
     fn string_literal() {
+        test_parse(r#""""#, |p| p.string_literal(), vec![
+            Token::new(Rule::string_literal, 0, 2),
+        ]);
+
         test_parse(r#""foo""#, |p| p.string_literal(), vec![
             Token::new(Rule::string_literal, 0, 5),
         ]);
@@ -265,16 +259,18 @@ mod tests {
             Token::new(Rule::number, 0, 3),
         ]);
 
-        test_parse(r#"-100"#, |p| p.number(), vec![
-            Token::new(Rule::number, 0, 4),
-        ]);
-
-        test_parse(r#"+100"#, |p| p.number(), vec![
-            Token::new(Rule::number, 0, 4),
-        ]);
-
         test_parse(r#"1_000_000"#, |p| p.number(), vec![
             Token::new(Rule::number, 0, 9),
+        ]);
+    }
+
+    #[test]
+    fn field_access() {
+        test_parse(r#"foo.bar"#, |p| p.field_access(), vec![
+            Token::new(Rule::field_access, 0, 7),
+            Token::new(Rule::identifier, 0, 3),
+            Token::new(Rule::op_access, 3, 4),
+            Token::new(Rule::identifier, 4, 7),
         ]);
     }
 
@@ -286,6 +282,16 @@ mod tests {
         assert!(parser.end(), "Parser did not reach eoi");
 
         assert_eq!(parser.queue(), &tokens);
+    }
+
+    fn test_fail<F>(input: &'static str, parse: F)
+        where F: FnOnce(&mut Rdp<StringInput>) -> bool {
+
+        let mut parser = parser_from(input);
+        assert!(!parse(&mut parser), "Parsing passed when expected it to fail");
+        assert!(!parser.end(), "Parser reached end when expected it to fail");
+
+        assert!(parser.queue().is_empty(), "Queue was not empty despite expecting to fail");
     }
 
     fn parser_from(s: &'static str) -> Rdp<StringInput> {
