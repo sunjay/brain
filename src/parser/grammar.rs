@@ -54,8 +54,8 @@ impl_rdp! {
         func_arg = _{ expr }
 
         string_literal = @{ ["\""] ~ literal_char* ~ ["\""] }
-        literal_char = _{ escape_sequence | (!["\""] ~ any) }
-        escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] | ["\\f"] | ["\\v"] | ["\\e"] }
+        literal_char = { escape_sequence | (!["\""] ~ any) }
+        escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] }
 
         identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
         alpha = _{ ['a'..'z'] | ['A'..'Z'] }
@@ -160,9 +160,8 @@ impl_rdp! {
             (&ident: identifier) => {
                 Expression::Identifier(ident.into())
             },
-            (&s: string_literal) => {
-                // The first and last quotes need to be removed
-                Expression::StringLiteral(s[1..s.len()-2].into())
+            (_: string_literal, s: _literal_chars()) => {
+                Expression::StringLiteral(s.into_iter().collect())
             },
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
@@ -227,6 +226,34 @@ impl_rdp! {
             },
         }
 
+        _literal_chars(&self) -> VecDeque<char> {
+            (&c: literal_char, mut tail: _literal_chars()) => {
+                if c.len() == 2 {
+                    debug_assert!(c.chars().next().unwrap() == '\\');
+                    tail.push_front(match c.chars().nth(1).unwrap() {
+                        '\\' => '\\',
+                        '"' => '"',
+                        '\'' => '\'',
+                        'n' => '\n',
+                        'r' => '\r',
+                        't' => '\t',
+                        '0' => '\0',
+                        //TODO: Replace this with a proper result when upgrading to pest 1.0
+                        _ => panic!("Unknown escape: {}", c)
+                    });
+                }
+                else {
+                    debug_assert!(c.len() == 1);
+                    tail.push_front(c.chars().next().unwrap());
+                }
+
+                tail
+            },
+            () => {
+                VecDeque::new()
+            }
+        }
+
         _identifier(&self) -> Identifier {
             (&ident: identifier) => {
                 ident.into()
@@ -237,9 +264,13 @@ impl_rdp! {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::fmt::Debug;
 
     use pest::prelude::*;
+
+    use super::*;
+    // ast, etc.
+    use super::super::*;
 
     #[test]
     fn string_literal() {
@@ -249,6 +280,9 @@ mod tests {
 
         test_parse(r#""foo""#, |p| p.string_literal(), vec![
             Token::new(Rule::string_literal, 0, 5),
+            Token::new(Rule::literal_char, 1, 2),
+            Token::new(Rule::literal_char, 2, 3),
+            Token::new(Rule::literal_char, 3, 4),
         ]);
     }
 
@@ -277,6 +311,15 @@ mod tests {
         ]);
     }
 
+    #[test]
+    fn string_literal_escapes() {
+        test_method(r#""foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::StringLiteral("foo".to_owned()));
+
+        test_method(r#""\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
+    }
+
     fn test_parse<F>(input: &'static str, parse: F, tokens: Vec<Token<Rule>>)
         where F: FnOnce(&mut Rdp<StringInput>) -> bool {
 
@@ -285,6 +328,17 @@ mod tests {
         assert!(parser.end(), "Parser did not reach eoi");
 
         assert_eq!(parser.queue(), &tokens);
+    }
+
+    fn test_method<T: Debug + PartialEq, F, P>(input: &'static str, parse: P, method: F, expected: T)
+        where P: FnOnce(&mut Rdp<StringInput>) -> bool,
+              F: FnOnce(&Rdp<StringInput>) -> T {
+
+        let mut parser = parser_from(input);
+        assert!(parse(&mut parser), "Parsing failed");
+        assert!(parser.end(), "Parser did not reach eoi");
+
+        assert_eq!(method(&parser), expected);
     }
 
     fn test_fail<F>(input: &'static str, parse: F)
