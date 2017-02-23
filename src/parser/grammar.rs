@@ -136,17 +136,15 @@ impl_rdp! {
         }
 
         _type_def(&self) -> TypeDefinition {
+            (_: array_type, type_def: _type_def(), _: semi, _: unspecified) => {
+                TypeDefinition::Array {type_def: Box::new(type_def), size: None}
+            },
+            (_: array_type, type_def: _type_def(), _: semi, _: expr, size: _expr()) => {
+                TypeDefinition::Array {type_def: Box::new(type_def), size: Some(size)}
+            },
             (ident: _identifier()) => {
                 TypeDefinition::Name {name: ident}
             },
-            (_: array_type, type_def: _type_def(), _: semi, size: _optional_expr()) => {
-                TypeDefinition::Array {type_def: Box::new(type_def), size: size}
-            },
-        }
-
-        _optional_expr(&self) -> Option<Expression> {
-            (_: expr, e: _expr()) => Some(e),
-            () => None,
         }
 
         _expr(&self) -> Expression {
