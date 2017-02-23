@@ -4,5 +4,4 @@ let ch: u8;
 // stdin.read returns false when EOF is reached
 while stdin.read(ch) {
   stdout.write(ch);
-  stdin.read(ch);
 }
