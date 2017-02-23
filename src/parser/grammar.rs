@@ -8,7 +8,7 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
-        statement = _{ declaration | assignment | while_loop | conditional | (expr ~ semi) | comment }
+        statement = { declaration | assignment | while_loop | conditional | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
@@ -89,8 +89,13 @@ impl_rdp! {
         }
 
         _program(&self) -> VecDeque<Statement> {
-            (head: _statement(), mut tail: _program()) => {
+            (_: statement, head: _statement(), mut tail: _program()) => {
                 tail.push_front(head);
+
+                tail
+            },
+            (&text: comment, mut tail: _program()) => {
+                tail.push_front(Statement::Comment(text.into()));
 
                 tail
             },
@@ -145,20 +150,8 @@ impl_rdp! {
                     args: args,
                 }
             },
-            (_: field_access, target: _identifier(), _: op_access, field: _identifier(), args: _func_args()) => {
-                Expression::Call {
-                    method: Box::new(Expression::Access {
-                        target: Box::new(Expression::Identifier(target)),
-                        field: Box::new(Expression::Identifier(field)),
-                    }),
-                    args: args,
-                }
-            },
-            (_: field_access, target: _identifier(), _: op_access, field: _identifier()) => {
-                Expression::Access {
-                    target: Box::new(Expression::Identifier(target)),
-                    field: Box::new(Expression::Identifier(field)),
-                }
+            (_: field_access, expr: _field_access()) => {
+                expr
             },
             (&ident: identifier) => {
                 Expression::Identifier(ident.into())
@@ -170,6 +163,24 @@ impl_rdp! {
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
                 Expression::Number(s.parse().unwrap())
+            },
+        }
+
+        _field_access(&self) -> Expression {
+            (target: _identifier(), _: op_access, field: _identifier(), args: _func_args()) => {
+                Expression::Call {
+                    method: Box::new(Expression::Access {
+                        target: Box::new(Expression::Identifier(target)),
+                        field: Box::new(Expression::Identifier(field)),
+                    }),
+                    args: args,
+                }
+            },
+            (target: _identifier(), _: op_access, field: _identifier()) => {
+                Expression::Access {
+                    target: Box::new(Expression::Identifier(target)),
+                    field: Box::new(Expression::Identifier(field)),
+                }
             },
         }
 
