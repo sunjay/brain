@@ -45,7 +45,9 @@ impl_rdp! {
         op_access = { ["."] }
 
         // This allows () and (func_arg, func_arg) and (func_arg) and (func_arg,)
-        func_args = { ["("] ~ (func_arg ~ [","])* ~ func_arg? ~ [")"] }
+        func_args = _{ func_args_start ~ (func_arg ~ [","])* ~ func_arg? ~ func_args_end }
+        func_args_start = { ["("] }
+        func_args_end = { [")"] }
         func_arg = _{ expr }
 
         string_literal = @{ ["\""] ~ literal_char* ~ ["\""] }
@@ -172,19 +174,19 @@ impl_rdp! {
         }
 
         _func_args(&self) -> FuncArgs {
-            (deque: _expr_deque()) => {
+            (_: func_args_start, deque: _expr_deque()) => {
                 deque.into_iter().collect()
             },
         }
 
         _expr_deque(&self) -> VecDeque<Expression> {
+            (_: func_args_end) => {
+                VecDeque::new()
+            },
             (head: _expr(), mut tail: _expr_deque()) => {
                 tail.push_front(head);
 
                 tail
-            },
-            () => {
-                VecDeque::new()
             },
         }
 

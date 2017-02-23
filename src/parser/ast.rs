@@ -34,10 +34,7 @@ impl FromStr for Program {
         let (line, col) = parser.input().line_col(pos);
         println!("Expected: {:?} at line {} col {}", expected, line, col);
 
-        println!("{:?}", {
-            let mut parser = Rdp::new(StringInput::new(input));
-            parser.parse_program()
-        });
+        println!("{:?}", parser.parse_program());
         unimplemented!();
     }
 }
