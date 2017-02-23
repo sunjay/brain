@@ -14,8 +14,9 @@ impl_rdp! {
         line_comment = _{ ["//"] ~ (!(["\r"] | ["\n"]) ~ any)* ~ (["\n"] | ["\r\n"] | ["\r"] | eoi) }
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
-        assignment = { identifier ~ ["="] ~ expr ~ semi}
-        declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (["="] ~ expr)? ~ semi}
+        assignment = { identifier ~ op_assign ~ expr ~ semi}
+        declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (op_assign ~ expr)? ~ semi}
+        op_assign = { ["="] }
         pattern = { identifier }
 
         type_def = _{ identifier | array_type }
@@ -25,8 +26,8 @@ impl_rdp! {
 
         while_loop = { ["while"] ~ expr ~ block }
 
-        expr = _{
-            { field_access | func_call | conditional | string_literal | number }
+        expr = {
+            { field_access | identifier | func_call | conditional | string_literal | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
@@ -38,7 +39,9 @@ impl_rdp! {
         conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
 
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
-        block = { ["{"] ~ statement* ~ expr? ~ ["}"] }
+        block = _{ block_start ~ statement* ~ expr? ~ block_end }
+        block_start = { ["{"] }
+        block_end = { ["}"] }
 
         func_call = { identifier ~ func_args }
         field_access = { identifier ~ op_access ~ identifier ~ func_args? }
@@ -108,17 +111,20 @@ impl_rdp! {
             (&text: comment) => {
                 Statement::Comment(text.into())
             },
-            (_: declaration, pattern: _pattern(), type_def: _type_def(), expr: _optional_expr(), _: semi) => {
-                Statement::Declaration {pattern: pattern, type_def: type_def, expr: expr}
+            (_: declaration, pattern: _pattern(), type_def: _type_def(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
+                Statement::Declaration {pattern: pattern, type_def: type_def, expr: Some(expr)}
             },
-            (_: assignment, ident: _identifier(), expr: _expr(), _: semi) => {
+            (_: declaration, pattern: _pattern(), type_def: _type_def(), _: semi) => {
+                Statement::Declaration {pattern: pattern, type_def: type_def, expr: None}
+            },
+            (_: assignment, ident: _identifier(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
                 Statement::Assignment {lhs: ident, expr: expr}
             },
-            (_: while_loop, condition: _expr(), body: _block()) => {
+            (_: while_loop, _: expr, condition: _expr(), body: _block()) => {
                 Statement::WhileLoop {condition: condition, body: body}
             },
             // This should always be last as it will catch pretty much any cases that weren't caught above
-            (expr: _expr(), _: semi) => {
+            (_: expr, expr: _expr(), _: semi) => {
                 Statement::Expression {expr: expr}
             },
         }
@@ -139,7 +145,7 @@ impl_rdp! {
         }
 
         _optional_expr(&self) -> Option<Expression> {
-            (e: _expr()) => Some(e),
+            (_: expr, e: _expr()) => Some(e),
             () => None,
         }
 
@@ -194,7 +200,7 @@ impl_rdp! {
             (_: func_args_end) => {
                 VecDeque::new()
             },
-            (head: _expr(), mut tail: _expr_deque()) => {
+            (_: expr, head: _expr(), mut tail: _expr_deque()) => {
                 tail.push_front(head);
 
                 tail
@@ -202,23 +208,23 @@ impl_rdp! {
         }
 
         _block(&self) -> Block {
-            (_: block, deque: _block_deque()) => {
+            (_: block_start, deque: _block_deque()) => {
                 deque.into_iter().collect()
             },
         }
 
         _block_deque(&self) -> VecDeque<Statement> {
-            (head: _statement(), mut tail: _block_deque()) => {
+            (_: statement, head: _statement(), mut tail: _block_deque()) => {
                 tail.push_front(head);
 
                 tail
             },
-            (head: _expr(), mut tail: _block_deque()) => {
+            (_: expr, head: _expr(), mut tail: _block_deque()) => {
                 tail.push_front(Statement::Expression {expr: head});
 
                 tail
             },
-            () => {
+            (_: block_end) => {
                 VecDeque::new()
             },
         }
