@@ -1,3 +1,4 @@
+use std::fmt;
 use std::iter;
 use std::collections::VecDeque;
 
@@ -353,6 +354,56 @@ impl_rdp! {
                 ident.into()
             },
         }
+    }
+}
+
+impl fmt::Display for Rule {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Just to make things a bit more ergonomic
+        use Rule::*;
+
+        write!(f, "{}", match *self {
+            eoi => "EOF",
+            comment => "comment",
+            identifier => "identifier",
+            keyword => "keyword",
+            number => "number",
+            string_literal => "string literal",
+            literal_char => "character",
+            any => "any character",
+
+            unspecified => "`_`",
+            semi => "`;`",
+
+            bool_or => "`or`",
+            bool_and => "`and`",
+            op_else_if => "`else if`",
+            op_else => "`else`",
+
+            op_assign => "`=`",
+            op_bool_or => "`||`",
+            op_bool_and => "`&&`",
+            op_eq => "`==`",
+            op_ne => "`!=`",
+            op_ge => "`>=`",
+            op_le => "`<=`",
+            op_gt => "`>`",
+            op_lt => "`<`",
+            op_access => "`.`",
+
+            block_start => "`{`",
+            block_end => "`}`",
+
+            func_args_start => "`(`",
+            func_args_end => "`)`",
+
+            // There are many rules that will never get matched here because
+            // this method is meant to be used for formatting errors
+            // We don't want to use the "_" wildcard because we want Rust
+            // to tell us when a new rule has to be added here
+            statement | assignment | declaration | pattern | array_type | while_loop | comparison |
+            conditional | func_call | field_access | expr | soi => unreachable!(*self),
+        })
     }
 }
 

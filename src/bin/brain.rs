@@ -64,7 +64,7 @@ fn main() {
             exit_with_error!("Syntax Error: no token expected at line {} col {}", e.line, e.col);
         } else {
             exit_with_error!("Syntax Error: expected token(s): {} at line {} col {}",
-                e.expected.iter().map(|r| format!("{:?}", r)).collect::<Vec<String>>().join(", "),
+                e.expected.iter().map(|r| format!("{}", r)).collect::<Vec<String>>().join(", "),
                 e.line, e.col);
         }
     });
