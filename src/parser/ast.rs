@@ -55,12 +55,6 @@ pub enum Statement {
         condition: Expression,
         body: Block,
     },
-    ConditionGroup {
-        // Condition expression and body block
-        branches: Vec<(Expression, Block)>,
-        // "default" or "else" branch body
-        default: Option<Block>,
-    },
     Expression {
         expr: Expression,
     },
@@ -96,7 +90,13 @@ pub enum Expression {
     Access {
         target: Box<Expression>,
         field: Box<Expression>,
-    }
+    },
+    ConditionGroup {
+        // Condition expression and body block
+        branches: Vec<(Expression, Block)>,
+        // "default" or "else" branch body
+        default: Option<Block>,
+    },
 }
 
 pub type Identifier = String;

@@ -1,3 +1,4 @@
+use std::iter;
 use std::collections::VecDeque;
 
 use pest::prelude::*;
@@ -8,6 +9,8 @@ impl_rdp! {
     grammar! {
         program = _{ statement* ~ eoi }
 
+        // conditional is technically an expression too but it can be used as a statement
+        // without a semicolon as well
         statement = { declaration | assignment | while_loop | conditional | (expr ~ semi) | comment }
 
         comment = @{ block_comment | line_comment }
@@ -36,7 +39,9 @@ impl_rdp! {
             comparison = { ["=="] | ["!="] | [">="] | ["<="] | [">"] | ["<"] }
         }
 
-        conditional = { ["if"] ~ expr ~ block ~ (["else"] ~ conditional)? ~ (["else"] ~ block)? }
+        conditional = { ["if"] ~ expr ~ block ~ (op_else_if ~ expr ~ block)* ~ (op_else ~ block)? }
+        op_else_if = { ["else if"] }
+        op_else = { ["else"] }
 
         // This allows {} and {statement; statement; statement;} and {statement; expr} and {expr}
         block = _{ block_start ~ statement* ~ expr? ~ block_end }
@@ -123,6 +128,9 @@ impl_rdp! {
             (_: while_loop, _: expr, condition: _expr(), body: _block()) => {
                 Statement::WhileLoop {condition: condition, body: body}
             },
+            (_: conditional, expr: _conditional()) => {
+                Statement::Expression {expr: expr}
+            },
             // This should always be last as it will catch pretty much any cases that weren't caught above
             (_: expr, expr: _expr(), _: semi) => {
                 Statement::Expression {expr: expr}
@@ -157,6 +165,9 @@ impl_rdp! {
             (_: field_access, expr: _field_access()) => {
                 expr
             },
+            (_: conditional, expr: _conditional()) => {
+                expr
+            },
             (&ident: identifier) => {
                 Expression::Identifier(ident.into())
             },
@@ -184,6 +195,47 @@ impl_rdp! {
                     target: Box::new(Expression::Identifier(target)),
                     field: Box::new(Expression::Identifier(field)),
                 }
+            },
+        }
+
+        _conditional(&self) -> Expression {
+            (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches(), _: op_else, else_block: _block()) => {
+                Expression::ConditionGroup {
+                    branches: iter::once((expr, block)).chain(branches).collect(),
+                    default: Some(else_block),
+                }
+            },
+            (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches()) => {
+                Expression::ConditionGroup {
+                    branches: iter::once((expr, block)).chain(branches).collect(),
+                    default: None,
+                }
+            },
+            (_: expr, expr: _expr(), block: _block(), _: op_else, else_block: _block()) => {
+                Expression::ConditionGroup {
+                    branches: vec![(expr, block)],
+                    default: Some(else_block),
+                }
+            },
+            (_: expr, expr: _expr(), block: _block()) => {
+                Expression::ConditionGroup {
+                    branches: vec![(expr, block)],
+                    default: None,
+                }
+            },
+        }
+
+        _branches(&self) -> VecDeque<(Expression, Block)> {
+            (_: expr, expr: _expr(), block: _block(), _: op_else_if, mut tail: _branches()) => {
+                tail.push_front((expr, block));
+
+                tail
+            },
+            (_: expr, expr: _expr(), block: _block()) => {
+                let mut queue = VecDeque::new();
+                queue.push_front((expr, block));
+
+                queue
             },
         }
 
@@ -348,6 +400,204 @@ mod tests {
         );
     }
 
+    #[test]
+    fn conditionals() {
+        // Basic if
+        test_method(r#"
+        if foo {
+            a();
+        }
+        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+            Statement::Expression {
+                expr: Expression::ConditionGroup {
+                    branches: vec![
+                        (Expression::Identifier("foo".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                    ],
+                    default: None,
+                },
+            }
+        );
+
+        // Basic if else
+        test_method(r#"
+        if foo {
+            a();
+        }
+        else {
+            b();
+        }
+        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+            Statement::Expression {
+                expr: Expression::ConditionGroup {
+                    branches: vec![
+                        (Expression::Identifier("foo".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                    ],
+                    default: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Call {
+                                method: Box::new(Expression::Identifier("b".to_owned())),
+                                args: vec![],
+                            }
+                        },
+                    ])
+                },
+            }
+        );
+
+        // Basic if else-if else
+        test_method(r#"
+        if foo {
+            a();
+        }
+        else if foo2 {
+            c();
+        }
+        else if foo3 {
+            d();
+        }
+        else {
+            b();
+        }
+        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+            Statement::Expression {
+                expr: Expression::ConditionGroup {
+                    branches: vec![
+                        (Expression::Identifier("foo".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                        (Expression::Identifier("foo2".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("c".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                        (Expression::Identifier("foo3".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("d".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                    ],
+                    default: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Call {
+                                method: Box::new(Expression::Identifier("b".to_owned())),
+                                args: vec![],
+                            }
+                        },
+                    ])
+                },
+            }
+        );
+
+        // Basic if else-if (no else)
+        test_method(r#"
+        if foo {
+            a();
+        }
+        else if foo2 {
+            c();
+        }
+        else if foo3 {
+            d();
+        }
+        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+            Statement::Expression {
+                expr: Expression::ConditionGroup {
+                    branches: vec![
+                        (Expression::Identifier("foo".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                        (Expression::Identifier("foo2".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("c".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                        (Expression::Identifier("foo3".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Call {
+                                    method: Box::new(Expression::Identifier("d".to_owned())),
+                                    args: vec![],
+                                },
+                            },
+                        ]),
+                    ],
+                    default: None,
+                },
+            }
+        );
+
+        // Declaration using if expression
+        test_method(r#"
+        let a: u8 = if foo {
+            1
+        }
+        else if bar7 {
+            2
+        }
+        else {
+            3
+        };
+        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+            Statement::Declaration {
+                pattern: Pattern::Identifier("a".to_owned()),
+                type_def: TypeDefinition::Name {
+                    name: "u8".to_owned(),
+                },
+                expr: Some(Expression::ConditionGroup {
+                    branches: vec![
+                        (Expression::Identifier("foo".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Number(1),
+                            },
+                        ]),
+                        (Expression::Identifier("bar7".to_owned()), vec![
+                            Statement::Expression {
+                                expr: Expression::Number(2),
+                            },
+                        ]),
+                    ],
+                    default: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Number(3),
+                        },
+                    ]),
+                }),
+            }
+        );
+    }
+
     fn test_parse<F>(input: &'static str, parse: F, tokens: Vec<Token<Rule>>)
         where F: FnOnce(&mut Rdp<StringInput>) -> bool {
 
@@ -380,6 +630,6 @@ mod tests {
     }
 
     fn parser_from(s: &'static str) -> Rdp<StringInput> {
-        Rdp::new(StringInput::new(s))
+        Rdp::new(StringInput::new(s.trim()))
     }
 }
