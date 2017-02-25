@@ -444,7 +444,6 @@ mod tests {
 
     #[test]
     fn binary_operators() {
-        // Basic if
         test_method(r#"
         a || b;
         a && b;
@@ -468,7 +467,7 @@ mod tests {
         a && b && c >= d;
         a <= b && c >= d;
         a < b && c > d;
-        "#, |p| p.program(), |p| p.parse_program(),
+        "#, |p| p.program(), |p| p.ast(),
             Program::new(vec![
                 Statement::Expression {
                     expr: Expression::Call {
