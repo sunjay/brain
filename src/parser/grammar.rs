@@ -19,7 +19,8 @@ impl_rdp! {
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
         assignment = { identifier ~ op_assign ~ expr ~ semi}
-        declaration = { ["let"] ~ pattern ~ [":"] ~ type_def ~ (op_assign ~ expr)? ~ semi}
+        declaration = { ["let"] ~ pattern ~ op_declare_type ~ type_def ~ (op_assign ~ expr)? ~ semi}
+        op_declare_type = { [":"] }
         op_assign = { ["="] }
         pattern = { identifier }
 
@@ -128,10 +129,10 @@ impl_rdp! {
             (&text: comment) => {
                 Statement::Comment(text.into())
             },
-            (_: declaration, pattern: _pattern(), type_def: _type_def(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
+            (_: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
                 Statement::Declaration {pattern: pattern, type_def: type_def, expr: Some(expr)}
             },
-            (_: declaration, pattern: _pattern(), type_def: _type_def(), _: semi) => {
+            (_: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: semi) => {
                 Statement::Declaration {pattern: pattern, type_def: type_def, expr: None}
             },
             (_: assignment, ident: _identifier(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
@@ -390,6 +391,7 @@ impl fmt::Display for Rule {
             op_gt => "`>`",
             op_lt => "`<`",
             op_access => "`.`",
+            op_declare_type => "`:`",
 
             block_start => "`{`",
             block_end => "`}`",
