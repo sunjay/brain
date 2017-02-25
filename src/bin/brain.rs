@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
-use brain::{Program, Instructions, OptimizationLevel};
+use brain::{Program, Instructions, OptimizationLevel, ParseError};
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
@@ -59,7 +59,15 @@ fn main() {
         exit_with_error!("Could not read source file: {}", e);
     });
 
-    let program: Program = source.parse().unwrap();
+    let program: Program = source.parse().unwrap_or_else(|e: ParseError| {
+        if e.expected.is_empty() {
+            exit_with_error!("Syntax Error: no token expected at line {} col {}", e.line, e.col);
+        } else {
+            exit_with_error!("Syntax Error: expected token(s): {} at line {} col {}",
+                e.expected.iter().map(|r| format!("{:?}", r)).collect::<Vec<String>>().join(", "),
+                e.line, e.col);
+        }
+    });
     let mut instructions = Instructions::from_program(program).unwrap();
     instructions.optimize(OptimizationLevel::On);
     let generated_code: String = instructions.into();

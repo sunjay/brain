@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use pest::prelude::*;
 
-use super::*;
+use super::{Rdp, ParseError};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
@@ -23,19 +23,23 @@ impl IntoIterator for Program {
 }
 
 impl FromStr for Program {
-    type Err = String;
+    type Err = ParseError;
+    
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parser = Rdp::new(StringInput::new(input));
 
-        println!("{:?}", (parser.program(), parser.end()));
-        println!("{:#?}", parser.queue());
-        println!("{:?}", parser.stack());
-        let (expected, pos) = parser.expected();
-        let (line, col) = parser.input().line_col(pos);
-        println!("Expected: {:?} at line {} col {}", expected, line, col);
-
-        println!("{:#?}", parser.parse_program());
-        unimplemented!();
+        if parser.program() {
+            Ok(parser.ast())
+        }
+        else {
+            let (expected, pos) = parser.expected();
+            let (line, col) = parser.input().line_col(pos);
+            Err(ParseError {
+                line: line,
+                col: col,
+                expected: expected,
+            })
+        }
     }
 }
 

@@ -98,7 +98,10 @@ impl_rdp! {
     }
 
     process! {
-        parse_program(&self) -> Program {
+        // Top-level method that returns the abstract syntax tree based on the
+        // contents of the parser queue
+        // Make sure to call program() before this so there is something in the queue
+        ast(&self) -> Program {
             (list: _program()) => {
                 Program::new(list.into_iter().collect())
             },
