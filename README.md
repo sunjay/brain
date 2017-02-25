@@ -1,5 +1,10 @@
 # brain
 
+[![Crates.io](https://img.shields.io/crates/v/brain.svg)](https://crates.io/crates/brain)
+[![Crates.io](https://img.shields.io/crates/l/brain.svg)](https://crates.io/crates/brain)
+[![Build Status](https://travis-ci.org/brain-lang/brain.svg?branch=master)](https://travis-ci.org/brain-lang/brain)
+[![Gitter](https://img.shields.io/gitter/room/brain-lang/brain.svg)](https://gitter.im/brain-lang/brain)
+
 brain is a high level programming language that compiles into brainfuck. It is
 implemented using the Rust programming language.
 
