@@ -307,6 +307,11 @@ impl_rdp! {
 
                 tail
             },
+            (&text: comment, mut tail: _block_deque()) => {
+                tail.push_front(Statement::Comment(text.into()));
+
+                tail
+            },
             (_: block_end) => {
                 VecDeque::new()
             },
