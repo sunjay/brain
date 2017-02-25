@@ -443,6 +443,38 @@ mod tests {
     }
 
     #[test]
+    fn empty_program() {
+        test_method(r#""#, |p| p.program(), |p| p.ast(),
+            Program::new(Vec::new()));
+
+        test_method(r#"
+        "#, |p| p.program(), |p| p.ast(),
+            Program::new(Vec::new()));
+
+        test_method(r#"
+
+        "#, |p| p.program(), |p| p.ast(),
+            Program::new(Vec::new()));
+    }
+
+    #[test]
+    fn leading_whitespace() {
+        test_method(r#"
+
+        foo();
+        "#, |p| p.program(), |p| p.ast(),
+            Program::new(vec![
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                        args: vec![],
+                    },
+                }
+            ])
+        );
+    }
+
+    #[test]
     fn binary_operators() {
         test_method(r#"
         a || b;
@@ -738,7 +770,7 @@ mod tests {
         if foo {
             a();
         }
-        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+        "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
@@ -764,7 +796,7 @@ mod tests {
         else {
             b();
         }
-        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+        "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
@@ -803,7 +835,7 @@ mod tests {
         else {
             b();
         }
-        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+        "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
@@ -855,7 +887,7 @@ mod tests {
         else if foo3 {
             d();
         }
-        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+        "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
@@ -900,7 +932,7 @@ mod tests {
         else {
             3
         };
-        "#, |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
+        "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Declaration {
                 pattern: Pattern::Identifier("a".to_owned()),
                 type_def: TypeDefinition::Name {
@@ -961,6 +993,6 @@ mod tests {
     }
 
     fn parser_from(s: &'static str) -> Rdp<StringInput> {
-        Rdp::new(StringInput::new(s.trim()))
+        Rdp::new(StringInput::new(s))
     }
 }
