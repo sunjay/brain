@@ -44,12 +44,13 @@ while counter > 0 {
     stdout.writeln(counter);
 }
 
+//NOT SUPPORTED FOR NOW:
 // the type of i is usize
 // i goes from 1 <= i < 10
 // This currently must be a static, finite counter
 // variables are not supported as counter limits
 // This is basically implemented as a brainfuck loop that goes from
 // 0 to (end-start) and start is added to the cell *within* the loop
-for i in 1..10 {
-    stdout.writeln("i = ", counter);
-}
+//for i in 1..10 {
+//    stdout.writeln("i = ", counter);
+//}

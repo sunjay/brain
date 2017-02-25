@@ -34,10 +34,7 @@ impl FromStr for Program {
         let (line, col) = parser.input().line_col(pos);
         println!("Expected: {:?} at line {} col {}", expected, line, col);
 
-        println!("{:?}", {
-            let mut parser = Rdp::new(StringInput::new(input));
-            parser.parse_program()
-        });
+        println!("{:#?}", parser.parse_program());
         unimplemented!();
     }
 }
@@ -57,12 +54,6 @@ pub enum Statement {
     WhileLoop {
         condition: Expression,
         body: Block,
-    },
-    ConditionGroup {
-        // Condition expression and body block
-        branches: Vec<(Expression, Block)>,
-        // "default" or "else" branch body
-        default: Option<Block>,
     },
     Expression {
         expr: Expression,
@@ -99,7 +90,13 @@ pub enum Expression {
     Access {
         target: Box<Expression>,
         field: Box<Expression>,
-    }
+    },
+    ConditionGroup {
+        // Condition expression and body block
+        branches: Vec<(Expression, Block)>,
+        // "default" or "else" branch body
+        default: Option<Block>,
+    },
 }
 
 pub type Identifier = String;
