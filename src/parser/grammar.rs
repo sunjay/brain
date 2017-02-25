@@ -7,7 +7,7 @@ use super::*;
 
 impl_rdp! {
     grammar! {
-        program = _{ statement* ~ eoi }
+        program = _{ soi ~ statement* ~ eoi }
 
         // conditional is technically an expression too but it can be used as a statement
         // without a semicolon as well
