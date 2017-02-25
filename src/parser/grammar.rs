@@ -27,7 +27,7 @@ impl_rdp! {
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { field_access | identifier | func_call | conditional | string_literal | number }
+            { func_call | field_access | identifier | conditional | string_literal | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = {< ["||"] }
