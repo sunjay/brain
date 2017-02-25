@@ -320,6 +320,34 @@ mod tests {
             Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
     }
 
+    #[test]
+    fn functions_field_access() {
+        test_method(r#"func(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Call {
+                method: Box::new(Expression::Identifier("func".to_owned())),
+                args: vec![
+                    Expression::Number(1),
+                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::Number(3),
+                ],
+            }
+        );
+
+        test_method(r#"thing.prop(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Call {
+                method: Box::new(Expression::Access {
+                    target: Box::new(Expression::Identifier("thing".to_owned())),
+                    field: Box::new(Expression::Identifier("prop".to_owned())),
+                }),
+                args: vec![
+                    Expression::Number(1),
+                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::Number(3),
+                ],
+            }
+        );
+    }
+
     fn test_parse<F>(input: &'static str, parse: F, tokens: Vec<Token<Rule>>)
         where F: FnOnce(&mut Rdp<StringInput>) -> bool {
 
