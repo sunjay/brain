@@ -461,10 +461,10 @@ mod tests {
     #[test]
     fn string_literal_escapes() {
         test_method(r#""foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral(Identifier::from("foo")));
+            Expression::StringLiteral("foo".to_owned()));
 
         test_method(r#""\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral(Identifier::from("\\ \" \' \n \r \t \0")));
+            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
     }
 
     #[test]
@@ -474,7 +474,7 @@ mod tests {
                 method: Box::new(Expression::Identifier(Identifier::from("func"))),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral(Identifier::from("foo")),
+                    Expression::StringLiteral("foo".to_owned()),
                     Expression::Number(3),
                 ],
             }
@@ -488,7 +488,7 @@ mod tests {
                 }),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral(Identifier::from("foo")),
+                    Expression::StringLiteral("foo".to_owned()),
                     Expression::Number(3),
                 ],
             }
