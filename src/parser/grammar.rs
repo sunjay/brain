@@ -183,19 +183,19 @@ impl_rdp! {
             },
             (_: bool_or, lhs: _expr(), _: op_bool_or, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier("std::ops::Or::or".to_owned())),
+                    method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
                     args: vec![lhs, rhs],
                 }
             },
             (_: bool_and, lhs: _expr(), _: op_bool_and, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier("std::ops::And::and".to_owned())),
+                    method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
                     args: vec![lhs, rhs],
                 }
             },
             (_: comparison, lhs: _expr(), op_token, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(match op_token.rule {
+                    method: Box::new(Expression::Identifier(Identifier::from(match op_token.rule {
                         Rule::op_eq => "std::cmp::PartialEq::eq",
                         Rule::op_ne => "std::cmp::PartialEq::ne",
                         Rule::op_ge => "std::cmp::PartialOrd::ge",
@@ -203,7 +203,7 @@ impl_rdp! {
                         Rule::op_gt => "std::cmp::PartialOrd::gt",
                         Rule::op_lt => "std::cmp::PartialOrd::lt",
                         _ => unreachable!(),
-                    }.to_owned())),
+                    }))),
                     args: vec![lhs, rhs],
                 }
             },
@@ -461,20 +461,20 @@ mod tests {
     #[test]
     fn string_literal_escapes() {
         test_method(r#""foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("foo".to_owned()));
+            Expression::StringLiteral(Identifier::from("foo")));
 
         test_method(r#""\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
+            Expression::StringLiteral(Identifier::from("\\ \" \' \n \r \t \0")));
     }
 
     #[test]
     fn functions_field_access() {
         test_method(r#"func(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
-                method: Box::new(Expression::Identifier("func".to_owned())),
+                method: Box::new(Expression::Identifier(Identifier::from("func"))),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::StringLiteral(Identifier::from("foo")),
                     Expression::Number(3),
                 ],
             }
@@ -483,12 +483,12 @@ mod tests {
         test_method(r#"thing.prop(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
                 method: Box::new(Expression::Access {
-                    target: Box::new(Expression::Identifier("thing".to_owned())),
-                    field: Box::new(Expression::Identifier("prop".to_owned())),
+                    target: Box::new(Expression::Identifier(Identifier::from("thing"))),
+                    field: Box::new(Expression::Identifier(Identifier::from("prop"))),
                 }),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::StringLiteral(Identifier::from("foo")),
                     Expression::Number(3),
                 ],
             }
@@ -827,10 +827,10 @@ mod tests {
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
-                        (Expression::Identifier("foo".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
                                     args: vec![],
                                 },
                             },
@@ -853,10 +853,10 @@ mod tests {
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
-                        (Expression::Identifier("foo".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
                                     args: vec![],
                                 },
                             },
@@ -865,7 +865,7 @@ mod tests {
                     default: Some(vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier("b".to_owned())),
+                                method: Box::new(Expression::Identifier(Identifier::from("b"))),
                                 args: vec![],
                             }
                         },
@@ -892,26 +892,26 @@ mod tests {
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
-                        (Expression::Identifier("foo".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
                                     args: vec![],
                                 },
                             },
                         ]),
-                        (Expression::Identifier("foo2".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo2")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("c".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("c"))),
                                     args: vec![],
                                 },
                             },
                         ]),
-                        (Expression::Identifier("foo3".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo3")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("d".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("d"))),
                                     args: vec![],
                                 },
                             },
@@ -920,7 +920,7 @@ mod tests {
                     default: Some(vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier("b".to_owned())),
+                                method: Box::new(Expression::Identifier(Identifier::from("b"))),
                                 args: vec![],
                             }
                         },
@@ -944,26 +944,26 @@ mod tests {
             Statement::Expression {
                 expr: Expression::ConditionGroup {
                     branches: vec![
-                        (Expression::Identifier("foo".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("a".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
                                     args: vec![],
                                 },
                             },
                         ]),
-                        (Expression::Identifier("foo2".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo2")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("c".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("c"))),
                                     args: vec![],
                                 },
                             },
                         ]),
-                        (Expression::Identifier("foo3".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo3")), vec![
                             Statement::Expression {
                                 expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier("d".to_owned())),
+                                    method: Box::new(Expression::Identifier(Identifier::from("d"))),
                                     args: vec![],
                                 },
                             },
@@ -987,18 +987,18 @@ mod tests {
         };
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Declaration {
-                pattern: Pattern::Identifier("a".to_owned()),
+                pattern: Pattern::Identifier(Identifier::from("a")),
                 type_def: TypeDefinition::Name {
-                    name: "u8".to_owned(),
+                    name: Identifier::from("u8"),
                 },
                 expr: Some(Expression::ConditionGroup {
                     branches: vec![
-                        (Expression::Identifier("foo".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("foo")), vec![
                             Statement::Expression {
                                 expr: Expression::Number(1),
                             },
                         ]),
-                        (Expression::Identifier("bar7".to_owned()), vec![
+                        (Expression::Identifier(Identifier::from("bar7")), vec![
                             Statement::Expression {
                                 expr: Expression::Number(2),
                             },
