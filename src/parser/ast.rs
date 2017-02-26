@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::str::FromStr;
 
 use pest::prelude::*;
@@ -25,7 +24,7 @@ impl IntoIterator for Program {
 
 impl FromStr for Program {
     type Err = ParseError;
-
+    
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parser = Rdp::new(StringInput::new(input));
 
@@ -104,22 +103,7 @@ pub enum Expression {
     },
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Identifier(Vec<String>);
-
-impl FromStr for Identifier {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Identifier(s.split("::").map(|s| s.to_owned()).collect()))
-    }
-}
-
-impl<'a> From<&'a str> for Identifier {
-    fn from(s: &'a str) -> Identifier {
-        s.parse().unwrap()
-    }
-}
-
+pub type Identifier = String;
 pub type Block = Vec<Statement>;
 pub type Number = i32;
 pub type FuncArgs = Vec<FuncArg>;
