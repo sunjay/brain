@@ -10,6 +10,10 @@ keywords = ["brain", "brainfuck", "compiler", "interpreter", "optimizer"]
 categories = ["command-line-interface"]
 license = "MIT"
 
+[badges]
+# Travis CI: `repository` is required. `branch` is optional; default is `master`
+travis-ci = { repository = "brain-lang/brain" }
+
 [dependencies]
 clap = "^2.0"
 pest = "0.4"
