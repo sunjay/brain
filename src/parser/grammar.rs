@@ -1,5 +1,4 @@
 use std::fmt;
-use std::iter;
 use std::collections::VecDeque;
 
 use pest::prelude::*;
@@ -215,7 +214,7 @@ impl_rdp! {
             },
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
-                Expression::Number(s.parse().unwrap())
+                Expression::Number(s.replace("_", "").parse().unwrap())
             },
         }
 
@@ -239,40 +238,52 @@ impl_rdp! {
 
         _conditional(&self) -> Expression {
             (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches(), _: op_else, else_block: _block()) => {
-                Expression::ConditionGroup {
-                    branches: iter::once((expr, block)).chain(branches).collect(),
-                    default: Some(else_block),
+                Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: Some(nest_else_ifs(branches, Some(else_block))),
                 }
             },
             (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches()) => {
-                Expression::ConditionGroup {
-                    branches: iter::once((expr, block)).chain(branches).collect(),
-                    default: None,
+                Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: Some(nest_else_ifs(branches, None)),
                 }
             },
             (_: expr, expr: _expr(), block: _block(), _: op_else, else_block: _block()) => {
-                Expression::ConditionGroup {
-                    branches: vec![(expr, block)],
-                    default: Some(else_block),
+                Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: Some(else_block),
                 }
             },
             (_: expr, expr: _expr(), block: _block()) => {
-                Expression::ConditionGroup {
-                    branches: vec![(expr, block)],
-                    default: None,
+                Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: None,
                 }
             },
         }
 
-        _branches(&self) -> VecDeque<(Expression, Block)> {
+        _branches(&self) -> VecDeque<Expression> {
             (_: expr, expr: _expr(), block: _block(), _: op_else_if, mut tail: _branches()) => {
-                tail.push_front((expr, block));
+                tail.push_front(Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: None,
+                });
 
                 tail
             },
             (_: expr, expr: _expr(), block: _block()) => {
                 let mut queue = VecDeque::new();
-                queue.push_front((expr, block));
+                queue.push_front(Expression::Branch {
+                    condition: Box::new(expr),
+                    body: block,
+                    otherwise: None,
+                });
 
                 queue
             },
@@ -358,6 +369,33 @@ impl_rdp! {
     }
 }
 
+/// Given a series of branch expressions, this will nest them together
+/// so that they result in a single nested branch expression
+///
+/// # Example
+/// Given:
+/// if foo1 { body1 } else {}
+/// if foo2 { body2 } else {}
+/// if foo3 { body3 } else {}
+///
+/// Results in:
+/// if foo1 { body1 } else { if foo2 { body2 } else { if foo3 { body3 } else {} } }
+fn nest_else_ifs(branches: VecDeque<Expression>, else_block: Option<Block>) -> Block {
+    branches.into_iter().rev().fold(else_block, |acc, mut br| {
+        Some(vec![Statement::Expression {
+            expr: {
+                match br {
+                    Expression::Branch {ref mut otherwise, ..} => {
+                        *otherwise = acc;
+                    },
+                    _ => unreachable!(),
+                };
+                br
+            },
+        }])
+    }).unwrap()
+}
+
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Just to make things a bit more ergonomic
@@ -416,8 +454,6 @@ mod tests {
     use pest::prelude::*;
 
     use super::*;
-    // ast, etc.
-    use super::super::*;
 
     #[test]
     fn string_literal() {
@@ -446,6 +482,16 @@ mod tests {
         test_parse(r#"1_000_000"#, |p| p.number(), vec![
             Token::new(Rule::number, 0, 9),
         ]);
+
+        test_parse(r#"1_000_000_"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 10),
+        ]);
+
+        test_parse(r#"1____0_0__0______000____"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 24),
+        ]);
+
+        test_fail(r#"_1_000_000"#, |p| p.number());
     }
 
     #[test]
@@ -456,6 +502,29 @@ mod tests {
             Token::new(Rule::op_access, 3, 4),
             Token::new(Rule::identifier, 4, 7),
         ]);
+    }
+
+    #[test]
+    fn numeric_literal() {
+        test_method(r#"0"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(0)
+        );
+
+        test_method(r#"100"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(100)
+        );
+
+        test_method(r#"1_000_000"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1_000_000)
+        );
+
+        test_method(r#"1_000_000_"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1_000_000_)
+        );
+
+        test_method(r#"1____0_0__0______000____"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1____0_0__0______000____)
+        );
     }
 
     #[test]
@@ -825,18 +894,17 @@ mod tests {
         }
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
-                expr: Expression::ConditionGroup {
-                    branches: vec![
-                        (Expression::Identifier(Identifier::from("foo")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
-                                    args: vec![],
-                                },
+                expr: Expression::Branch {
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    body: vec![
+                        Statement::Expression {
+                            expr: Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                args: vec![],
                             },
-                        ]),
+                        },
                     ],
-                    default: None,
+                    otherwise: None,
                 },
             }
         );
@@ -851,18 +919,17 @@ mod tests {
         }
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
-                expr: Expression::ConditionGroup {
-                    branches: vec![
-                        (Expression::Identifier(Identifier::from("foo")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
-                                    args: vec![],
-                                },
+                expr: Expression::Branch {
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    body: vec![
+                        Statement::Expression {
+                            expr: Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                args: vec![],
                             },
-                        ]),
+                        },
                     ],
-                    default: Some(vec![
+                    otherwise: Some(vec![
                         Statement::Expression {
                             expr: Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("b"))),
@@ -890,39 +957,52 @@ mod tests {
         }
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
-                expr: Expression::ConditionGroup {
-                    branches: vec![
-                        (Expression::Identifier(Identifier::from("foo")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
-                                    args: vec![],
-                                },
-                            },
-                        ]),
-                        (Expression::Identifier(Identifier::from("foo2")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("c"))),
-                                    args: vec![],
-                                },
-                            },
-                        ]),
-                        (Expression::Identifier(Identifier::from("foo3")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("d"))),
-                                    args: vec![],
-                                },
-                            },
-                        ]),
-                    ],
-                    default: Some(vec![
+                expr: Expression::Branch {
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("b"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
                                 args: vec![],
-                            }
+                            },
+                        },
+                    ],
+                    otherwise: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Branch {
+                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"))),
+                                body: vec![
+                                    Statement::Expression {
+                                        expr: Expression::Call {
+                                            method: Box::new(Expression::Identifier(Identifier::from("c"))),
+                                            args: vec![],
+                                        },
+                                    },
+                                ],
+                                otherwise: Some(vec![
+                                    Statement::Expression {
+                                        expr: Expression::Branch {
+                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"))),
+                                            body: vec![
+                                                Statement::Expression {
+                                                    expr: Expression::Call {
+                                                        method: Box::new(Expression::Identifier(Identifier::from("d"))),
+                                                        args: vec![],
+                                                    },
+                                                },
+                                            ],
+                                            otherwise: Some(vec![
+                                                Statement::Expression {
+                                                    expr: Expression::Call {
+                                                        method: Box::new(Expression::Identifier(Identifier::from("b"))),
+                                                        args: vec![],
+                                                    }
+                                                },
+                                            ]),
+                                        },
+                                    },
+                                ]),
+                            },
                         },
                     ]),
                 },
@@ -942,34 +1022,47 @@ mod tests {
         }
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
-                expr: Expression::ConditionGroup {
-                    branches: vec![
-                        (Expression::Identifier(Identifier::from("foo")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("a"))),
-                                    args: vec![],
-                                },
+                expr: Expression::Branch {
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    body: vec![
+                        Statement::Expression {
+                            expr: Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                args: vec![],
                             },
-                        ]),
-                        (Expression::Identifier(Identifier::from("foo2")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("c"))),
-                                    args: vec![],
-                                },
-                            },
-                        ]),
-                        (Expression::Identifier(Identifier::from("foo3")), vec![
-                            Statement::Expression {
-                                expr: Expression::Call {
-                                    method: Box::new(Expression::Identifier(Identifier::from("d"))),
-                                    args: vec![],
-                                },
-                            },
-                        ]),
+                        },
                     ],
-                    default: None,
+                    otherwise: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Branch {
+                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"))),
+                                body: vec![
+                                    Statement::Expression {
+                                        expr: Expression::Call {
+                                            method: Box::new(Expression::Identifier(Identifier::from("c"))),
+                                            args: vec![],
+                                        },
+                                    },
+                                ],
+                                otherwise: Some(vec![
+                                    Statement::Expression {
+                                        expr: Expression::Branch {
+                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"))),
+                                            body: vec![
+                                                Statement::Expression {
+                                                    expr: Expression::Call {
+                                                        method: Box::new(Expression::Identifier(Identifier::from("d"))),
+                                                        args: vec![],
+                                                    },
+                                                },
+                                            ],
+                                            otherwise: None,
+                                        },
+                                    },
+                                ]),
+                            },
+                        },
+                    ]),
                 },
             }
         );
@@ -991,22 +1084,28 @@ mod tests {
                 type_def: TypeDefinition::Name {
                     name: Identifier::from("u8"),
                 },
-                expr: Some(Expression::ConditionGroup {
-                    branches: vec![
-                        (Expression::Identifier(Identifier::from("foo")), vec![
-                            Statement::Expression {
-                                expr: Expression::Number(1),
-                            },
-                        ]),
-                        (Expression::Identifier(Identifier::from("bar7")), vec![
-                            Statement::Expression {
-                                expr: Expression::Number(2),
-                            },
-                        ]),
-                    ],
-                    default: Some(vec![
+                expr: Some(Expression::Branch {
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    body: vec![
                         Statement::Expression {
-                            expr: Expression::Number(3),
+                            expr: Expression::Number(1),
+                        },
+                    ],
+                    otherwise: Some(vec![
+                        Statement::Expression {
+                            expr: Expression::Branch {
+                                condition: Box::new(Expression::Identifier(Identifier::from("bar7"))),
+                                body: vec![
+                                    Statement::Expression {
+                                        expr: Expression::Number(2)
+                                    },
+                                ],
+                                otherwise: Some(vec![
+                                    Statement::Expression {
+                                        expr: Expression::Number(3)
+                                    },
+                                ]),
+                            },
                         },
                     ]),
                 }),

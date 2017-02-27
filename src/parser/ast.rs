@@ -24,7 +24,7 @@ impl IntoIterator for Program {
 
 impl FromStr for Program {
     type Err = ParseError;
-    
+
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parser = Rdp::new(StringInput::new(input));
 
@@ -95,11 +95,14 @@ pub enum Expression {
         target: Box<Expression>,
         field: Box<Expression>,
     },
-    ConditionGroup {
-        // Condition expression and body block
-        branches: Vec<(Expression, Block)>,
-        // "default" or "else" branch body
-        default: Option<Block>,
+    Branch {
+        /// Condition to be executed to determine which block
+        /// is run
+        condition: Box<Expression>,
+        /// executed if the condition is non-zero
+        body: Block,
+        /// (optional) executed if the condition is zero
+        otherwise: Option<Block>,
     },
 }
 
