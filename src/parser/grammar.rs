@@ -214,7 +214,7 @@ impl_rdp! {
             },
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
-                Expression::Number(s.parse().unwrap())
+                Expression::Number(s.replace("_", "").parse().unwrap())
             },
         }
 
@@ -502,6 +502,29 @@ mod tests {
             Token::new(Rule::op_access, 3, 4),
             Token::new(Rule::identifier, 4, 7),
         ]);
+    }
+
+    #[test]
+    fn numeric_literal() {
+        test_method(r#"0"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(0)
+        );
+
+        test_method(r#"100"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(100)
+        );
+
+        test_method(r#"1_000_000"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1_000_000)
+        );
+
+        test_method(r#"1_000_000_"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1_000_000_)
+        );
+
+        test_method(r#"1____0_0__0______000____"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::Number(1____0_0__0______000____)
+        );
     }
 
     #[test]
