@@ -23,7 +23,7 @@ pub struct MemoryBlock {
 impl MemoryBlock {
     /// Returns the cell position of the first cell within this MemoryBlock
     pub fn position(&self) -> CellPosition {
-        CellPosition(self, 0)
+        CellPosition(self.id, 0)
     }
 
     /// Returns the position of the cell at the given index within this MemoryBlock

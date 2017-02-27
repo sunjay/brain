@@ -1,3 +1,3 @@
 mod static_allocator;
 
-pub use static_allocator::*;
+pub use self::static_allocator::*;

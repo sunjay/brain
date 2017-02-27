@@ -1,4 +1,4 @@
-use memory::{MemoryBlock, Size, CellPosition}
+use memory::{MemoryBlock, Size, CellPosition};
 
 pub enum Operation {
     /// Allocates the given size in bytes on the tape so that it is not used by any other code
