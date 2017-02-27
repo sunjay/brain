@@ -46,7 +46,7 @@ impl MemoryBlock {
 }
 
 /// The position of a cell within an MemoryBlock
-/// Index = 0 indicates
+/// Index = 0 indicates the start of the memory block
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct CellPosition(Id, Index);
 
