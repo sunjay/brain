@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Comparison operators like `==`, `!=`, `>=`, etc.
 - Declaration without initialization
   - Allows you to defer initialization to whenever makes sense in your code
+  - Note that static checking is not fully functional
+    (see [#7](https://github.com/brain-lang/brain/issues/7))
 - Simple wrapping unsigned 8-bit `u8` type
 - Much cleaner and easier to build on codebase underneath the compiler which
   means more features sooner!
