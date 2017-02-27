@@ -4,7 +4,8 @@
 extern crate pest;
 
 mod parser;
-mod codegen;
+mod operations;
 mod memory;
 
 pub use parser::*;
+pub use operations::*;
