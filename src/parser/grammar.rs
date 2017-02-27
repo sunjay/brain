@@ -482,6 +482,16 @@ mod tests {
         test_parse(r#"1_000_000"#, |p| p.number(), vec![
             Token::new(Rule::number, 0, 9),
         ]);
+
+        test_parse(r#"1_000_000_"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 10),
+        ]);
+
+        test_parse(r#"1____0_0__0______000____"#, |p| p.number(), vec![
+            Token::new(Rule::number, 0, 24),
+        ]);
+
+        test_fail(r#"_1_000_000"#, |p| p.number());
     }
 
     #[test]
