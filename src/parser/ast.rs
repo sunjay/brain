@@ -3,6 +3,7 @@ use std::str::FromStr;
 use pest::prelude::*;
 
 use super::{Rdp, ParseError};
+use operations::{self, Operation};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
@@ -10,6 +11,10 @@ pub struct Program(Vec<Statement>);
 impl Program {
     pub fn new(statements: Vec<Statement>) -> Program {
         Program(statements)
+    }
+
+    pub fn into_operations(self) -> Vec<Operation> {
+        operations::from_ast(self)
     }
 }
 

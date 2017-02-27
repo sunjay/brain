@@ -85,5 +85,7 @@ fn compile(source: String) -> String {
         }
     });
 
+    let operations = program.into_operations();
+
     unimplemented!();
 }

@@ -9,3 +9,4 @@ mod memory;
 
 pub use parser::*;
 pub use operations::*;
+pub use memory::*;
