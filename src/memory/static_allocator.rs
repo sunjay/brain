@@ -21,6 +21,11 @@ pub struct MemoryBlock {
 }
 
 impl MemoryBlock {
+    /// Returns the size of this memory block
+    pub fn size(&self) -> Size {
+        self.size
+    }
+
     /// Returns the cell position of the first cell within this MemoryBlock
     pub fn position(&self) -> CellPosition {
         CellPosition(self.id, 0)
@@ -56,6 +61,8 @@ impl StaticAllocator {
         }
     }
 
+    /// Allocates a memory block of the given size and gives it a unique ID
+    /// so that this memory block can be referred to uniquely
     pub fn allocate(&mut self, size: Size) -> MemoryBlock {
         let blk = MemoryBlock {
             id: Id(self.next_id),

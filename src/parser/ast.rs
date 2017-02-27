@@ -81,8 +81,6 @@ pub enum TypeDefinition {
     },
     Array {
         type_def: Box<TypeDefinition>,
-        //TODO: This probably isn't the right type since this should accept anything and then get
-        // statically checked to ensure the correct number was put here
         size: Option<Expression>,
     },
 }

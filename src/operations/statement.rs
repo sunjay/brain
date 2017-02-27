@@ -1,8 +1,11 @@
 use parser::Statement;
-use memory::StaticAllocator;
+use super::scope::ScopeStack;
 
 use super::{Operation};
 
-pub fn into_operations(ast: Statement, mem: &mut StaticAllocator) -> Vec<Operation> {
-    unimplemented!();
+pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> Vec<Operation> {
+    match node {
+        Statement::Comment(_) => Vec::new(),
+        _ => unimplemented!(),
+    }
 }
