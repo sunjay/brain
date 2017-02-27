@@ -3,6 +3,9 @@ mod scope;
 mod item_type;
 mod program;
 mod statement;
+mod declaration;
+mod type_definition;
+mod expression;
 
 pub use self::operation::*;
 

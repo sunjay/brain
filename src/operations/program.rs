@@ -1,7 +1,7 @@
 use parser::Program;
-use super::scope::ScopeStack;
 
 use super::{Operation, statement};
+use super::scope::ScopeStack;
 
 pub fn into_operations(ast: Program, scope: &mut ScopeStack) -> Vec<Operation> {
     ast.into_iter().fold(Vec::new(), |mut acc, stmt| {
