@@ -182,13 +182,13 @@ impl_rdp! {
             },
             (_: bool_or, lhs: _expr(), _: op_bool_or, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                    method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                     args: vec![lhs, rhs],
                 }
             },
             (_: bool_and, lhs: _expr(), _: op_bool_and, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                    method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                     args: vec![lhs, rhs],
                 }
             },
