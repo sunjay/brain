@@ -1,5 +1,7 @@
 use memory::Size;
 
+use super::scope::ScopeStack;
+
 /// An item is anything that can be declared
 #[derive(Debug, PartialEq, Clone)]
 pub enum ItemType {
@@ -11,7 +13,7 @@ pub enum ItemType {
     /// A fixed-size array
     Array {
         /// The type of the elements in this array
-        type_def: Box<ItemType>,
+        type_name: String,
         /// The number of elements that this array can hold
         size: usize,
     },
@@ -19,7 +21,7 @@ pub enum ItemType {
 
 impl ItemType {
     /// Computes the required size in cells of this type
-    pub fn required_size(&self) -> Size {
+    pub fn required_size(&self, scope: &ScopeStack) -> Size {
         unimplemented!(); //TODO
     }
 }

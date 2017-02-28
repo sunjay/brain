@@ -63,7 +63,7 @@ impl ScopeStack {
     /// Does not associate memory block with a name which means it cannot be looked up later
     /// Returns the allocated memory block
     pub fn allocate(&mut self, typ: &ItemType) -> MemoryBlock {
-        let size = typ.required_size();
+        let size = typ.required_size(self);
         self.allocator.allocate(size)
     }
 }
