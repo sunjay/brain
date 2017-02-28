@@ -9,6 +9,11 @@ mod type_definition;
 mod expression;
 
 pub use self::operation::*;
+pub mod self::program::*;
+pub mod self::statement::*;
+pub mod self::declaration::*;
+pub mod self::type_definition::*;
+pub mod self::expression::*;
 
 use parser::Program;
 
