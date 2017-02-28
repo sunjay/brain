@@ -625,13 +625,13 @@ mod tests {
             Program::new(vec![
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                     },
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                     },
                 },
@@ -673,10 +673,10 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Identifier(Identifier::from("c")),
@@ -685,14 +685,14 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
                             },
                         ],
@@ -700,14 +700,14 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
                             },
                         ],
@@ -715,7 +715,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
@@ -730,10 +730,10 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Call {
@@ -745,7 +745,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"))),
@@ -760,7 +760,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::Or::or"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"))),
@@ -775,10 +775,10 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Identifier(Identifier::from("c")),
@@ -787,13 +787,13 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![
                                     Expression::Call {
-                                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                         args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                                     },
                                     Expression::Identifier(Identifier::from("c")),
@@ -805,10 +805,10 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![
                                     Expression::Call {
                                         method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
@@ -823,7 +823,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
@@ -838,10 +838,10 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                                 args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
                             },
                             Expression::Call {
@@ -853,7 +853,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"))),
@@ -868,7 +868,7 @@ mod tests {
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::ops::And::and"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
                         args: vec![
                             Expression::Call {
                                 method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"))),
