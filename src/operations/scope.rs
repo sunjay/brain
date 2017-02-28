@@ -4,8 +4,14 @@ use memory::{StaticAllocator, MemoryBlock};
 
 use super::item_type::ItemType;
 
+/// Represents a single item in a scope
+pub struct ScopeItem {
+    type_def: ItemType,
+    memory: MemoryBlock,
+}
+
 /// Represents a single level of scope
-pub type Scope = HashMap<String, (ItemType, MemoryBlock)>;
+pub type Scope = HashMap<String, ScopeItem>;
 
 pub struct ScopeStack {
     stack: VecDeque<Scope>,
@@ -43,7 +49,7 @@ impl ScopeStack {
     /// the correct one
     /// Definitions are returned in order from latest definition to oldest
     /// Always use the first definition that matches the type you are looking for
-    pub fn lookup(&self, name: &str) -> Vec<&(ItemType, MemoryBlock)> {
+    pub fn lookup(&self, name: &str) -> Vec<&ScopeItem> {
         self.stack.iter().rev().map(|sc| sc.get(name)).fold(Vec::new(), |mut acc, r| match r {
             Some(def) => {
                 acc.push(def);
@@ -60,7 +66,10 @@ impl ScopeStack {
         let mem = self.allocate(typ);
         // It's OK to overwrite existing names because we support rebinding
         if let Some(scope) = self.stack.back_mut() {
-            scope.insert(name, (typ.clone(), mem));
+            scope.insert(name, ScopeItem {
+                type_def: typ.clone(),
+                memory: mem,
+            });
         }
         else {
             panic!("Attempt to declare name despite having no current scope");
