@@ -1,8 +1,10 @@
+use std::rc::Rc;
 use std::collections::{VecDeque, HashMap};
 
 use memory::{StaticAllocator, MemoryBlock};
 
-use super::item_type::ItemType;
+use super::operation::Operation;
+use super::item_type::{ItemType, FunctionTypeDef, FuncArgs};
 
 /// Represents a single item in a scope
 pub struct ScopeItem {
@@ -76,6 +78,21 @@ impl ScopeStack {
         }
 
         mem
+    }
+
+    /// Declares a built in function with the given name and type definition
+    /// The name is declared in the "current" scope which is at the top of the stack
+    /// Returns the allocated memory block
+    fn declare_builtin_function<F: 'static>(&mut self, name: String, func_type: FunctionTypeDef, f: F) -> MemoryBlock
+        where F: Fn(FuncArgs, ScopeStack) -> Vec<Operation> {
+
+        self.declare(
+            name,
+            &ItemType::BuiltInFunction {
+                type_def: func_type,
+                operations: Rc::new(f),
+            }
+        )
     }
 
     /// Allocate a memory block that is large enough for the given type
