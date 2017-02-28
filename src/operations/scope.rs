@@ -39,8 +39,18 @@ impl ScopeStack {
     }
 
     /// Looks up a name starting at the current scope
-    pub fn lookup(&self, name: &str) -> Option<&(ItemType, MemoryBlock)> {
-        self.stack.iter().rev().map(|sc| sc.get(name)).find(|r| r.is_some()).unwrap_or(None)
+    /// Returns ALL matches so that the caller can determine which definition is
+    /// the correct one
+    /// Definitions are returned in order from latest definition to oldest
+    /// Always use the first definition that matches the type you are looking for
+    pub fn lookup(&self, name: &str) -> Vec<&(ItemType, MemoryBlock)> {
+        self.stack.iter().rev().map(|sc| sc.get(name)).fold(Vec::new(), |mut acc, r| match r {
+            Some(def) => {
+                acc.push(def);
+                acc
+            },
+            None => acc,
+        })
     }
 
     /// Declares a name with the given type, allocates enough space for that type
@@ -65,5 +75,34 @@ impl ScopeStack {
     pub fn allocate(&mut self, typ: &ItemType) -> MemoryBlock {
         let size = typ.required_size(self);
         self.allocator.allocate(size)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn multiple_definitions() {
+        let mut scope = ScopeStack::new();
+        assert_eq!(scope.lookup("foo").len(), 0);
+
+        scope.declare("foo".to_owned(), unimplemented!());
+        assert_eq!(scope.lookup("foo").len(), 1);
+
+        // Declaring the same name in the same scope should overwrite the
+        // definition
+        scope.declare("foo".to_owned(), unimplemented!());
+        assert_eq!(scope.lookup("foo").len(), 1);
+
+        scope.push_scope();
+        // Declaring foo in another scope should add a definition
+        scope.declare("foo".to_owned(), unimplemented!());
+        assert_eq!(scope.lookup("foo").len(), 2);
+
+        // Declaring the same name in the same scope should overwrite the
+        // definition
+        scope.declare("foo".to_owned(), unimplemented!());
+        assert_eq!(scope.lookup("foo").len(), 2);
     }
 }
