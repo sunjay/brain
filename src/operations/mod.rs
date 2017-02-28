@@ -1,6 +1,7 @@
+pub mod scope;
+pub mod item_type;
+
 mod operation;
-mod scope;
-mod item_type;
 mod program;
 mod statement;
 mod declaration;
