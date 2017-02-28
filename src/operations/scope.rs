@@ -46,11 +46,11 @@ impl ScopeStack {
     /// Declares a name with the given type, allocates enough space for that type
     /// The name is declared in the "current" scope which is at the top of the stack
     /// Returns the allocated memory block
-    pub fn declare(&mut self, name: String, typ: ItemType) -> MemoryBlock {
-        let mem = self.allocate(&typ);
+    pub fn declare(&mut self, name: String, typ: &ItemType) -> MemoryBlock {
+        let mem = self.allocate(typ);
         // It's OK to overwrite existing names because we support rebinding
         if let Some(scope) = self.stack.back_mut() {
-            scope.insert(name, (typ, mem));
+            scope.insert(name, (typ.clone(), mem));
         }
         else {
             panic!("Attempt to declare name despite having no current scope");

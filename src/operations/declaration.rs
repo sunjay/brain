@@ -2,6 +2,7 @@ use parser::{Pattern, TypeDefinition, Expression};
 
 use super::{Operation, type_definition, expression};
 use super::scope::ScopeStack;
+use super::item_type::ItemType;
 
 pub fn into_operations(
     pattern: Pattern,
@@ -15,10 +16,10 @@ pub fn into_operations(
         Pattern::Identifier(name) => name,
     };
 
-    let mem = scope.declare(name, typ);
+    let mem = scope.declare(name, &typ);
 
     if let Some(expr) = expr {
-        expression::into_operations(expr, mem, scope)
+        expression::into_operations(expr, &typ, mem, scope)
     }
     else {
         Vec::new()

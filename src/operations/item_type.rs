@@ -1,6 +1,7 @@
 use memory::Size;
 
 /// An item is anything that can be declared
+#[derive(Debug, PartialEq, Clone)]
 pub enum ItemType {
     /// A struct has a single definition with any number of
     /// fields and generics

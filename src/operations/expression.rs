@@ -3,12 +3,14 @@ use memory::MemoryBlock;
 
 use super::{Operation};
 use super::scope::ScopeStack;
+use super::item_type::ItemType;
 
 /// Generates operations for evaluating the given expression
-/// and storing its result in the given destination memory block
+/// and storing its result in the given target memory block
 pub fn into_operations(
     expr: Expression,
-    destination: MemoryBlock,
+    target_type: &ItemType,
+    target: MemoryBlock,
     scope: &mut ScopeStack,
 ) -> Vec<Operation> {
     unimplemented!();
