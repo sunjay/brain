@@ -33,6 +33,11 @@ pub enum ItemType {
     ///TODO: Replace with type bounds when generics are implemented in #45
     Any,
 
+    /// A primitive type is a raw interpretation of some memory cells
+    /// These primitive types are built-in and cannot be declared
+    /// within the language itself
+    Primitive(Size),
+
     /// A struct has a single definition with any number of
     /// fields and generics
     /// Structs can have impls which contain methods for that
@@ -58,6 +63,9 @@ pub enum ItemType {
 impl ItemType {
     /// Computes the required size in cells of this type
     pub fn required_size(&self, scope: &ScopeStack) -> Size {
-        unimplemented!(); //TODO
+        match *self {
+            ItemType::Primitive(size) => size,
+            _ => unimplemented!(),
+        }
     }
 }

@@ -29,13 +29,14 @@ pub fn into_operations(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use operations::item_type::ItemType;
 
     #[test]
     fn declaration_only() {
         // When only doing a declaration, no operations should be generated
         // since there is no expression to actually evaluate
         let mut scope = ScopeStack::new();
-        scope.declare("u8".to_owned(), unimplemented!());
+        scope.declare("u8".to_owned(), &ItemType::Primitive(1));
 
         let ops = into_operations(
             Pattern::Identifier("foo".to_owned()),

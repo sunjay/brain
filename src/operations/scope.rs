@@ -107,28 +107,29 @@ impl ScopeStack {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use operations::item_type::ItemType;
 
     #[test]
     fn multiple_definitions() {
         let mut scope = ScopeStack::new();
         assert_eq!(scope.lookup("foo").len(), 0);
 
-        scope.declare("foo".to_owned(), unimplemented!());
+        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
         assert_eq!(scope.lookup("foo").len(), 1);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
-        scope.declare("foo".to_owned(), unimplemented!());
+        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
         assert_eq!(scope.lookup("foo").len(), 1);
 
         scope.push_scope();
         // Declaring foo in another scope should add a definition
-        scope.declare("foo".to_owned(), unimplemented!());
+        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
         assert_eq!(scope.lookup("foo").len(), 2);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
-        scope.declare("foo".to_owned(), unimplemented!());
+        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
         assert_eq!(scope.lookup("foo").len(), 2);
     }
 }
