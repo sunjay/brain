@@ -2,7 +2,7 @@ use parser::Expression;
 use parser::Expression::*;
 use memory::MemoryBlock;
 
-use super::{Operation};
+use super::OperationsResult;
 use super::scope::{TypeId, ScopeStack};
 
 /// Generates operations for evaluating the given expression
@@ -13,7 +13,7 @@ pub fn into_operations(
     target_type: TypeId,
     target: Option<MemoryBlock>,
     scope: &mut ScopeStack,
-) -> Vec<Operation> {
+) -> OperationsResult {
     match expr {
         //Call {method, args} =>
         _ => unimplemented!(),

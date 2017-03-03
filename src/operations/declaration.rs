@@ -1,6 +1,6 @@
 use parser::{Pattern, TypeDefinition, Expression};
 
-use super::{Operation, type_definition, expression};
+use super::{OperationsResult, type_definition, expression};
 use super::scope::ScopeStack;
 
 pub fn into_operations(
@@ -8,14 +8,14 @@ pub fn into_operations(
     type_def: TypeDefinition,
     expr: Option<Expression>,
     scope: &mut ScopeStack,
-) -> Vec<Operation> {
-    let type_id = type_definition::resolve_type_id(type_def, scope).unwrap_or_else(|e| unimplemented!());
+) -> OperationsResult {
+    let type_id = type_definition::resolve_type_id(type_def, scope)?;
 
     let name = match pattern {
         Pattern::Identifier(name) => name,
     };
 
-    expr.map_or(Vec::new(), |e| {
+    expr.map_or(Ok(Vec::new()), |e| {
         let mem = scope.declare(name, type_id);
         expression::into_operations(e, type_id, Some(mem), scope)
     })
@@ -40,7 +40,7 @@ mod tests {
             TypeDefinition::Name {name: Identifier::from("u8")},
             None,
             &mut scope
-        );
+        ).unwrap();
         assert_eq!(ops.len(), 0);
     }
 }
