@@ -4,18 +4,24 @@ use std::str::FromStr;
 use pest::prelude::*;
 
 use super::{Rdp, ParseError};
-use operations::{self, Operation};
+use operations::{self, OperationsResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
 
 impl Program {
-    pub fn new(statements: Vec<Statement>) -> Program {
-        Program(statements)
+    pub fn new() -> Program {
+        Program(Vec::new())
     }
 
-    pub fn into_operations(self) -> Vec<Operation> {
+    pub fn into_operations(self) -> OperationsResult {
         operations::from_ast(self)
+    }
+}
+
+impl From<Vec<Statement>> for Program {
+    fn from(statements: Vec<Statement>) -> Self {
+        Program(statements)
     }
 }
 

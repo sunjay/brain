@@ -104,7 +104,7 @@ impl_rdp! {
         // Make sure to call program() before this so there is something in the queue
         ast(&self) -> Program {
             (list: _program()) => {
-                Program::new(list.into_iter().collect())
+                Program::from(list.into_iter().collect::<Vec<_>>())
             },
         }
 
@@ -567,16 +567,16 @@ mod tests {
     #[test]
     fn empty_program() {
         test_method(r#""#, |p| p.program(), |p| p.ast(),
-            Program::new(Vec::new()));
+            Program::from(Vec::new()));
 
         test_method(r#"
         "#, |p| p.program(), |p| p.ast(),
-            Program::new(Vec::new()));
+            Program::from(Vec::new()));
 
         test_method(r#"
 
         "#, |p| p.program(), |p| p.ast(),
-            Program::new(Vec::new()));
+            Program::from(Vec::new()));
     }
 
     #[test]
@@ -585,7 +585,7 @@ mod tests {
 
         foo();
         "#, |p| p.program(), |p| p.ast(),
-            Program::new(vec![
+            Program::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
                         method: Box::new(Expression::Identifier(Identifier::from("foo"))),
@@ -622,7 +622,7 @@ mod tests {
         a <= b && c >= d;
         a < b && c > d;
         "#, |p| p.program(), |p| p.ast(),
-            Program::new(vec![
+            Program::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
                         method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
