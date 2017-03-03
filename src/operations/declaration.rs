@@ -10,20 +10,15 @@ pub fn into_operations(
     expr: Option<Expression>,
     scope: &mut ScopeStack,
 ) -> Vec<Operation> {
-    let typ = type_definition::resolve_type(type_def, scope);
+    let typ = type_definition::resolve_type(type_def, scope).unwrap_or_else(|| unimplemented!());
 
     let name = match pattern {
         Pattern::Identifier(name) => name,
     };
 
-    let mem = scope.declare(name, &typ);
-
-    if let Some(expr) = expr {
-        expression::into_operations(expr, &typ, mem, scope)
-    }
-    else {
-        Vec::new()
-    }
+    expr.map_or(Vec::new(), |e| {
+        expression::into_operations(e, &typ, scope.declare(name, &typ), scope)
+    })
 }
 
 #[cfg(test)]

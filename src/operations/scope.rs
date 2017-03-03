@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::collections::{VecDeque, HashMap};
 
+use parser::Identifier;
 use memory::{StaticAllocator, MemoryBlock};
 
 use super::operation::Operation;
@@ -8,8 +9,8 @@ use super::item_type::{ItemType, FunctionTypeDef, FuncArgs};
 
 /// Represents a single item in a scope
 pub struct ScopeItem {
-    type_def: ItemType,
-    memory: MemoryBlock,
+    pub type_def: ItemType,
+    pub memory: MemoryBlock,
 }
 
 /// Represents a single level of scope
@@ -51,7 +52,7 @@ impl ScopeStack {
     /// the correct one
     /// Definitions are returned in order from latest definition to oldest
     /// Always use the first definition that matches the type you are looking for
-    pub fn lookup(&self, name: &str) -> Vec<&ScopeItem> {
+    pub fn lookup(&self, name: &Identifier) -> Vec<&ScopeItem> {
         self.stack.iter().rev().map(|sc| sc.get(name)).fold(Vec::new(), |mut acc, r| match r {
             Some(def) => {
                 acc.push(def);
@@ -107,29 +108,31 @@ impl ScopeStack {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use parser::Identifier;
     use operations::item_type::ItemType;
 
     #[test]
     fn multiple_definitions() {
         let mut scope = ScopeStack::new();
-        assert_eq!(scope.lookup("foo").len(), 0);
+        assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 0);
 
         scope.declare("foo".to_owned(), &ItemType::Primitive(1));
-        assert_eq!(scope.lookup("foo").len(), 1);
+        assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 1);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
         scope.declare("foo".to_owned(), &ItemType::Primitive(1));
-        assert_eq!(scope.lookup("foo").len(), 1);
+        assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 1);
 
         scope.push_scope();
         // Declaring foo in another scope should add a definition
         scope.declare("foo".to_owned(), &ItemType::Primitive(1));
-        assert_eq!(scope.lookup("foo").len(), 2);
+        assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 2);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
         scope.declare("foo".to_owned(), &ItemType::Primitive(1));
-        assert_eq!(scope.lookup("foo").len(), 2);
+        assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 2);
     }
 }
