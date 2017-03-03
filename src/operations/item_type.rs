@@ -11,13 +11,6 @@ use super::scope::{ScopeItem, ScopeStack};
 /// Arguments can be assumed to match the type of that function
 pub type FuncArgs = Vec<ScopeItem>;
 
-/// Definition of a function's type
-#[derive(Clone)]
-pub struct FunctionTypeDef {
-    args: Vec<FuncArgType>,
-    return_type: Box<ItemType>,
-}
-
 #[derive(Clone)]
 pub enum FuncArgType {
     /// A single argument of the given type
@@ -32,6 +25,11 @@ pub enum ItemType {
     /// Any type
     ///TODO: Replace with type bounds when generics are implemented in #45
     Any,
+
+    /// Unit type
+    /// The unit type is a type with a single zero-size value.
+    /// Both the type and the value are specified: ()
+    Unit,
 
     /// A primitive type is a raw interpretation of some memory cells
     /// These primitive types are built-in and cannot be declared
@@ -52,11 +50,10 @@ pub enum ItemType {
         size: usize,
     },
 
-    BuiltInFunction {
-        type_def: FunctionTypeDef,
-        /// Generates operations that represent calling the
-        /// function with the given arguments
-        operations: Rc<Fn(FuncArgs, ScopeStack) -> Vec<Operation>>,
+    /// Definition of a function's type
+    Function {
+        args: Vec<FuncArgType>,
+        return_type: Box<ItemType>,
     },
 }
 

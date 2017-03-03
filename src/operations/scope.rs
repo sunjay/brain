@@ -5,12 +5,32 @@ use parser::Identifier;
 use memory::{StaticAllocator, MemoryBlock};
 
 use super::operation::Operation;
-use super::item_type::{ItemType, FunctionTypeDef, FuncArgs};
+use super::item_type::{ItemType, FuncArgs};
 
 /// Represents a single item in a scope
-pub struct ScopeItem {
-    pub type_def: ItemType,
-    pub memory: MemoryBlock,
+pub enum ScopeItem {
+    /// A typed block of memory
+    TypedBlock {
+        type_def: ItemType,
+        memory: MemoryBlock,
+    },
+
+    /// A built-in function
+    BuiltInFunction {
+        type_def: ItemType,
+        /// Generates operations that represent calling the
+        /// function with the given arguments
+        operations: Rc<Fn(FuncArgs, ScopeStack) -> Vec<Operation>>,
+    },
+}
+
+impl ScopeItem {
+    pub fn type_def(&self) -> ItemType {
+        match *self {
+            ScopeItem::TypedBlock {ref type_def, ..} => type_def,
+            ScopeItem::BuiltInFunction {ref type_def, ..} => type_def,
+        }.clone()
+    }
 }
 
 /// Represents a single level of scope
@@ -67,33 +87,12 @@ impl ScopeStack {
     /// Returns the allocated memory block
     pub fn declare(&mut self, name: Identifier, typ: &ItemType) -> MemoryBlock {
         let mem = self.allocate(typ);
-        // It's OK to overwrite existing names because we support rebinding
-        if let Some(scope) = self.stack.back_mut() {
-            scope.insert(name, ScopeItem {
-                type_def: typ.clone(),
-                memory: mem,
-            });
-        }
-        else {
-            panic!("Attempt to declare name despite having no current scope");
-        }
+        self.insert_current(name, ScopeItem::TypedBlock {
+            type_def: typ.clone(),
+            memory: mem,
+        });
 
         mem
-    }
-
-    /// Declares a built in function with the given name and type definition
-    /// The name is declared in the "current" scope which is at the top of the stack
-    /// Returns the allocated memory block
-    fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, func_type: FunctionTypeDef, f: F) -> MemoryBlock
-        where F: Fn(FuncArgs, ScopeStack) -> Vec<Operation> {
-
-        self.declare(
-            name,
-            &ItemType::BuiltInFunction {
-                type_def: func_type,
-                operations: Rc::new(f),
-            }
-        )
     }
 
     /// Allocate a memory block that is large enough for the given type
@@ -102,6 +101,36 @@ impl ScopeStack {
     pub fn allocate(&mut self, typ: &ItemType) -> MemoryBlock {
         let size = typ.required_size(self);
         self.allocator.allocate(size)
+    }
+
+    /// Declares a built in function with the given name and type definition
+    /// The name is declared in the "current" scope which is at the top of the stack
+    /// Returns the allocated memory block
+    pub fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, typ: &ItemType, f: F)
+        where F: Fn(FuncArgs, ScopeStack) -> Vec<Operation> {
+
+        // Make sure we are declaring the function as a function type
+        debug_assert!(match *typ {
+            ItemType::Function { .. } => true,
+            _ => false,
+        });
+
+        self.insert_current(name, ScopeItem::BuiltInFunction {
+            type_def: typ.clone(),
+            operations: Rc::new(f),
+        });
+    }
+
+    /// Inserts a ScopeItem into the current scope
+    fn insert_current(&mut self, name: Identifier, item: ScopeItem) {
+        // Notice that we insert directly without caring about whether the name already exists
+        // It's OK to overwrite existing names because we support rebinding
+        if let Some(scope) = self.stack.back_mut() {
+            scope.insert(name, item);
+        }
+        else {
+            panic!("Attempt to declare name despite having no current scope");
+        }
     }
 }
 

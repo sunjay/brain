@@ -10,10 +10,13 @@ use super::item_type::ItemType;
 pub fn into_operations(
     expr: Expression,
     target_type: &ItemType,
-    target: MemoryBlock,
+    target: Option<MemoryBlock>,
     scope: &mut ScopeStack,
 ) -> Vec<Operation> {
-    unimplemented!();
+    match expr {
+        //Call {method, args} =>
+        _ => unimplemented!(),
+    }
 }
 
 #[cfg(test)]
