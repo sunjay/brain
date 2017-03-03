@@ -14,7 +14,7 @@ pub struct ScopeItem {
 }
 
 /// Represents a single level of scope
-pub type Scope = HashMap<String, ScopeItem>;
+pub type Scope = HashMap<Identifier, ScopeItem>;
 
 pub struct ScopeStack {
     stack: VecDeque<Scope>,
@@ -65,7 +65,7 @@ impl ScopeStack {
     /// Declares a name with the given type, allocates enough space for that type
     /// The name is declared in the "current" scope which is at the top of the stack
     /// Returns the allocated memory block
-    pub fn declare(&mut self, name: String, typ: &ItemType) -> MemoryBlock {
+    pub fn declare(&mut self, name: Identifier, typ: &ItemType) -> MemoryBlock {
         let mem = self.allocate(typ);
         // It's OK to overwrite existing names because we support rebinding
         if let Some(scope) = self.stack.back_mut() {
@@ -84,7 +84,7 @@ impl ScopeStack {
     /// Declares a built in function with the given name and type definition
     /// The name is declared in the "current" scope which is at the top of the stack
     /// Returns the allocated memory block
-    fn declare_builtin_function<F: 'static>(&mut self, name: String, func_type: FunctionTypeDef, f: F) -> MemoryBlock
+    fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, func_type: FunctionTypeDef, f: F) -> MemoryBlock
         where F: Fn(FuncArgs, ScopeStack) -> Vec<Operation> {
 
         self.declare(
@@ -117,22 +117,22 @@ mod tests {
         let mut scope = ScopeStack::new();
         assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 0);
 
-        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
+        scope.declare(Identifier::from("foo"), &ItemType::Primitive(1));
         assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 1);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
-        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
+        scope.declare(Identifier::from("foo"), &ItemType::Primitive(1));
         assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 1);
 
         scope.push_scope();
         // Declaring foo in another scope should add a definition
-        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
+        scope.declare(Identifier::from("foo"), &ItemType::Primitive(1));
         assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 2);
 
         // Declaring the same name in the same scope should overwrite the
         // definition
-        scope.declare("foo".to_owned(), &ItemType::Primitive(1));
+        scope.declare(Identifier::from("foo"), &ItemType::Primitive(1));
         assert_eq!(scope.lookup(&Identifier::from("foo")).len(), 2);
     }
 }
