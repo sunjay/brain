@@ -25,6 +25,8 @@ pub fn into_operations(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use parser::Identifier;
     use operations::item_type::ItemType;
 
     #[test]
@@ -32,11 +34,11 @@ mod tests {
         // When only doing a declaration, no operations should be generated
         // since there is no expression to actually evaluate
         let mut scope = ScopeStack::new();
-        scope.declare("u8".to_owned(), &ItemType::Primitive(1));
+        scope.declare(Identifier::from("u8"), &ItemType::Primitive(1));
 
         let ops = into_operations(
-            Pattern::Identifier("foo".to_owned()),
-            TypeDefinition::Name {name: "u8".to_owned()},
+            Pattern::Identifier(Identifier::from("foo")),
+            TypeDefinition::Name {name: Identifier::from("u8")},
             None,
             &mut scope
         );
