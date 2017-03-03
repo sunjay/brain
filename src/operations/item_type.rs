@@ -40,7 +40,10 @@ pub enum ItemType {
     /// fields and generics
     /// Structs can have impls which contain methods for that
     /// struct
-    Struct {/*TODO*/},
+    Struct {
+        name: String,
+        //TODO: fields, generics, etc.
+    },
 
     /// A fixed-size array
     Array {
@@ -62,6 +65,7 @@ impl ItemType {
     pub fn required_size(&self, scope: &ScopeStack) -> Size {
         match *self {
             ItemType::Primitive(size) => size,
+            ItemType::Struct { .. } => Size::default(),
             _ => unimplemented!(),
         }
     }

@@ -18,7 +18,7 @@ pub fn into_operations(
 
     expr.map_or(Vec::new(), |e| {
         let mem = scope.declare(name, &typ);
-        expression::into_operations(e, &typ, Some(mem), scope)
+        expression::into_operations(e, &typ, mem, scope)
     })
 }
 

@@ -9,14 +9,20 @@ use super::item_type::{ItemType, FuncArgs};
 
 /// Represents a single item in a scope
 pub enum ScopeItem {
+    /// A type, not associated with any memory
+    /// Usually used for a struct/type declaration, not the declaration
+    /// of a variable with a type (TypedBlock should be used for that)
+    Type(ItemType),
+
     /// A typed block of memory
     TypedBlock {
         type_def: ItemType,
         memory: MemoryBlock,
     },
 
-    /// A built-in function
+    /// A built-in function definition
     BuiltInFunction {
+        /// The type of the function, guaranteed to be ItemType::Function
         type_def: ItemType,
         /// Generates operations that represent calling the
         /// function with the given arguments
@@ -27,6 +33,7 @@ pub enum ScopeItem {
 impl ScopeItem {
     pub fn type_def(&self) -> ItemType {
         match *self {
+            ScopeItem::Type(ref type_def) => type_def,
             ScopeItem::TypedBlock {ref type_def, ..} => type_def,
             ScopeItem::BuiltInFunction {ref type_def, ..} => type_def,
         }.clone()
@@ -85,12 +92,14 @@ impl ScopeStack {
     /// Declares a name with the given type, allocates enough space for that type
     /// The name is declared in the "current" scope which is at the top of the stack
     /// Returns the allocated memory block
-    pub fn declare(&mut self, name: Identifier, typ: &ItemType) -> MemoryBlock {
+    pub fn declare(&mut self, name: Identifier, typ: &ItemType) -> Option<MemoryBlock> {
         let mem = self.allocate(typ);
-        self.insert_current(name, ScopeItem::TypedBlock {
-            type_def: typ.clone(),
-            memory: mem,
-        });
+        self.insert_current(name, mem.map_or_else(|| ScopeItem::Type(typ.clone()), |mem| {
+            ScopeItem::TypedBlock {
+                type_def: typ.clone(),
+                memory: mem,
+            }
+        }));
 
         mem
     }
@@ -98,7 +107,7 @@ impl ScopeStack {
     /// Allocate a memory block that is large enough for the given type
     /// Does not associate memory block with a name which means it cannot be looked up later
     /// Returns the allocated memory block
-    pub fn allocate(&mut self, typ: &ItemType) -> MemoryBlock {
+    pub fn allocate(&mut self, typ: &ItemType) -> Option<MemoryBlock> {
         let size = typ.required_size(self);
         self.allocator.allocate(size)
     }
