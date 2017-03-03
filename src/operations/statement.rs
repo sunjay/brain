@@ -2,8 +2,7 @@ use parser::Statement;
 use parser::Statement::*;
 
 use super::{Operation, declaration, expression};
-use super::scope::ScopeStack;
-use super::item_type::ItemType;
+use super::scope::{ScopeStack, UNIT_TYPE_ID};
 
 pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> Vec<Operation> {
     match node {
@@ -12,7 +11,7 @@ pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> Vec<Operation
             declaration::into_operations(pattern, type_def, expr, scope)
         },
         Expression {expr} => {
-            expression::into_operations(expr, &ItemType::Unit, None, scope)
+            expression::into_operations(expr, UNIT_TYPE_ID, None, scope)
         },
         _ => unimplemented!(),
     }

@@ -2,7 +2,6 @@ use parser::{Pattern, TypeDefinition, Expression};
 
 use super::{Operation, type_definition, expression};
 use super::scope::ScopeStack;
-use super::item_type::ItemType;
 
 pub fn into_operations(
     pattern: Pattern,
@@ -10,15 +9,15 @@ pub fn into_operations(
     expr: Option<Expression>,
     scope: &mut ScopeStack,
 ) -> Vec<Operation> {
-    let typ = type_definition::resolve_type(type_def, scope).unwrap_or_else(|| unimplemented!());
+    let type_id = type_definition::resolve_type_id(type_def, scope).unwrap_or_else(|e| unimplemented!());
 
     let name = match pattern {
         Pattern::Identifier(name) => name,
     };
 
     expr.map_or(Vec::new(), |e| {
-        let mem = scope.declare(name, &typ);
-        expression::into_operations(e, &typ, mem, scope)
+        let mem = scope.declare(name, type_id);
+        expression::into_operations(e, type_id, Some(mem), scope)
     })
 }
 
@@ -34,7 +33,7 @@ mod tests {
         // When only doing a declaration, no operations should be generated
         // since there is no expression to actually evaluate
         let mut scope = ScopeStack::new();
-        scope.declare(Identifier::from("u8"), &ItemType::Primitive(1));
+        scope.declare_type(Identifier::from("u8"), ItemType::Primitive(1));
 
         let ops = into_operations(
             Pattern::Identifier(Identifier::from("foo")),

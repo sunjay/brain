@@ -63,19 +63,13 @@ impl StaticAllocator {
 
     /// Allocates a memory block of the given size and gives it a unique ID
     /// so that this memory block can be referred to uniquely
-    /// A memory block is not allocated if the given size is zero
-    pub fn allocate(&mut self, size: Size) -> Option<MemoryBlock> {
-        if size == 0 {
-            None
-        }
-        else {
-            let blk = MemoryBlock {
-                id: Id(self.next_id),
-                size: size,
-            };
-            self.next_id += 1;
+    pub fn allocate(&mut self, size: Size) -> MemoryBlock {
+        let blk = MemoryBlock {
+            id: Id(self.next_id),
+            size: size,
+        };
+        self.next_id += 1;
 
-            Some(blk)
-        }
+        blk
     }
 }

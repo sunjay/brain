@@ -1,15 +1,21 @@
-use parser::{Pattern, TypeDefinition, Expression};
+use parser::TypeDefinition;
+use parser::TypeDefinition::*;
 
-use super::{Operation};
-use super::scope::ScopeStack;
-use super::item_type::ItemType;
+use super::scope::{TypeId, ScopeStack};
 
-pub fn resolve_type(type_def: TypeDefinition, scope: &ScopeStack) -> Option<ItemType> {
+/// Attempts to resolve the TypeId of a given type definition
+pub fn resolve_type_id(type_def: TypeDefinition, scope: &ScopeStack) -> Result<TypeId, (/*TODO*/)> {
     match type_def {
         // We return the first declaration found because we want to use the latest definition
         // of the type that we are defining
-        TypeDefinition::Name {name} => scope.lookup(&name).first().map(|it| it.type_def()),
+        Name {name} => scope.lookup(&name).first().ok_or_else(|| {
+            //TODO: No type found that is associated with that name
+            unimplemented!();
+        }).and_then(|it| it.type_id().ok_or_else(|| {
+            //TODO: Attempt to use a non-type name as a type
+            unimplemented!();
+        })),
         //TODO: Deal with infinitely sized (self-referential) types
-        TypeDefinition::Array {type_def, size} => unimplemented!(),
+        Array {type_def, size} => unimplemented!(),
     }
 }

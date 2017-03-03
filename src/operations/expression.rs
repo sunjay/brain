@@ -1,20 +1,21 @@
-use parser::{Expression};
+use parser::Expression;
+use parser::Expression::*;
 use memory::MemoryBlock;
 
 use super::{Operation};
-use super::scope::ScopeStack;
-use super::item_type::ItemType;
+use super::scope::{TypeId, ScopeStack};
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
+/// Providing no memory is ONLY valid if target_type is zero-sized
 pub fn into_operations(
     expr: Expression,
-    target_type: &ItemType,
+    target_type: TypeId,
     target: Option<MemoryBlock>,
     scope: &mut ScopeStack,
 ) -> Vec<Operation> {
     match expr {
-        //Call {method, args} => 
+        //Call {method, args} =>
         _ => unimplemented!(),
     }
 }

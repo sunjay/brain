@@ -1,8 +1,5 @@
-use std::rc::Rc;
-
 use memory::Size;
 
-use super::operation::Operation;
 use super::scope::{ScopeItem, ScopeStack};
 
 /// The arguments that will get passed to a function
@@ -41,7 +38,6 @@ pub enum ItemType {
     /// Structs can have impls which contain methods for that
     /// struct
     Struct {
-        name: String,
         //TODO: fields, generics, etc.
     },
 
@@ -61,11 +57,12 @@ pub enum ItemType {
 }
 
 impl ItemType {
-    /// Computes the required size in cells of this type
+    /// Computes the required size in cells of an *instance* of this type
     pub fn required_size(&self, scope: &ScopeStack) -> Size {
         match *self {
+            ItemType::Unit => Size::default(),
             ItemType::Primitive(size) => size,
-            ItemType::Struct { .. } => Size::default(),
+            ItemType::Struct { .. } => Size::default(), //TODO: Update this when fields are supported
             _ => unimplemented!(),
         }
     }

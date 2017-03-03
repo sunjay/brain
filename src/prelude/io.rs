@@ -8,9 +8,15 @@ pub fn populate_scope(scope: &mut ScopeStack) {
     // https://github.com/brain-lang/brain/issues/37
     scope.push_scope();
 
-    let stdin_type = ItemType::Struct {name: "Stdin".to_owned()};
-    scope.declare(Identifier::from("stdin"), &stdin_type);
+    let stdin_type = scope.declare_type(
+        Identifier::from("std::io::Stdin"),
+        ItemType::Struct {},
+    );
+    scope.declare(Identifier::from("stdin"), stdin_type);
 
-    let stdout_type = ItemType::Struct {name: "Stdout".to_owned()};
-    scope.declare(Identifier::from("stdout"), &stdout_type);
+    let stdout_type = scope.declare_type(
+        Identifier::from("std::io::Stdout"),
+        ItemType::Struct {},
+    );
+    scope.declare(Identifier::from("stdout"), stdout_type);
 }
