@@ -12,7 +12,7 @@ pub fn into_operations(
     let type_id = type_definition::resolve_type_id(type_def, scope)?;
 
     let name = match pattern {
-        Pattern::Identifier(name, ..) => name,
+        Pattern::Identifier(name) => name,
     };
 
     expr.map_or(Ok(Vec::new()), |e| {
@@ -25,7 +25,7 @@ pub fn into_operations(
 mod tests {
     use super::*;
 
-    use parser::{Identifier, Span};
+    use parser::Identifier;
     use operations::item_type::ItemType;
 
     #[test]
@@ -36,8 +36,8 @@ mod tests {
         scope.declare_type(Identifier::from("u8"), ItemType::Primitive(1));
 
         let ops = into_operations(
-            Pattern::Identifier(Identifier::from("foo"), Span {start: 0, end: 0}),
-            TypeDefinition::Name {name: Identifier::from("u8"), span: Span {start: 0, end: 0}},
+            Pattern::Identifier(Identifier::from("foo")),
+            TypeDefinition::Name {name: Identifier::from("u8")},
             None,
             &mut scope
         ).unwrap();

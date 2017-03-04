@@ -62,56 +62,48 @@ pub enum Statement {
         pattern: Pattern,
         type_def: TypeDefinition,
         expr: Option<Expression>,
-        span: Span,
     },
     Assignment {
         lhs: Identifier,
         expr: Expression,
-        span: Span,
     },
     WhileLoop {
         condition: Expression,
         body: Block,
-        span: Span,
     },
     Expression {
         expr: Expression,
-        span: Span,
     },
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Pattern {
-    Identifier(Identifier, Span),
+    Identifier(Identifier),
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TypeDefinition {
     Name {
         name: Identifier,
-        span: Span,
     },
     Array {
         type_def: Box<TypeDefinition>,
         size: Option<Expression>,
-        span: Span,
     },
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    StringLiteral(String, Span),
-    Identifier(Identifier, Span),
-    Number(Number, Span),
+    StringLiteral(String),
+    Identifier(Identifier),
+    Number(Number),
     Call {
         method: Box<Expression>,
         args: FuncArgs,
-        span: Span,
     },
     Access {
         target: Box<Expression>,
         field: Box<Expression>,
-        span: Span,
     },
     Branch {
         /// Condition to be executed to determine which block
@@ -121,7 +113,6 @@ pub enum Expression {
         body: Block,
         /// (optional) executed if the condition is zero
         otherwise: Option<Block>,
-        span: Span,
     },
 }
 
@@ -138,22 +129,6 @@ impl FromStr for Identifier {
 impl<'a> From<&'a str> for Identifier {
     fn from(s: &'a str) -> Identifier {
         s.parse().unwrap()
-    }
-}
-
-/// Represents a position in the source code
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct Span {
-    pub start: usize,
-    pub end: usize,
-}
-
-impl<Rule> From<Token<Rule>> for Span {
-    fn from(t: Token<Rule>) -> Span {
-        Span {
-            start: t.start,
-            end: t.end,
-        }
     }
 }
 
