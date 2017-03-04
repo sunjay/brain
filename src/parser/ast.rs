@@ -1,14 +1,26 @@
+use std::convert::From;
 use std::str::FromStr;
 
 use pest::prelude::*;
 
 use super::{Rdp, ParseError};
+use operations::{self, OperationsResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program(Vec<Statement>);
 
 impl Program {
-    pub fn new(statements: Vec<Statement>) -> Program {
+    pub fn new() -> Program {
+        Program(Vec::new())
+    }
+
+    pub fn into_operations(self) -> OperationsResult {
+        operations::from_ast(self)
+    }
+}
+
+impl From<Vec<Statement>> for Program {
+    fn from(statements: Vec<Statement>) -> Self {
         Program(statements)
     }
 }
@@ -76,8 +88,6 @@ pub enum TypeDefinition {
     },
     Array {
         type_def: Box<TypeDefinition>,
-        //TODO: This probably isn't the right type since this should accept anything and then get
-        // statically checked to ensure the correct number was put here
         size: Option<Expression>,
     },
 }
@@ -106,7 +116,22 @@ pub enum Expression {
     },
 }
 
-pub type Identifier = String;
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct Identifier(Vec<String>);
+
+impl FromStr for Identifier {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Identifier(s.split("::").map(|s| s.to_owned()).collect()))
+    }
+}
+
+impl<'a> From<&'a str> for Identifier {
+    fn from(s: &'a str) -> Identifier {
+        s.parse().unwrap()
+    }
+}
+
 pub type Block = Vec<Statement>;
 pub type Number = i32;
 pub type FuncArgs = Vec<FuncArg>;

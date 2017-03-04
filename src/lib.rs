@@ -4,13 +4,10 @@
 extern crate pest;
 
 mod parser;
-mod instruction;
-mod instructions;
-mod codegen;
+mod operations;
 mod memory;
-mod optimizations;
+mod prelude;
 
 pub use parser::*;
-pub use instruction::*;
-pub use instructions::*;
-pub use optimizations::OptimizationLevel;
+pub use operations::*;
+pub use memory::*;
