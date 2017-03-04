@@ -1,7 +1,13 @@
 use parser::Statement;
 use parser::Statement::*;
 
-use super::{OperationsResult, declaration, assignment, expression};
+use super::{
+    OperationsResult,
+    declaration,
+    assignment,
+    while_loop,
+    expression,
+};
 use super::scope::{ScopeStack, UNIT_TYPE_ID};
 
 pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsResult {
@@ -13,10 +19,12 @@ pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsRes
         Assignment {lhs, expr} => {
             assignment::into_operations(lhs, expr, scope)
         },
+        WhileLoop {condition, body} => {
+            while_loop::into_operations(condition, body, scope)
+        },
         Expression {expr} => {
             expression::into_operations(expr, UNIT_TYPE_ID, None, scope)
         },
-        _ => unimplemented!(),
     }
 }
 
