@@ -3,6 +3,7 @@ pub mod item_type;
 pub mod program;
 pub mod statement;
 pub mod declaration;
+pub mod assignment;
 pub mod type_definition;
 pub mod expression;
 

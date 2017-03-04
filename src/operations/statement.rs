@@ -1,20 +1,23 @@
 use parser::Statement;
 use parser::Statement::*;
 
-use super::{OperationsResult, declaration, expression};
+use super::{OperationsResult, declaration, assignment, expression};
 use super::scope::{ScopeStack, UNIT_TYPE_ID};
 
 pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsResult {
-    Ok(match node {
-        Comment(_) => Vec::new(),
+    match node {
+        Comment(_) => Ok(Vec::new()),
         Declaration {pattern, type_def, expr} => {
-            declaration::into_operations(pattern, type_def, expr, scope)?
+            declaration::into_operations(pattern, type_def, expr, scope)
+        },
+        Assignment {lhs, expr} => {
+            assignment::into_operations(lhs, expr, scope)
         },
         Expression {expr} => {
-            expression::into_operations(expr, UNIT_TYPE_ID, None, scope)?
+            expression::into_operations(expr, UNIT_TYPE_ID, None, scope)
         },
         _ => unimplemented!(),
-    })
+    }
 }
 
 #[cfg(test)]
