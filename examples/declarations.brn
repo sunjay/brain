@@ -1,40 +1,39 @@
 // automatically determine the length of the right
-a[] = "Hello, world\n";
+let a: [u8; _] = "Hello, world\n";
 // Outputs "Hello, world\n"
-out a;
+stdout.write(a);
 // error if rhs is not the length declared on the left
-b[3] = "abc";
-out "a: " a;
-out "b: " b "\n";
+let b: [u8; 3] = "abc";
+stdout.write("a: ", a);
+stdout.write("b: ", b, "\n");
 
-// invalid because different sizes (addressed in #3)
+// invalid because different sizes (addressed in issue #3)
 //a = b;
 
 // redeclaration of the same name with a different size is an error:
-//a[1] = "q";
-// Invalid:
-//a[0] = "";
+//TODO: This restriction may be lifted.
+//let a: [u8; 1] = "q";
 
 // copies a to a new variable c. c is the same size as a.
-c[] = a;
-out c;
+let c: [u8; _] = a;
+stdout.write(c);
 
 // Invalid:
 //a = a;
 
 // Explicitly declaring the size here even though its a copy
-d[3] = b;
-out "d = " d " (should be abc)\n";
+let d: [u8; 3] = b;
+stdout.write("d = ", d, " (should be abc)\n");
 
-out "b = " b " (should be abc)\n";
+stdout.write("b = ", b, " (should be abc)\n");
 b = "dbd";
-out "b = " b " (should be dbd)\n";
+stdout.write("b = ", b, " (should be dbd)\n");
 b = d;
-out "b = " b " (should be abc)\n";
+stdout.write("b = ", b, " (should be abc)\n");
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number
-qqq[] = "foo";
-_bar[] = "bar";
+let qqq: [u8; _];
+let _bar: [u8; _];
 // invalid:
-//12abc[] = "fail";
+//let 12abc: [u8; _];

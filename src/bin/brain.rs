@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
-use brain::{Program, Instructions, OptimizationLevel};
+use brain::{Program, ParseError};
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
@@ -59,10 +59,7 @@ fn main() {
         exit_with_error!("Could not read source file: {}", e);
     });
 
-    let program: Program = source.parse().unwrap();
-    let mut instructions = Instructions::from_program(program).unwrap();
-    instructions.optimize(OptimizationLevel::On);
-    let generated_code: String = instructions.into();
+    let generated_code: String = compile(source);
 
     let mut output_file = File::create(output_path).unwrap_or_else(|e| {
         exit_with_error!("Could not create target file: {}", e);
@@ -74,4 +71,21 @@ fn main() {
     }).unwrap_or_else(|e| {
         exit_with_error!("Could not write target file: {}", e);
     });
+}
+
+/// Compile the provided source code to brainfuck
+fn compile(source: String) -> String {
+    let program: Program = source.parse().unwrap_or_else(|e: ParseError| {
+        if e.expected.is_empty() {
+            exit_with_error!("Syntax Error: no token expected at line {} col {}", e.line, e.col);
+        } else {
+            exit_with_error!("Syntax Error: expected token(s): {} at line {} col {}",
+                e.expected.iter().map(|r| format!("{}", r)).collect::<Vec<String>>().join(", "),
+                e.line, e.col);
+        }
+    });
+
+    let operations = program.into_operations();
+
+    unimplemented!();
 }
