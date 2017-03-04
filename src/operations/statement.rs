@@ -7,10 +7,10 @@ use super::scope::{ScopeStack, UNIT_TYPE_ID};
 pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsResult {
     Ok(match node {
         Comment(_) => Vec::new(),
-        Declaration {pattern, type_def, expr} => {
+        Declaration {pattern, type_def, expr, ..} => {
             declaration::into_operations(pattern, type_def, expr, scope)?
         },
-        Expression {expr} => {
+        Expression {expr, ..} => {
             expression::into_operations(expr, UNIT_TYPE_ID, None, scope)?
         },
         _ => unimplemented!(),

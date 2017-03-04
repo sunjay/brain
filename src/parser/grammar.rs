@@ -23,7 +23,7 @@ impl_rdp! {
         op_assign = { ["="] }
         pattern = { identifier }
 
-        type_def = _{ identifier | array_type }
+        type_def = { identifier | array_type }
         array_type = { ["["] ~ type_def ~ semi ~ array_size ~ ["]"] }
         array_size = _{ unspecified | expr }
         unspecified = { ["_"] }
@@ -71,11 +71,15 @@ impl_rdp! {
         literal_char = { escape_sequence | (!["\""] ~ any) }
         escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] }
 
-        identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
+        // Using a hack here to get both the token and the value out of pest
+        identifier = { identifier_ }
+        identifier_ = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
         alpha = _{ ['a'..'z'] | ['A'..'Z'] }
         alphanumeric = _{ alpha | ['0'..'9'] }
 
-        number = @{ ["0"] | (nonzero ~ digit*) }
+        // Using a hack here to get both the token and the value out of pest
+        number = { number_ }
+        number_ = @{ ["0"] | (nonzero ~ digit*) }
         // Allow "_" in numbers for grouping: 1_000_000 == 1000000
         digit = _{ ["0"] | nonzero | ["_"] }
         nonzero = _{ ['1'..'9'] }
@@ -128,50 +132,51 @@ impl_rdp! {
             (&text: comment) => {
                 Statement::Comment(text.into())
             },
-            (_: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
-                Statement::Declaration {pattern: pattern, type_def: type_def, expr: Some(expr)}
+            (token: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
+                Statement::Declaration {pattern: pattern, type_def: type_def, expr: Some(expr), span: Span::from(token)}
             },
-            (_: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: semi) => {
-                Statement::Declaration {pattern: pattern, type_def: type_def, expr: None}
+            (token: declaration, pattern: _pattern(), _: op_declare_type, type_def: _type_def(), _: semi) => {
+                Statement::Declaration {pattern: pattern, type_def: type_def, expr: None, span: Span::from(token)}
             },
-            (_: assignment, ident: _identifier(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
-                Statement::Assignment {lhs: ident, expr: expr}
+            (token: assignment, ident: _identifier(), _: op_assign, _: expr, expr: _expr(), _: semi) => {
+                Statement::Assignment {lhs: ident, expr: expr, span: Span::from(token)}
             },
-            (_: while_loop, _: expr, condition: _expr(), body: _block()) => {
-                Statement::WhileLoop {condition: condition, body: body}
+            (token: while_loop, _: expr, condition: _expr(), body: _block()) => {
+                Statement::WhileLoop {condition: condition, body: body, span: Span::from(token)}
             },
-            (_: conditional, expr: _conditional()) => {
-                Statement::Expression {expr: expr}
+            (token: conditional, expr: _conditional()) => {
+                Statement::Expression {expr: expr, span: Span::from(token)}
             },
             // This should always be last as it will catch pretty much any cases that weren't caught above
-            (_: expr, expr: _expr(), _: semi) => {
-                Statement::Expression {expr: expr}
+            (token: expr, expr: _expr(), _: semi) => {
+                Statement::Expression {expr: expr, span: Span::from(token)}
             },
         }
 
         _pattern(&self) -> Pattern {
-            (_: pattern, ident: _identifier()) => {
-                Pattern::Identifier(ident)
+            (token: pattern, ident: _identifier()) => {
+                Pattern::Identifier(ident, Span::from(token))
             },
         }
 
         _type_def(&self) -> TypeDefinition {
-            (_: array_type, type_def: _type_def(), _: semi, _: unspecified) => {
-                TypeDefinition::Array {type_def: Box::new(type_def), size: None}
+            (_: type_def, token: array_type, type_def: _type_def(), _: semi, _: unspecified) => {
+                TypeDefinition::Array {type_def: Box::new(type_def), size: None, span: Span::from(token)}
             },
-            (_: array_type, type_def: _type_def(), _: semi, _: expr, size: _expr()) => {
-                TypeDefinition::Array {type_def: Box::new(type_def), size: Some(size)}
+            (_: type_def, token: array_type, type_def: _type_def(), _: semi, _: expr, size: _expr()) => {
+                TypeDefinition::Array {type_def: Box::new(type_def), size: Some(size), span: Span::from(token)}
             },
-            (ident: _identifier()) => {
-                TypeDefinition::Name {name: ident}
+            (token: type_def, ident: _identifier()) => {
+                TypeDefinition::Name {name: ident, span: Span::from(token)}
             },
         }
 
         _expr(&self) -> Expression {
-            (_: func_call, method: _identifier(), args: _func_args()) => {
+            (token: func_call, method: _identifier(), args: _func_args()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(method)),
+                    method: Box::new(Expression::Identifier(method, Span::from(token))),
                     args: args,
+                    span: Span::from(token),
                 }
             },
             (_: field_access, expr: _field_access()) => {
@@ -180,19 +185,21 @@ impl_rdp! {
             (_: conditional, expr: _conditional()) => {
                 expr
             },
-            (_: bool_or, lhs: _expr(), _: op_bool_or, rhs: _expr()) => {
+            (token: bool_or, lhs: _expr(), _: op_bool_or, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                    method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span::from(token))),
                     args: vec![lhs, rhs],
+                    span: Span::from(token),
                 }
             },
-            (_: bool_and, lhs: _expr(), _: op_bool_and, rhs: _expr()) => {
+            (token: bool_and, lhs: _expr(), _: op_bool_and, rhs: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                    method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span::from(token))),
                     args: vec![lhs, rhs],
+                    span: Span::from(token),
                 }
             },
-            (_: comparison, lhs: _expr(), op_token, rhs: _expr()) => {
+            (token: comparison, lhs: _expr(), op_token, rhs: _expr()) => {
                 Expression::Call {
                     method: Box::new(Expression::Identifier(Identifier::from(match op_token.rule {
                         Rule::op_eq => "std::cmp::PartialEq::eq",
@@ -202,87 +209,97 @@ impl_rdp! {
                         Rule::op_gt => "std::cmp::PartialOrd::gt",
                         Rule::op_lt => "std::cmp::PartialOrd::lt",
                         _ => unreachable!(),
-                    }))),
+                    }), Span::from(token))),
                     args: vec![lhs, rhs],
+                    span: Span::from(token),
                 }
             },
-            (&ident: identifier) => {
-                Expression::Identifier(ident.into())
+            (token: identifier, &ident: identifier_) => {
+                Expression::Identifier(ident.into(), Span::from(token))
             },
-            (_: string_literal, s: _literal_chars()) => {
-                Expression::StringLiteral(s.into_iter().collect())
+            (token: string_literal, s: _literal_chars()) => {
+                Expression::StringLiteral(s.into_iter().collect(), Span::from(token))
             },
-            (&s: number) => {
+            (token: number, &s: number_) => {
                 // If our grammar is correct, we are guarenteed that this will work
-                Expression::Number(s.replace("_", "").parse().unwrap())
+                Expression::Number(s.replace("_", "").parse().unwrap(), Span::from(token))
             },
         }
 
         _field_access(&self) -> Expression {
-            (target: _identifier(), _: op_access, field: _identifier(), args: _func_args()) => {
+            (target: _identifier(), token: op_access, field: _identifier(), args: _func_args()) => {
                 Expression::Call {
                     method: Box::new(Expression::Access {
-                        target: Box::new(Expression::Identifier(target)),
-                        field: Box::new(Expression::Identifier(field)),
+                        target: Box::new(Expression::Identifier(target, Span::from(token))),
+                        field: Box::new(Expression::Identifier(field, Span::from(token))),
+                        span: Span::from(token),
                     }),
                     args: args,
+                    span: Span::from(token),
                 }
             },
-            (target: _identifier(), _: op_access, field: _identifier()) => {
+            (target: _identifier(), token: op_access, field: _identifier()) => {
                 Expression::Access {
-                    target: Box::new(Expression::Identifier(target)),
-                    field: Box::new(Expression::Identifier(field)),
+                    target: Box::new(Expression::Identifier(target, Span::from(token))),
+                    field: Box::new(Expression::Identifier(field, Span::from(token))),
+                    span: Span::from(token),
                 }
             },
         }
 
         _conditional(&self) -> Expression {
-            (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches(), _: op_else, else_block: _block()) => {
+            (token: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches(), _: op_else, else_block: _block()) => {
                 Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: Some(nest_else_ifs(branches, Some(else_block))),
+                    span: Span::from(token),
                 }
             },
-            (_: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches()) => {
+            (token: expr, expr: _expr(), block: _block(), _: op_else_if, branches: _branches()) => {
                 Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: Some(nest_else_ifs(branches, None)),
+                    span: Span::from(token),
                 }
             },
-            (_: expr, expr: _expr(), block: _block(), _: op_else, else_block: _block()) => {
+            (token: expr, expr: _expr(), block: _block(), _: op_else, else_block: _block()) => {
                 Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: Some(else_block),
+                    span: Span::from(token),
                 }
             },
-            (_: expr, expr: _expr(), block: _block()) => {
+            (token: expr, expr: _expr(), block: _block()) => {
                 Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: None,
+                    span: Span::from(token),
                 }
             },
         }
 
         _branches(&self) -> VecDeque<Expression> {
-            (_: expr, expr: _expr(), block: _block(), _: op_else_if, mut tail: _branches()) => {
+            (token: expr, expr: _expr(), block: _block(), _: op_else_if, mut tail: _branches()) => {
                 tail.push_front(Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: None,
+                    span: Span::from(token),
                 });
 
                 tail
             },
-            (_: expr, expr: _expr(), block: _block()) => {
+            (token: expr, expr: _expr(), block: _block()) => {
                 let mut queue = VecDeque::new();
                 queue.push_front(Expression::Branch {
                     condition: Box::new(expr),
                     body: block,
                     otherwise: None,
+                    span: Span::from(token),
                 });
 
                 queue
@@ -318,8 +335,8 @@ impl_rdp! {
 
                 tail
             },
-            (_: expr, head: _expr(), mut tail: _block_deque()) => {
-                tail.push_front(Statement::Expression {expr: head});
+            (token: expr, head: _expr(), mut tail: _block_deque()) => {
+                tail.push_front(Statement::Expression {expr: head, span: Span::from(token)});
 
                 tail
             },
@@ -362,7 +379,7 @@ impl_rdp! {
         }
 
         _identifier(&self) -> Identifier {
-            (&ident: identifier) => {
+            (_: identifier, &ident: identifier_) => {
                 ident.into()
             },
         }
@@ -382,16 +399,20 @@ impl_rdp! {
 /// if foo1 { body1 } else { if foo2 { body2 } else { if foo3 { body3 } else {} } }
 fn nest_else_ifs(branches: VecDeque<Expression>, else_block: Option<Block>) -> Block {
     branches.into_iter().rev().fold(else_block, |acc, mut br| {
+        let span = match br {
+            Expression::Branch {ref mut otherwise, span, ..} => {
+                *otherwise = acc;
+
+                span.clone()
+            },
+            _ => unreachable!(),
+        };
+
         Some(vec![Statement::Expression {
             expr: {
-                match br {
-                    Expression::Branch {ref mut otherwise, ..} => {
-                        *otherwise = acc;
-                    },
-                    _ => unreachable!(),
-                };
                 br
             },
+            span: span,
         }])
     }).unwrap()
 }
@@ -441,8 +462,8 @@ impl fmt::Display for Rule {
             // this method is meant to be used for formatting errors
             // We don't want to use the "_" wildcard because we want Rust
             // to tell us when a new rule has to be added here
-            statement | assignment | declaration | pattern | array_type | while_loop | comparison |
-            conditional | func_call | field_access | expr | soi => unreachable!(*self),
+            statement | assignment | declaration | pattern | type_def | array_type | while_loop | comparison |
+            conditional | func_call | field_access | expr | soi | identifier_ | number_ => unreachable!(*self),
         })
     }
 }
@@ -507,59 +528,62 @@ mod tests {
     #[test]
     fn numeric_literal() {
         test_method(r#"0"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::Number(0)
+            Expression::Number(0, Span {start: 0, end: 0})
         );
 
         test_method(r#"100"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::Number(100)
+            Expression::Number(100, Span {start: 0, end: 0})
         );
 
         test_method(r#"1_000_000"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::Number(1_000_000)
+            Expression::Number(1_000_000, Span {start: 0, end: 0})
         );
 
         test_method(r#"1_000_000_"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::Number(1_000_000_)
+            Expression::Number(1_000_000_, Span {start: 0, end: 0})
         );
 
         test_method(r#"1____0_0__0______000____"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::Number(1____0_0__0______000____)
+            Expression::Number(1____0_0__0______000____, Span {start: 0, end: 0})
         );
     }
 
     #[test]
     fn string_literal_escapes() {
         test_method(r#""foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("foo".to_owned()));
+            Expression::StringLiteral("foo".to_owned(), Span {start: 0, end: 0}));
 
         test_method(r#""\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
+            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned(), Span {start: 0, end: 0}));
     }
 
     #[test]
     fn functions_field_access() {
         test_method(r#"func(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
-                method: Box::new(Expression::Identifier(Identifier::from("func"))),
+                method: Box::new(Expression::Identifier(Identifier::from("func"), Span {start: 0, end: 0})),
                 args: vec![
-                    Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
-                    Expression::Number(3),
+                    Expression::Number(1, Span {start: 0, end: 0}),
+                    Expression::StringLiteral("foo".to_owned(), Span {start: 0, end: 0}),
+                    Expression::Number(3, Span {start: 0, end: 0}),
                 ],
+                span: Span {start: 0, end: 0},
             }
         );
 
         test_method(r#"thing.prop(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
                 method: Box::new(Expression::Access {
-                    target: Box::new(Expression::Identifier(Identifier::from("thing"))),
-                    field: Box::new(Expression::Identifier(Identifier::from("prop"))),
+                    target: Box::new(Expression::Identifier(Identifier::from("thing"), Span {start: 0, end: 0})),
+                    field: Box::new(Expression::Identifier(Identifier::from("prop"), Span {start: 0, end: 0})),
+                    span: Span {start: 0, end: 0},
                 }),
                 args: vec![
-                    Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
-                    Expression::Number(3),
+                    Expression::Number(1, Span {start: 0, end: 0}),
+                    Expression::StringLiteral("foo".to_owned(), Span {start: 0, end: 0}),
+                    Expression::Number(3, Span {start: 0, end: 0}),
                 ],
+                span: Span {start: 0, end: 0},
             }
         );
     }
@@ -588,9 +612,11 @@ mod tests {
             Program::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                         args: vec![],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 }
             ])
         );
@@ -625,261 +651,331 @@ mod tests {
             Program::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"))),
-                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
+                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
-                            Expression::Identifier(Identifier::from("c")),
+                            Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
-                            },
-                        ],
-                    },
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
-                        args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
-                            },
-                        ],
-                    },
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
-                        args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
-                            Expression::Identifier(Identifier::from("c")),
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
+                            },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
+                            },
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
+                            },
+                        ],
+                        span: Span {start: 0, end: 0},
+                    },
+                    span: Span {start: 0, end: 0},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
+                            },
+                            Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
+                        ],
+                        span: Span {start: 0, end: 0},
+                    },
+                    span: Span {start: 0, end: 0},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                                 args: vec![
                                     Expression::Call {
-                                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                        span: Span {start: 0, end: 0},
                                     },
-                                    Expression::Identifier(Identifier::from("c")),
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
                                 ],
+                                span: Span {start: 0, end: 0},
                             },
-                            Expression::Identifier(Identifier::from("d")),
+                            Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0}),
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                                 args: vec![
                                     Expression::Call {
-                                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
-                                        args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
+                                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                        span: Span {start: 0, end: 0},
                                     },
-                                    Expression::Identifier(Identifier::from("c")),
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
                                 ],
+                                span: Span {start: 0, end: 0},
                             },
-                            Expression::Identifier(Identifier::from("d")),
+                            Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0}),
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"))),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"))),
-                                args: vec![Expression::Identifier(Identifier::from("a")), Expression::Identifier(Identifier::from("b"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"))),
-                                args: vec![Expression::Identifier(Identifier::from("c")), Expression::Identifier(Identifier::from("d"))],
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
+                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
+                                span: Span {start: 0, end: 0},
                             },
                         ],
+                        span: Span {start: 0, end: 0},
                     },
+                    span: Span {start: 0, end: 0},
                 },
             ])
         );
@@ -895,17 +991,21 @@ mod tests {
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                     body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0})),
                                 args: vec![],
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ],
                     otherwise: None,
+                    span: Span {start: 0, end: 0},
                 },
+                span: Span {start: 0, end: 0},
             }
         );
 
@@ -920,24 +1020,30 @@ mod tests {
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                     body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0})),
                                 args: vec![],
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("b"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})),
                                 args: vec![],
-                            }
+                                span: Span {start: 0, end: 0},
+                            },
+                            span: Span {start: 0, end: 0},
                         },
                     ]),
+                    span: Span {start: 0, end: 0},
                 },
+                span: Span {start: 0, end: 0},
             }
         );
 
@@ -958,54 +1064,68 @@ mod tests {
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                     body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0})),
                                 args: vec![],
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
                             expr: Expression::Branch {
-                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"))),
+                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"), Span {start: 0, end: 0})),
                                 body: vec![
                                     Statement::Expression {
                                         expr: Expression::Call {
-                                            method: Box::new(Expression::Identifier(Identifier::from("c"))),
+                                            method: Box::new(Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0})),
                                             args: vec![],
+                                            span: Span {start: 0, end: 0},
                                         },
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ],
                                 otherwise: Some(vec![
                                     Statement::Expression {
                                         expr: Expression::Branch {
-                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"))),
+                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"), Span {start: 0, end: 0})),
                                             body: vec![
                                                 Statement::Expression {
                                                     expr: Expression::Call {
-                                                        method: Box::new(Expression::Identifier(Identifier::from("d"))),
+                                                        method: Box::new(Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})),
                                                         args: vec![],
+                                                        span: Span {start: 0, end: 0},
                                                     },
+                                                    span: Span {start: 0, end: 0},
                                                 },
                                             ],
                                             otherwise: Some(vec![
                                                 Statement::Expression {
                                                     expr: Expression::Call {
-                                                        method: Box::new(Expression::Identifier(Identifier::from("b"))),
+                                                        method: Box::new(Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})),
                                                         args: vec![],
-                                                    }
+                                                        span: Span {start: 0, end: 0},
+                                                    },
+                                                    span: Span {start: 0, end: 0},
                                                 },
                                             ]),
+                                            span: Span {start: 0, end: 0},
                                         },
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ]),
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ]),
+                    span: Span {start: 0, end: 0},
                 },
+                span: Span {start: 0, end: 0},
             }
         );
 
@@ -1023,47 +1143,59 @@ mod tests {
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                     body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("a"))),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0})),
                                 args: vec![],
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
                             expr: Expression::Branch {
-                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"))),
+                                condition: Box::new(Expression::Identifier(Identifier::from("foo2"), Span {start: 0, end: 0})),
                                 body: vec![
                                     Statement::Expression {
                                         expr: Expression::Call {
-                                            method: Box::new(Expression::Identifier(Identifier::from("c"))),
+                                            method: Box::new(Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0})),
                                             args: vec![],
+                                            span: Span {start: 0, end: 0},
                                         },
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ],
                                 otherwise: Some(vec![
                                     Statement::Expression {
                                         expr: Expression::Branch {
-                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"))),
+                                            condition: Box::new(Expression::Identifier(Identifier::from("foo3"), Span {start: 0, end: 0})),
                                             body: vec![
                                                 Statement::Expression {
                                                     expr: Expression::Call {
-                                                        method: Box::new(Expression::Identifier(Identifier::from("d"))),
+                                                        method: Box::new(Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})),
                                                         args: vec![],
+                                                        span: Span {start: 0, end: 0},
                                                     },
+                                                    span: Span {start: 0, end: 0},
                                                 },
                                             ],
                                             otherwise: None,
+                                            span: Span {start: 0, end: 0},
                                         },
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ]),
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ]),
+                    span: Span {start: 0, end: 0},
                 },
+                span: Span {start: 0, end: 0},
             }
         );
 
@@ -1080,35 +1212,43 @@ mod tests {
         };
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Declaration {
-                pattern: Pattern::Identifier(Identifier::from("a")),
+                pattern: Pattern::Identifier(Identifier::from("a"), Span {start: 0, end: 0}),
                 type_def: TypeDefinition::Name {
                     name: Identifier::from("u8"),
+                    span: Span {start: 0, end: 0},
                 },
                 expr: Some(Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"))),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
                     body: vec![
                         Statement::Expression {
-                            expr: Expression::Number(1),
+                            expr: Expression::Number(1, Span {start: 0, end: 0}),
+                            span: Span {start: 0, end: 0},
                         },
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
                             expr: Expression::Branch {
-                                condition: Box::new(Expression::Identifier(Identifier::from("bar7"))),
+                                condition: Box::new(Expression::Identifier(Identifier::from("bar7"), Span {start: 0, end: 0})),
                                 body: vec![
                                     Statement::Expression {
-                                        expr: Expression::Number(2)
+                                        expr: Expression::Number(2, Span {start: 0, end: 0}),
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ],
                                 otherwise: Some(vec![
                                     Statement::Expression {
-                                        expr: Expression::Number(3)
+                                        expr: Expression::Number(3, Span {start: 0, end: 0}),
+                                        span: Span {start: 0, end: 0},
                                     },
                                 ]),
+                                span: Span {start: 0, end: 0},
                             },
+                            span: Span {start: 0, end: 0},
                         },
                     ]),
+                    span: Span {start: 0, end: 0},
                 }),
+                span: Span {start: 0, end: 0},
             }
         );
     }

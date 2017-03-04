@@ -9,12 +9,18 @@ pub fn resolve_type_id(type_def: TypeDefinition, scope: &ScopeStack) -> Result<T
     match type_def {
         // We return the first declaration found because we want to use the latest definition
         // of the type that we are defining
-        Name {name} => scope.lookup(&name).first().ok_or_else(|| {
-            Error::UnresolvedName(name.clone())
+        Name {name, span} => scope.lookup(&name).first().ok_or_else(|| {
+            Error::UnresolvedName {
+                name: name.clone(),
+                span: span,
+            }
         }).and_then(|it| it.type_id().ok_or_else(|| {
-            Error::InvalidType(name)
+            Error::InvalidType {
+                name: name,
+                span: span,
+            }
         })),
         //TODO: Deal with infinitely sized (self-referential) types
-        Array {type_def, size} => unimplemented!(),
+        Array {type_def, size, span} => unimplemented!(),
     }
 }
