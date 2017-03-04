@@ -651,331 +651,427 @@ mod tests {
             Program::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
-                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                        span: Span {start: 0, end: 0},
-                    },
-                    span: Span {start: 0, end: 0},
-                },
-                Statement::Expression {
-                    expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 9, end: 15})),
                         args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
-                            Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
+                            Expression::Identifier(Identifier::from("a"), Span {start: 9, end: 10}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 14, end: 15}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 9, end: 15},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 9, end: 15},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 25, end: 31})),
                         args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
+                            Expression::Identifier(Identifier::from("a"), Span {start: 25, end: 26}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 30, end: 31}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 25, end: 31},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 25, end: 31},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 41, end: 47})),
                         args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
+                            Expression::Identifier(Identifier::from("a"), Span {start: 41, end: 42}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 46, end: 47}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 41, end: 47},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 41, end: 47},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 57, end: 63})),
                         args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
+                            Expression::Identifier(Identifier::from("a"), Span {start: 57, end: 58}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 62, end: 63}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 57, end: 63},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 57, end: 63},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 73, end: 79})),
                         args: vec![
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
-                            Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
-                            },
+                            Expression::Identifier(Identifier::from("a"), Span {start: 73, end: 74}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 78, end: 79}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 73, end: 79},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 73, end: 79},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 89, end: 95})),
+                        args: vec![
+                            Expression::Identifier(Identifier::from("a"), Span {start: 89, end: 90}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 94, end: 95}),
+                        ],
+                        span: Span {start: 89, end: 95},
+                    },
+                    span: Span {start: 89, end: 95},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 105, end: 110})),
+                        args: vec![
+                            Expression::Identifier(Identifier::from("a"), Span {start: 105, end: 106}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 109, end: 110}),
+                        ],
+                        span: Span {start: 105, end: 110},
+                    },
+                    span: Span {start: 105, end: 110},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 120, end: 125})),
+                        args: vec![
+                            Expression::Identifier(Identifier::from("a"), Span {start: 120, end: 121}),
+                            Expression::Identifier(Identifier::from("b"), Span {start: 124, end: 125}),
+                        ],
+                        span: Span {start: 120, end: 125},
+                    },
+                    span: Span {start: 120, end: 125},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 135, end: 146})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 135, end: 141})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 135, end: 136}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 140, end: 141}),
+                                ],
+                                span: Span {start: 135, end: 141},
+                            },
+                            Expression::Identifier(Identifier::from("c"), Span {start: 145, end: 146}),
+                        ],
+                        span: Span {start: 135, end: 146},
+                    },
+                    span: Span {start: 135, end: 146},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 156, end: 172})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 156, end: 162})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 156, end: 157}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 161, end: 162}),
+                                ],
+                                span: Span {start: 156, end: 162},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 166, end: 172})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 166, end: 167}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 171, end: 172}),
+                                ],
+                                span: Span {start: 166, end: 172},
+                            }
+                        ],
+                        span: Span {start: 156, end: 172},
+                    },
+                    span: Span {start: 156, end: 172},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 182, end: 198})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 182, end: 188})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 182, end: 183}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 187, end: 188}),
+                                ],
+                                span: Span {start: 182, end: 188},
+                            },
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 192, end: 198})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 192, end: 193}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 197, end: 198}),
+                                ],
+                                span: Span {start: 192, end: 198},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 182, end: 198},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 182, end: 198},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 208, end: 224})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 208, end: 214})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 208, end: 209}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 213, end: 214}),
+                                ],
+                                span: Span {start: 208, end: 214},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 218, end: 224})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 218, end: 219}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 223, end: 224}),
+                                ],
+                                span: Span {start: 218, end: 224},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 208, end: 224},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 208, end: 224},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 234, end: 250})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 234, end: 240})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 234, end: 235}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 239, end: 240}),
+                                ],
+                                span: Span {start: 234, end: 240},
                             },
-                            Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 244, end: 250})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 244, end: 245}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 249, end: 250}),
+                                ],
+                                span: Span {start: 244, end: 250},
+                            },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 234, end: 250},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 234, end: 250},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 260, end: 276})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 260, end: 266})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 260, end: 261}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 265, end: 266}),
+                                ],
+                                span: Span {start: 260, end: 266},
+                            },
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 270, end: 276})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 270, end: 271}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 275, end: 276}),
+                                ],
+                                span: Span {start: 270, end: 276},
+                            },
+                        ],
+                        span: Span {start: 260, end: 276},
+                    },
+                    span: Span {start: 260, end: 276},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator||"), Span {start: 286, end: 300})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 286, end: 291})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 286, end: 287}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 290, end: 291}),
+                                ],
+                                span: Span {start: 286, end: 291},
+                            },
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 295, end: 300})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 295, end: 296}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 299, end: 300}),
+                                ],
+                                span: Span {start: 295, end: 300},
+                            },
+                        ],
+                        span: Span {start: 286, end: 300},
+                    },
+                    span: Span {start: 286, end: 300},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 310, end: 321})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 310, end: 316})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 310, end: 311}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 315, end: 316}),
+                                ],
+                                span: Span {start: 310, end: 316},
+                            },
+                            Expression::Identifier(Identifier::from("c"), Span {start: 320, end: 321}),
+                        ],
+                        span: Span {start: 310, end: 321},
+                    },
+                    span: Span {start: 310, end: 321},
+                },
+                Statement::Expression {
+                    expr: Expression::Call {
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 331, end: 347})),
+                        args: vec![
+                            Expression::Call {
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 331, end: 342})),
                                 args: vec![
                                     Expression::Call {
-                                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                        span: Span {start: 0, end: 0},
+                                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 331, end: 337})),
+                                        args: vec![
+                                            Expression::Identifier(Identifier::from("a"), Span {start: 331, end: 332}),
+                                            Expression::Identifier(Identifier::from("b"), Span {start: 336, end: 337}),
+                                        ],
+                                        span: Span {start: 331, end: 337},
                                     },
-                                    Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 341, end: 342}),
                                 ],
-                                span: Span {start: 0, end: 0},
+                                span: Span {start: 331, end: 342},
                             },
-                            Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0}),
+                            Expression::Identifier(Identifier::from("d"), Span {start: 346, end: 347}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 331, end: 347},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 331, end: 347},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 357, end: 373})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 357, end: 368})),
                                 args: vec![
                                     Expression::Call {
-                                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
-                                        args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                        span: Span {start: 0, end: 0},
+                                        method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 357, end: 363})),
+                                        args: vec![
+                                            Expression::Identifier(Identifier::from("a"), Span {start: 357, end: 358}),
+                                            Expression::Identifier(Identifier::from("b"), Span {start: 362, end: 363}),
+                                        ],
+                                        span: Span {start: 357, end: 363},
                                     },
-                                    Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}),
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 367, end: 368}),
                                 ],
-                                span: Span {start: 0, end: 0},
+                                span: Span {start: 357, end: 368},
                             },
-                            Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0}),
+                            Expression::Identifier(Identifier::from("d"), Span {start: 372, end: 373}),
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 357, end: 373},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 357, end: 373},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 383, end: 399})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::eq"), Span {start: 383, end: 389})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 383, end: 384}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 388, end: 389}),
+                                ],
+                                span: Span {start: 383, end: 389},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialEq::ne"), Span {start: 393, end: 399})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 393, end: 394}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 398, end: 399}),
+                                ],
+                                span: Span {start: 393, end: 399},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 383, end: 399},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 383, end: 399},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 409, end: 425})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 409, end: 415})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 409, end: 410}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 414, end: 415}),
+                                ],
+                                span: Span {start: 409, end: 415},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 419, end: 425})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 419, end: 420}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 424, end: 425}),
+                                ],
+                                span: Span {start: 419, end: 425},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 409, end: 425},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 409, end: 425},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 435, end: 451})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::le"), Span {start: 435, end: 441})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 435, end: 436}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 440, end: 441}),
+                                ],
+                                span: Span {start: 435, end: 441},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::ge"), Span {start: 445, end: 451})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 445, end: 446}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 450, end: 451}),
+                                ],
+                                span: Span {start: 445, end: 451},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 435, end: 451},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 435, end: 451},
                 },
                 Statement::Expression {
                     expr: Expression::Call {
-                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 0, end: 0})),
+                        method: Box::new(Expression::Identifier(Identifier::from("operator&&"), Span {start: 461, end: 475})),
                         args: vec![
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("b"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::lt"), Span {start: 461, end: 466})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("a"), Span {start: 461, end: 462}),
+                                    Expression::Identifier(Identifier::from("b"), Span {start: 465, end: 466}),
+                                ],
+                                span: Span {start: 461, end: 466},
                             },
                             Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 0, end: 0})),
-                                args: vec![Expression::Identifier(Identifier::from("c"), Span {start: 0, end: 0}), Expression::Identifier(Identifier::from("d"), Span {start: 0, end: 0})],
-                                span: Span {start: 0, end: 0},
+                                method: Box::new(Expression::Identifier(Identifier::from("std::cmp::PartialOrd::gt"), Span {start: 470, end: 475})),
+                                args: vec![
+                                    Expression::Identifier(Identifier::from("c"), Span {start: 470, end: 471}),
+                                    Expression::Identifier(Identifier::from("d"), Span {start: 474, end: 475}),
+                                ],
+                                span: Span {start: 470, end: 475},
                             },
                         ],
-                        span: Span {start: 0, end: 0},
+                        span: Span {start: 461, end: 475},
                     },
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 461, end: 475},
                 },
             ])
         );
