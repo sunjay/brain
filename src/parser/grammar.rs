@@ -1087,21 +1087,21 @@ mod tests {
         "#.trim(), |p| p.statement(), |p| {p.inc_queue_index(); p._statement()},
             Statement::Expression {
                 expr: Expression::Branch {
-                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 0, end: 0})),
+                    condition: Box::new(Expression::Identifier(Identifier::from("foo"), Span {start: 3, end: 6})),
                     body: vec![
                         Statement::Expression {
                             expr: Expression::Call {
-                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 0, end: 0})),
+                                method: Box::new(Expression::Identifier(Identifier::from("a"), Span {start: 21, end: 24})),
                                 args: vec![],
-                                span: Span {start: 0, end: 0},
+                                span: Span {start: 21, end: 24},
                             },
-                            span: Span {start: 0, end: 0},
+                            span: Span {start: 21, end: 24},
                         },
                     ],
                     otherwise: None,
-                    span: Span {start: 0, end: 0},
+                    span: Span {start: 3, end: 6},
                 },
-                span: Span {start: 0, end: 0},
+                span: Span {start: 0, end: 35},
             }
         );
 
