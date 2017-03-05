@@ -1,20 +1,6 @@
 use memory::Size;
 
-use super::scope::{ScopeItem, ScopeStack, TypeId};
-
-/// The arguments that will get passed to a function
-/// Distinct to the function's actual type because these are
-/// ScopeItems not type defintions
-/// Arguments can be assumed to match the type of that function
-pub type FuncArgs = Vec<ScopeItem>;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum FuncArgType {
-    /// A single argument of the given type
-    Arg(ItemType),
-    /// Any number of arguments of the given type
-    Variadic(ItemType),
-}
+use super::scope::{ScopeStack, TypeId};
 
 /// An item is anything that can be declared
 #[derive(Debug, Clone, PartialEq)]
@@ -51,8 +37,10 @@ pub enum ItemType {
 
     /// Definition of a function's type
     Function {
-        args: Vec<FuncArgType>,
-        return_type: Box<ItemType>,
+        args: Vec<TypeId>,
+        return_type: TypeId,
+        /// If true, the **last** argument type can be provided any number of times (including 0)
+        variadic: bool,
     },
 }
 

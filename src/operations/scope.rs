@@ -5,9 +5,13 @@ use parser::Identifier;
 use memory::{StaticAllocator, MemoryBlock};
 
 use super::operation::Operation;
-use super::item_type::{ItemType, FuncArgs};
+use super::item_type::ItemType;
 
 pub type TypeId = usize;
+
+/// The arguments that will get passed to a function
+/// Arguments are guaranteed to match the type of the function
+pub type FuncArgs = Vec<ScopeItem>;
 
 /// Represents a single item in a scope
 pub enum ScopeItem {
