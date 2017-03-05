@@ -7,6 +7,7 @@ mod parser;
 mod operations;
 mod memory;
 mod prelude;
+mod core;
 
 pub use parser::*;
 pub use operations::*;
