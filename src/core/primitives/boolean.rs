@@ -46,14 +46,14 @@ mod tests {
         let mut scope = ScopeStack::new();
         populate_scope(&mut scope);
 
-        let type_id = match **scope.lookup(&Identifier::from("bool")).first().unwrap() {
+        let bool_type_id = match **scope.lookup(&Identifier::from("bool")).first().unwrap() {
             ScopeItem::Type(id) => id,
             _ => unreachable!(),
         };
 
         let true_bytes = match **scope.lookup(&Identifier::from("true")).first().unwrap() {
             ScopeItem::Constant {type_id, ref bytes} => {
-                assert_eq!(type_id, type_id);
+                assert_eq!(type_id, bool_type_id);
                 assert_eq!(*bytes, vec![1]);
                 bytes
             },
@@ -62,7 +62,7 @@ mod tests {
 
         let false_bytes = match **scope.lookup(&Identifier::from("false")).first().unwrap() {
             ScopeItem::Constant {type_id, ref bytes} => {
-                assert_eq!(type_id, type_id);
+                assert_eq!(type_id, bool_type_id);
                 assert_eq!(*bytes, vec![0]);
                 bytes
             },
