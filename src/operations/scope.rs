@@ -46,8 +46,19 @@ pub enum ScopeItem {
         id: TypeId,
         /// Generates operations that represent calling the
         /// function with the given arguments
-        operations: Rc<Fn(&mut ScopeStack, FuncArgs) -> OperationsResult>,
+        /// Function should store the result in the memory block represented by the third
+        /// parameter
+        operations: Rc<Fn(&mut ScopeStack, FuncArgs, MemoryBlock) -> OperationsResult>,
     },
+}
+
+impl ScopeItem {
+    pub fn numeric_literal_value(&self) -> Number {
+        match *self {
+            ScopeItem::NumericLiteral(number) => number,
+            _ => panic!("Called `ScopeItem::numeric_literal_value()` on a non `NumericLiteral` value"),
+        }
+    }
 }
 
 /// Represents a single level of scope
@@ -224,7 +235,7 @@ impl ScopeStack {
     /// Functions that can be called on an instance of a type should have that type as the first
     /// parameter as the "self" of that function
     pub fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, typ: ItemType, f: F)
-        where F: Fn(&mut ScopeStack, FuncArgs) -> OperationsResult {
+        where F: Fn(&mut ScopeStack, FuncArgs, MemoryBlock) -> OperationsResult {
 
         // Make sure we are declaring the function as a function type
         debug_assert!(match typ {

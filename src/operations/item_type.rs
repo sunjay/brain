@@ -5,6 +5,11 @@ use super::scope::{ScopeStack, TypeId};
 /// Possible types for function arguments
 #[derive(Debug, Clone, PartialEq)]
 pub enum FuncArgType {
+    /// Represents Any type
+    /// TODO: This is mostly a hack to allow for generics before we support them. It would be nice
+    /// to eventually implement this properly when #45 comes along
+    Any,
+
     /// A single value of the specified type
     Arg(TypeId),
 

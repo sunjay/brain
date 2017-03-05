@@ -32,7 +32,7 @@ fn define_stdin(scope: &mut ScopeStack) {
             ],
             return_type: unit_type,
         },
-        |scope, args| {
+        |scope, args, _| {
             unimplemented!();
         }
     );
@@ -58,7 +58,7 @@ fn define_stdout(scope: &mut ScopeStack) {
             ],
             return_type: unit_type,
         },
-        |scope, args| {
+        |scope, args, _| {
             unimplemented!();
         }
     );
@@ -72,7 +72,7 @@ fn define_stdout(scope: &mut ScopeStack) {
             ],
             return_type: unit_type,
         },
-        move |scope, args| {
+        move |scope, args, _| {
             let mut ops = expression::call(scope, Expression::Identifier(write_method_name.clone()), args)?;
 
             // Write a newline using a temporary cell

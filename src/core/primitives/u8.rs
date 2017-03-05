@@ -1,5 +1,6 @@
 use parser::Identifier;
-use operations::item_type::ItemType;
+use operations::{Operation, Error};
+use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::ScopeStack;
 
 pub fn populate_scope(scope: &mut ScopeStack) {
@@ -13,19 +14,37 @@ pub fn populate_scope(scope: &mut ScopeStack) {
         ItemType::Primitive(1)
     );
 
-    // Special function implemented for this type signals to the compiler
-    // that this type can be created from a literal
     scope.declare_builtin_function(
+        // Special method for converting from literal
         // This name is such that it could never be called directly
         // from the language itself
-        Identifier::from("{unsigned integer}"),
+        Identifier::from("std::convert::From<{unsigned integer}>"),
         ItemType::Function {
-            // The arguments aren't important here since this is just a placeholder
-            args: vec![],
+            // This takes a single literal of the type specific within
+            // the curly braces {} in the name
+            args: vec![FuncArgType::Any],
             // Return type signifies which type we are declaring supports integer literals
             return_type: u8_type,
         },
-        // Empty placeholder
-        |_, _| Ok(Vec::new())
+        move |scope, args, target| {
+            let value = args[0].numeric_literal_value();
+
+            // 8 is the size of this numeric type in bytes
+            // We use >= here because 0 is reserved for zero so we
+            // have (2^size - 1) numbers available
+            if value >= (1 << 8) {
+                Err(Error::OverflowingLiteral {
+                    typ: scope.get_type(u8_type).clone()
+                })
+            }
+            else {
+                Ok(vec![
+                    Operation::Increment {
+                        target: target.position(),
+                        amount: value as usize,
+                    }
+                ])
+            }
+        }
     )
 }
