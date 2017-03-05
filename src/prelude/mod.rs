@@ -1,4 +1,5 @@
 mod io;
+mod boolean;
 mod array;
 mod u8;
 

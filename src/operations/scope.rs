@@ -16,6 +16,15 @@ pub enum ScopeItem {
     /// of a variable with a type (TypedBlock should be used for that)
     Type(TypeId),
 
+    /// A constant set of bytes inlined whenever used
+    /// These items have no memory address
+    /// The bytes of the constant are stored directly
+    Constant {
+        type_id: TypeId,
+        /// Size of bytes must match the required size of type_id
+        bytes: Vec<u8>,
+    },
+
     /// A typed block of memory
     TypedBlock {
         type_id: TypeId,
@@ -106,6 +115,19 @@ impl ScopeStack {
         self.insert_current(name, ScopeItem::Type(type_id));
 
         type_id
+    }
+
+    /// Declares a constant with the given name
+    pub fn declare_constant(&mut self, name: Identifier, type_id: TypeId, value: Vec<u8>) {
+        debug_assert!({
+            let size = self.get_type(type_id).required_size(self);
+            value.len() == size
+        });
+
+        self.insert_current(name, ScopeItem::Constant {
+            type_id: type_id,
+            bytes: value,
+        });
     }
 
     /// Declares a name with the given type and allocates enough space for that type
