@@ -3,13 +3,13 @@ use parser::Block;
 use super::{OperationsResult, statement};
 use super::scope::ScopeStack;
 
-pub fn into_operations(block: Block, scope: &mut ScopeStack) -> OperationsResult {
+pub fn into_operations(scope: &mut ScopeStack, block: Block) -> OperationsResult {
     scope.push_scope();
 
     let mut ops = Vec::new();
 
     for stmt in block.into_iter() {
-        ops.extend(statement::into_operations(stmt, scope)?);
+        ops.extend(statement::into_operations(scope, stmt)?);
     }
 
     scope.pop_scope();
@@ -27,7 +27,7 @@ mod tests {
         let mut scope = ScopeStack::new();
         let block = Block::new();
 
-        let ops = into_operations(block, &mut scope).unwrap();
+        let ops = into_operations(&mut scope, block).unwrap();
         assert_eq!(ops.len(), 0);
     }
 
@@ -46,7 +46,7 @@ mod tests {
             // }
         ];
 
-        let ops = into_operations(block, &mut scope).unwrap();
+        let ops = into_operations(&mut scope, block).unwrap();
         assert_eq!(ops.len(), 0);
     }
 }

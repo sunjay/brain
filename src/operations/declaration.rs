@@ -4,12 +4,12 @@ use super::{OperationsResult, type_definition, expression};
 use super::scope::ScopeStack;
 
 pub fn into_operations(
+    scope: &mut ScopeStack,
     pattern: Pattern,
     type_def: TypeDefinition,
     expr: Option<Expression>,
-    scope: &mut ScopeStack,
 ) -> OperationsResult {
-    let type_id = type_definition::resolve_type_id(type_def, scope)?;
+    let type_id = type_definition::resolve_type_id(scope, type_def)?;
 
     let name = match pattern {
         Pattern::Identifier(name) => name,
@@ -17,7 +17,7 @@ pub fn into_operations(
 
     expr.map_or(Ok(Vec::new()), |e| {
         let mem = scope.declare(name, type_id);
-        expression::into_operations(e, type_id, Some(mem), scope)
+        expression::into_operations(scope, e, type_id, Some(mem))
     })
 }
 
@@ -36,10 +36,10 @@ mod tests {
         scope.declare_type(Identifier::from("u8"), ItemType::Primitive(1));
 
         let ops = into_operations(
+            &mut scope,
             Pattern::Identifier(Identifier::from("foo")),
             TypeDefinition::Name {name: Identifier::from("u8")},
-            None,
-            &mut scope
+            None
         ).unwrap();
         assert_eq!(ops.len(), 0);
     }

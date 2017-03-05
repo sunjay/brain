@@ -5,7 +5,7 @@ use super::Error;
 use super::scope::{TypeId, ScopeStack, ScopeItem};
 
 /// Attempts to resolve the TypeId of a given type definition
-pub fn resolve_type_id(type_def: TypeDefinition, scope: &ScopeStack) -> Result<TypeId, Error> {
+pub fn resolve_type_id(scope: &ScopeStack, type_def: TypeDefinition) -> Result<TypeId, Error> {
     match type_def {
         // We return the first declaration found because we want to use the latest definition
         // of the type that we are defining

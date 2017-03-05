@@ -10,20 +10,21 @@ use super::{
 };
 use super::scope::ScopeStack;
 
-pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsResult {
+pub fn into_operations(scope: &mut ScopeStack, node: Statement) -> OperationsResult {
     match node {
         Comment(_) => Ok(Vec::new()),
         Declaration {pattern, type_def, expr} => {
-            declaration::into_operations(pattern, type_def, expr, scope)
+            declaration::into_operations(scope, pattern, type_def, expr)
         },
         Assignment {lhs, expr} => {
-            assignment::into_operations(lhs, expr, scope)
+            assignment::into_operations(scope, lhs, expr)
         },
         WhileLoop {condition, body} => {
-            while_loop::into_operations(condition, body, scope)
+            while_loop::into_operations(scope, condition, body)
         },
         Expression {expr} => {
-            expression::into_operations(expr, scope.unit_type_id(), None, scope)
+            let unit_type = scope.unit_type_id();
+            expression::into_operations(scope, expr, unit_type, None)
         },
     }
 }
@@ -36,7 +37,7 @@ mod tests {
     fn comment() {
         // Make sure comments result in no operations
         let mut scope = ScopeStack::new();
-        let ops = into_operations(Statement::Comment("foo".to_string()), &mut scope).unwrap();
+        let ops = into_operations(&mut scope, Statement::Comment("foo".to_string())).unwrap();
         assert_eq!(ops.len(), 0);
     }
 }

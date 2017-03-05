@@ -5,15 +5,15 @@ use super::{Operation, OperationsResult, expression, block};
 use super::scope::{ScopeStack, ScopeItem};
 
 pub fn into_operations(
+    scope: &mut ScopeStack,
     condition: Expression,
     body: Block,
-    scope: &mut ScopeStack,
 ) -> OperationsResult {
     let bool_type = scope.bool_type_id();
     let cond_mem = scope.allocate(bool_type);
 
-    let cond_ops = expression::into_operations(condition, bool_type, Some(cond_mem), scope)?;
-    let loop_body = block::into_operations(body, scope)?;
+    let cond_ops = expression::into_operations(scope, condition, bool_type, Some(cond_mem))?;
+    let loop_body = block::into_operations(scope, body)?;
 
     // While loops need to evaluate the condition both before the loop and at the end
     // of the loop body

@@ -5,9 +5,9 @@ use super::{OperationsResult, expression};
 use super::scope::{ScopeStack, ScopeItem};
 
 pub fn into_operations(
+    scope: &mut ScopeStack,
     lhs: Identifier,
     expr: Expression,
-    scope: &mut ScopeStack,
 ) -> OperationsResult {
     scope.lookup(&lhs).first().ok_or_else(|| {
         Error::UnresolvedName(lhs.clone())
@@ -15,6 +15,6 @@ pub fn into_operations(
         ScopeItem::TypedBlock {type_id, memory} => Ok((type_id, memory)),
         _ => Err(Error::InvalidLeftHandSide(lhs)),
     }).and_then(|(type_id, memory)| {
-        expression::into_operations(expr, type_id, Some(memory), scope)
+        expression::into_operations(scope, expr, type_id, Some(memory))
     })
 }

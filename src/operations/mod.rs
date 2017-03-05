@@ -22,5 +22,5 @@ use self::scope::ScopeStack;
 
 pub fn from_ast(ast: Program) -> OperationsResult {
     let mut global_scope = ScopeStack::new();
-    program::into_operations(ast, &mut global_scope)
+    program::into_operations(&mut global_scope, ast)
 }
