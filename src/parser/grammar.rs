@@ -7,7 +7,7 @@ use super::*;
 
 impl_rdp! {
     grammar! {
-        program = _{ soi ~ statement* ~ eoi }
+        module = _{ soi ~ statement* ~ eoi }
 
         // conditional is technically an expression too but it can be used as a statement
         // without a semicolon as well
@@ -99,22 +99,24 @@ impl_rdp! {
     }
 
     process! {
-        // Top-level method that returns the abstract syntax tree based on the
-        // contents of the parser queue
-        // Make sure to call program() before this so there is something in the queue
-        ast(&self) -> Program {
-            (list: _program()) => {
-                Program::from(list.into_iter().collect::<Vec<_>>())
+        // Top-level method that returns the abstract syntax tree based on the contents of the
+        // parser queue
+        // Make sure to call module() before this so there is something in the queue
+        module_ast(&self) -> Module {
+            (statements: _module()) => {
+                Module {
+                    body: statements.into_iter().collect::<Block>(),
+                }
             },
         }
 
-        _program(&self) -> VecDeque<Statement> {
-            (_: statement, head: _statement(), mut tail: _program()) => {
+        _module(&self) -> VecDeque<Statement> {
+            (_: statement, head: _statement(), mut tail: _module()) => {
                 tail.push_front(head);
 
                 tail
             },
-            (&text: comment, mut tail: _program()) => {
+            (&text: comment, mut tail: _module()) => {
                 tail.push_front(Statement::Comment(text.into()));
 
                 tail
@@ -143,7 +145,7 @@ impl_rdp! {
             (_: conditional, expr: _conditional()) => {
                 Statement::Expression {expr: expr}
             },
-            // This should always be last as it will catch pretty much any cases that weren't caught above
+            // This should always be lmodule_ast as it will catch pretty much any cases that weren't caught above
             (_: expr, expr: _expr(), _: semi) => {
                 Statement::Expression {expr: expr}
             },
@@ -566,17 +568,17 @@ mod tests {
 
     #[test]
     fn empty_program() {
-        test_method(r#""#, |p| p.program(), |p| p.ast(),
-            Program::from(Vec::new()));
+        test_method(r#""#, |p| p.module(), |p| p.module_ast(),
+            Module::new());
 
         test_method(r#"
-        "#, |p| p.program(), |p| p.ast(),
-            Program::from(Vec::new()));
+        "#, |p| p.module(), |p| p.module_ast(),
+            Module::new());
 
         test_method(r#"
 
-        "#, |p| p.program(), |p| p.ast(),
-            Program::from(Vec::new()));
+        "#, |p| p.module(), |p| p.module_ast(),
+            Module::new());
     }
 
     #[test]
@@ -584,8 +586,8 @@ mod tests {
         test_method(r#"
 
         foo();
-        "#, |p| p.program(), |p| p.ast(),
-            Program::from(vec![
+        "#, |p| p.module(), |p| p.module_ast(),
+            Module::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
                         method: Box::new(Expression::Identifier(Identifier::from("foo"))),
@@ -621,8 +623,8 @@ mod tests {
         a && b && c >= d;
         a <= b && c >= d;
         a < b && c > d;
-        "#, |p| p.program(), |p| p.ast(),
-            Program::from(vec![
+        "#, |p| p.module(), |p| p.module_ast(),
+            Module::from(vec![
                 Statement::Expression {
                     expr: Expression::Call {
                         method: Box::new(Expression::Identifier(Identifier::from("operator||"))),

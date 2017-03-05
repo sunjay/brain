@@ -7,30 +7,19 @@ use super::{Rdp, ParseError};
 use operations::{self, OperationsResult};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Program(Vec<Statement>);
+pub struct Program {
+    pub root_mod: Module,
+}
 
 impl Program {
     pub fn new() -> Program {
-        Program(Vec::new())
+        Program {
+            root_mod: Module::new(),
+        }
     }
 
     pub fn into_operations(self) -> OperationsResult {
         operations::from_ast(self)
-    }
-}
-
-impl From<Vec<Statement>> for Program {
-    fn from(statements: Vec<Statement>) -> Self {
-        Program(statements)
-    }
-}
-
-impl IntoIterator for Program {
-    type Item = Statement;
-    type IntoIter = ::std::vec::IntoIter<Statement>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }
 
@@ -40,8 +29,10 @@ impl FromStr for Program {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         let mut parser = Rdp::new(StringInput::new(input));
 
-        if parser.program() {
-            Ok(parser.ast())
+        if parser.module() {
+            Ok(Program {
+                root_mod: parser.module_ast(),
+            })
         }
         else {
             let (expected, pos) = parser.expected();
@@ -51,6 +42,27 @@ impl FromStr for Program {
                 col: col,
                 expected: expected,
             })
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Module {
+    pub body: Block,
+}
+
+impl Module {
+    pub fn new() -> Module {
+        Module {
+            body: Block::new(),
+        }
+    }
+}
+
+impl From<Block> for Module {
+    fn from(block: Block) -> Self {
+        Module {
+            body: block
         }
     }
 }
