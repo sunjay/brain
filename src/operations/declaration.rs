@@ -1,6 +1,6 @@
 use parser::{Pattern, TypeDefinition, Expression};
 
-use super::{OperationsResult, type_definition, expression};
+use super::{Operation, OperationsResult, type_definition, expression};
 use super::scope::ScopeStack;
 
 pub fn into_operations(
@@ -15,10 +15,15 @@ pub fn into_operations(
         Pattern::Identifier(name) => name,
     };
 
-    expr.map_or(Ok(Vec::new()), |e| {
-        let mem = scope.declare(name, type_id);
-        expression::into_operations(scope, e, type_id, mem)
-    })
+    // Need to always declare the variable in the scope
+    let mem = scope.declare(name, type_id);
+    let mut ops = vec![Operation::Allocate(mem)];
+
+    if let Some(expr) = expr {
+        ops.extend(expression::into_operations(scope, expr, type_id, mem)?)
+    }
+
+    Ok(ops)
 }
 
 #[cfg(test)]
@@ -41,6 +46,8 @@ mod tests {
             TypeDefinition::Name {name: Identifier::from("u8")},
             None
         ).unwrap();
-        assert_eq!(ops.len(), 0);
+
+        assert!(!scope.lookup(&Identifier::from("foo")).is_empty(), "No value was declared");
+        assert_eq!(ops.len(), 1);
     }
 }
