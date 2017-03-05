@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use std::convert::From;
 use std::str::FromStr;
 
@@ -132,6 +133,17 @@ pub enum Expression {
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Identifier(Vec<String>);
 
+impl Identifier {
+    // NOTE: Do not implement ::new() for Identifier
+    // Having an empty Identifier does not make any sense!
+
+    // Concatenates this identifier with another identifier and returns
+    // a new identifier
+    pub fn concat<T>(self, other: T) -> Identifier where T: IntoIterator<Item=String> {
+        self.into_iter().chain(other).collect()
+    }
+}
+
 impl FromStr for Identifier {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -145,7 +157,37 @@ impl<'a> From<&'a str> for Identifier {
     }
 }
 
+impl IntoIterator for Identifier {
+    type Item = String;
+    type IntoIter = ::std::vec::IntoIter<String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl FromIterator<String> for Identifier {
+    fn from_iter<I: IntoIterator<Item=String>>(iter: I) -> Self {
+        Identifier(iter.into_iter().collect())
+    }
+}
+
 pub type Block = Vec<Statement>;
 pub type Number = i32;
 pub type FuncArgs = Vec<FuncArg>;
 pub type FuncArg = Expression;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn concat_identifiers() {
+        let mut ident = Identifier::from("foo::bar::Bar::spam")
+            .concat(Identifier::from("car::bar::star"));
+
+        let concated = Identifier::from("foo::bar::Bar::spam::car::bar::star");
+
+        assert_eq!(ident, concated);
+    }
+}
