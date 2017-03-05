@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     use parser::Identifier;
-    use scope::ScopeItem;
+    use operations::scope::ScopeItem;
 
     #[test]
     fn constants() {

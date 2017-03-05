@@ -399,7 +399,7 @@ fn nest_else_ifs(branches: VecDeque<Expression>, else_block: Option<Block>) -> B
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Just to make things a bit more ergonomic
-        use Rule::*;
+        use self::Rule::*;
 
         write!(f, "{}", match *self {
             eoi => "EOF",

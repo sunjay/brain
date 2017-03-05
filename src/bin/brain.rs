@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Arg, App};
 
-use brain::{Program, ParseError};
+use brain::parser::{Program, ParseError};
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {

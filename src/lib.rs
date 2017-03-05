@@ -3,12 +3,8 @@
 #[macro_use]
 extern crate pest;
 
-mod parser;
-mod operations;
-mod memory;
-mod prelude;
-mod core;
-
-pub use parser::*;
-pub use operations::*;
-pub use memory::*;
+pub mod parser;
+pub mod operations;
+pub mod memory;
+pub mod core;
+pub mod prelude;
