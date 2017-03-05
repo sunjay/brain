@@ -113,7 +113,7 @@ pub enum Expression {
     Number(Number),
     Call {
         method: Box<Expression>,
-        args: FuncArgs,
+        args: CallArgs,
     },
     Access {
         target: Box<Expression>,
@@ -174,8 +174,8 @@ impl FromIterator<String> for Identifier {
 
 pub type Block = Vec<Statement>;
 pub type Number = i32;
-pub type FuncArgs = Vec<FuncArg>;
-pub type FuncArg = Expression;
+pub type CallArgs = Vec<CallArg>;
+pub type CallArg = Expression;
 
 #[cfg(test)]
 mod tests {

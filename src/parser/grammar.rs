@@ -170,7 +170,7 @@ impl_rdp! {
         }
 
         _expr(&self) -> Expression {
-            (_: func_call, method: _identifier(), args: _func_args()) => {
+            (_: func_call, method: _identifier(), args: _call_args()) => {
                 Expression::Call {
                     method: Box::new(Expression::Identifier(method)),
                     args: args,
@@ -221,7 +221,7 @@ impl_rdp! {
         }
 
         _field_access(&self) -> Expression {
-            (target: _identifier(), _: op_access, field: _identifier(), args: _func_args()) => {
+            (target: _identifier(), _: op_access, field: _identifier(), args: _call_args()) => {
                 Expression::Call {
                     method: Box::new(Expression::Access {
                         target: Box::new(Expression::Identifier(target)),
@@ -291,7 +291,7 @@ impl_rdp! {
             },
         }
 
-        _func_args(&self) -> FuncArgs {
+        _call_args(&self) -> CallArgs {
             (_: func_args_start, deque: _expr_deque()) => {
                 deque.into_iter().collect()
             },
