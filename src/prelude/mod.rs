@@ -14,7 +14,8 @@ pub fn populate_scope(scope: &mut ScopeStack) {
 
     stdio::populate_scope(scope);
 
-    array::populate_scope(scope);
     boolean::populate_scope(scope);
     u8::populate_scope(scope);
+
+    array::populate_scope(scope);
 }

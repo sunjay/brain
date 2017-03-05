@@ -20,7 +20,6 @@ use parser::Program;
 
 use self::scope::ScopeStack;
 
-pub fn from_ast(ast: Program) -> OperationsResult {
-    let mut global_scope = ScopeStack::new();
-    program::into_operations(&mut global_scope, ast)
+pub fn from_ast(global_scope: &mut ScopeStack, ast: Program) -> OperationsResult {
+    program::into_operations(global_scope, ast)
 }

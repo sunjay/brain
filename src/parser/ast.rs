@@ -5,6 +5,7 @@ use pest::prelude::*;
 
 use super::{Rdp, ParseError};
 use operations::{self, OperationsResult};
+use operations::scope::ScopeStack;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Program {
@@ -18,8 +19,8 @@ impl Program {
         }
     }
 
-    pub fn into_operations(self) -> OperationsResult {
-        operations::from_ast(self)
+    pub fn into_operations(self, global_scope: &mut ScopeStack) -> OperationsResult {
+        operations::from_ast(global_scope, self)
     }
 }
 

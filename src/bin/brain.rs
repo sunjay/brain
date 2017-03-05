@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 use clap::{Arg, App};
 
 use brain::parser::{Program, ParseError};
+use brain::operations::scope::ScopeStack;
+use brain::prelude;
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
@@ -85,7 +87,9 @@ fn compile(source: String) -> String {
         }
     });
 
-    let operations = program.into_operations();
+    let mut global_scope = ScopeStack::new();
+    prelude::populate_scope(&mut global_scope);
+    let operations = program.into_operations(&mut global_scope);
 
     unimplemented!();
 }
