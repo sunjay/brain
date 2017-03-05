@@ -45,6 +45,21 @@ impl MemoryBlock {
     }
 }
 
+impl Default for MemoryBlock {
+
+    /// The default memory block is useful whenever you need no memory but still need to pass
+    /// a memory block to a function
+    /// This is useful because it will cause the compiler to panic if anyone ever attempts to
+    /// mutate this block (since it is zero sized)
+    /// This saves the allocator from wasting too many IDs on zero-sized blocks of memory
+    fn default() -> Self {
+        MemoryBlock {
+            id: Id(0),
+            size: 0,
+        }
+    }
+}
+
 /// The position of a cell within an MemoryBlock
 /// Index = 0 indicates the start of the memory block
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -57,13 +72,17 @@ pub struct StaticAllocator {
 impl StaticAllocator {
     pub fn new() -> StaticAllocator {
         StaticAllocator {
-            next_id: 0,
+            next_id: 1,
         }
     }
 
     /// Allocates a memory block of the given size and gives it a unique ID
     /// so that this memory block can be referred to uniquely
     pub fn allocate(&mut self, size: Size) -> MemoryBlock {
+        if size == 0 {
+            return MemoryBlock::default();
+        }
+
         let blk = MemoryBlock {
             id: Id(self.next_id),
             size: size,
@@ -71,5 +90,38 @@ impl StaticAllocator {
         self.next_id += 1;
 
         blk
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn allocating_zero_returns_default() {
+        let mut allocator = StaticAllocator::new();
+
+        // Allocate zero memory
+        let mem = allocator.allocate(0);
+
+        // Make sure the default gets returned
+        let default = MemoryBlock::default();
+        assert_eq!(mem, default);
+
+        // Make sure it keeps happening
+        let mem = allocator.allocate(0);
+        assert_eq!(mem, default);
+    }
+
+    #[test]
+    fn cannot_allocate_default_memory_block() {
+        let mut allocator = StaticAllocator::new();
+
+        // Allocate a non-zero amount of memory
+        let mem = allocator.allocate(1);
+
+        // Make sure the default doesn't accidentally get returned
+        let default = MemoryBlock::default();
+        assert!(mem != default);
     }
 }

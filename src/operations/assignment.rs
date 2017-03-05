@@ -15,6 +15,6 @@ pub fn into_operations(
         ScopeItem::TypedBlock {type_id, memory} => Ok((type_id, memory)),
         _ => Err(Error::InvalidLeftHandSide(lhs)),
     }).and_then(|(type_id, memory)| {
-        expression::into_operations(scope, expr, type_id, Some(memory))
+        expression::into_operations(scope, expr, type_id, memory)
     })
 }

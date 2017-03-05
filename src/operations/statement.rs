@@ -1,5 +1,6 @@
 use parser::Statement;
 use parser::Statement::*;
+use memory::MemoryBlock;
 
 use super::{
     OperationsResult,
@@ -24,7 +25,7 @@ pub fn into_operations(scope: &mut ScopeStack, node: Statement) -> OperationsRes
         },
         Expression {expr} => {
             let unit_type = scope.unit_type_id();
-            expression::into_operations(scope, expr, unit_type, None)
+            expression::into_operations(scope, expr, unit_type, MemoryBlock::default())
         },
     }
 }
