@@ -4,13 +4,13 @@ use std::collections::{VecDeque, HashMap};
 use parser::Identifier;
 use memory::{StaticAllocator, MemoryBlock};
 
-use super::operation::Operation;
+use super::operation::{Operation, OperationsResult};
 use super::item_type::ItemType;
 
 pub type TypeId = usize;
 
 /// The arguments that will get passed to a function
-/// Arguments are guaranteed to match the type of the function
+/// Arguments are guaranteed by static analysis to match the type defined for the function
 pub type FuncArgs = Vec<ScopeItem>;
 
 /// Represents a single item in a scope
@@ -41,7 +41,7 @@ pub enum ScopeItem {
         id: TypeId,
         /// Generates operations that represent calling the
         /// function with the given arguments
-        operations: Rc<Fn(FuncArgs, ScopeStack) -> Vec<Operation>>,
+        operations: Rc<Fn(&mut ScopeStack, FuncArgs) -> OperationsResult>,
     },
 }
 
@@ -189,7 +189,7 @@ impl ScopeStack {
     /// The name is declared in the "current" scope which is at the top of the stack
     /// The function is guaranteed to be called with arguments that match its given type signature
     pub fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, typ: ItemType, f: F)
-        where F: Fn(FuncArgs, ScopeStack) -> Vec<Operation> {
+        where F: Fn(&mut ScopeStack, FuncArgs) -> OperationsResult {
 
         // Make sure we are declaring the function as a function type
         debug_assert!(match typ {
