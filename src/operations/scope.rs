@@ -32,18 +32,6 @@ pub enum ScopeItem {
     },
 }
 
-impl ScopeItem {
-    /// Returns the TypeId of this ScopeItem if this is a type,
-    /// otherwise returns None
-    pub fn type_id(&self) -> Option<TypeId> {
-        match *self {
-            ScopeItem::Type(id) => Some(id),
-            ScopeItem::BuiltInFunction {id, ..} => Some(id),
-            ScopeItem::TypedBlock { .. } => None,
-        }
-    }
-}
-
 /// The type ID that corresponds to the unit type
 pub const UNIT_TYPE_ID: TypeId = 0;
 
