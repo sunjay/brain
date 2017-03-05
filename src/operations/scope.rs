@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::collections::{VecDeque, HashMap};
 
-use parser::Identifier;
+use parser::{Identifier, Number};
 use memory::{StaticAllocator, MemoryBlock};
 
 use super::OperationsResult;
@@ -14,6 +14,7 @@ pub type TypeId = usize;
 pub type FuncArgs = Vec<ScopeItem>;
 
 /// Represents a single item in a scope
+#[derive(Clone)]
 pub enum ScopeItem {
     /// A type, not associated with any memory
     /// Used for a struct/type declaration, not the declaration
@@ -28,6 +29,10 @@ pub enum ScopeItem {
         /// Size of bytes must match the required size of type_id
         bytes: Vec<u8>,
     },
+
+    /// A constant value that represents a numeric literal without a specific number type
+    /// Stored in a temporary memory location for non-built-in functions
+    NumericLiteral(Number),
 
     /// A typed block of memory
     TypedBlock {

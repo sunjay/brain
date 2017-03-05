@@ -16,8 +16,8 @@ pub fn into_operations(
     target: MemoryBlock,
 ) -> OperationsResult {
     match expr {
-        Expression::Identifier(name) => expr_identifier(scope, name, target_type, target),
-        Expression::Number(value) => expr_number(scope, value, target_type, target),
+        Expression::Identifier(name) => store_identifier(scope, name, target_type, target),
+        Expression::Number(value) => store_number(scope, value, target_type, target),
         _ => unimplemented!(),
     }
 }
@@ -27,7 +27,7 @@ pub fn call(scope: &mut ScopeStack, method: Expression, args: FuncArgs) -> Opera
     unimplemented!();
 }
 
-fn expr_identifier(
+fn store_identifier(
     scope: &mut ScopeStack,
     name: Identifier,
     target_type: TypeId,
@@ -35,7 +35,12 @@ fn expr_identifier(
 ) -> OperationsResult {
     scope.lookup(&name).first().ok_or_else(|| {
         Error::UnresolvedName(name.clone())
-    }).and_then(|item| match **item {
+    }).map(|item| (**item).clone()).and_then(|item| match item {
+        // There is a non-lexical lifetimes issue here which was introduced by calling store_number() below
+        // The clone() above is completely unnecssary and is a hack to work around this problem
+        // in the Rust compiler
+        // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
+
         ScopeItem::Type(..) => Err(Error::UnresolvedName(name)),
 
         ScopeItem::Constant {type_id, ref bytes} => {
@@ -46,6 +51,8 @@ fn expr_identifier(
                 mismatched_types(scope, target_type, type_id)
             }
         },
+
+        ScopeItem::NumericLiteral(number) => store_number(scope, number, target_type, target),
 
         ScopeItem::TypedBlock {type_id, memory} => {
             if target_type == type_id {
@@ -71,7 +78,7 @@ fn expr_identifier(
     })
 }
 
-fn expr_number(
+fn store_number(
     scope: &mut ScopeStack,
     value: Number,
     target_type: TypeId,
