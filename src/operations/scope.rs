@@ -4,7 +4,7 @@ use std::collections::{VecDeque, HashMap};
 use parser::Identifier;
 use memory::{StaticAllocator, MemoryBlock};
 
-use super::operation::{Operation, OperationsResult};
+use super::OperationsResult;
 use super::item_type::ItemType;
 
 pub type TypeId = usize;
