@@ -216,6 +216,8 @@ impl ScopeStack {
     /// Declares a built in function with the given name and type definition
     /// The name is declared in the "current" scope which is at the top of the stack
     /// The function is guaranteed to be called with arguments that match its given type signature
+    /// Functions that can be called on an instance of a type should have that type as the first
+    /// parameter as the "self" of that function
     pub fn declare_builtin_function<F: 'static>(&mut self, name: Identifier, typ: ItemType, f: F)
         where F: Fn(&mut ScopeStack, FuncArgs) -> OperationsResult {
 

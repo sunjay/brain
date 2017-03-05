@@ -5,15 +5,15 @@ use super::scope::{ScopeStack, TypeId};
 /// Possible types for function arguments
 #[derive(Debug, Clone, PartialEq)]
 pub enum FuncArgType {
-    /// Any type
-    ///TODO: Replace with type bounds when generics are implemented in #45
-    Any,
-
     /// A single value of the specified type
     Arg(TypeId),
 
     /// Zero or more values of the specified type
-    Variadic(TypeId),
+    /// If the type is None, that means that there is no specific type being required
+    /// so any type can be passed as an argument
+    /// TODO: This is mostly a hack to allow for generics before we support them. It would be nice
+    /// to eventually implement this properly when #45 comes along
+    Variadic(Option<TypeId>),
 }
 
 /// An item is anything that can be declared
