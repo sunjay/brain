@@ -3,7 +3,7 @@ use memory::MemoryBlock;
 
 use super::{Error, Operation, OperationsResult};
 use super::item_type::ItemType;
-use super::scope::{TypeId, ScopeStack, ScopeItem};
+use super::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
@@ -20,6 +20,11 @@ pub fn into_operations(
         Expression::Number(value) => expr_number(scope, value, target_type, target),
         _ => unimplemented!(),
     }
+}
+
+/// Call the provided method with the given arguments
+pub fn call(scope: &mut ScopeStack, method: Expression, args: FuncArgs) -> OperationsResult {
+    unimplemented!();
 }
 
 fn expr_identifier(
