@@ -77,6 +77,10 @@ pub enum Operation {
     /// This will be moved to before the loop and at the end of the loop body
     /// It is up to the surrounding operations to determine when to evaluate the condition
     Loop {
+        /// This field in particular is VERY important because it creates a guarantee about the
+        /// position of the cell pointer both before and after a loop
+        /// Without this, solving for the current position in order to generate
+        /// movement instructions would be nearly impossible
         cond: CellPosition,
         body: Vec<Operation>,
     },
