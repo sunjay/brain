@@ -12,6 +12,7 @@ pub fn populate_scope(scope: &mut ScopeStack) {
         Identifier::from("bool"),
         ItemType::Primitive(1)
     );
+    scope.set_bool_type_id(bool_type);
 
     scope.declare_constant(
         Identifier::from("true"),

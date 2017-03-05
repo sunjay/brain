@@ -8,7 +8,7 @@ use super::{
     while_loop,
     expression,
 };
-use super::scope::{ScopeStack, UNIT_TYPE_ID};
+use super::scope::ScopeStack;
 
 pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsResult {
     match node {
@@ -23,7 +23,7 @@ pub fn into_operations(node: Statement, scope: &mut ScopeStack) -> OperationsRes
             while_loop::into_operations(condition, body, scope)
         },
         Expression {expr} => {
-            expression::into_operations(expr, UNIT_TYPE_ID, None, scope)
+            expression::into_operations(expr, scope.unit_type_id(), None, scope)
         },
     }
 }
