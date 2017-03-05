@@ -7,7 +7,7 @@ pub enum Operation {
     /// Denotes a "block" of operations
     /// Any allocations in this block will be freed at the end of the block
     Block {
-        body: Vec<Operation>,
+        body: Operations,
     },
 
     /// Allocates the given size in bytes on the tape so that it is not used by any other code
@@ -30,7 +30,7 @@ pub enum Operation {
     TempAllocate {
         // The memory block used as temporary memory in the provided operations
         temp: MemoryBlock,
-        body: Vec<Operation>,
+        body: Operations,
     },
 
     /// Frees the given memory id and all cells associated with it
@@ -82,7 +82,7 @@ pub enum Operation {
         /// Without this, solving for the current position in order to generate
         /// movement instructions would be nearly impossible
         cond: CellPosition,
-        body: Vec<Operation>,
+        body: Operations,
     },
 
     /// Copy `size` cells from the source cell to the target cell using a single temporary cell
