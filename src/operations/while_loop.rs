@@ -1,8 +1,7 @@
 use parser::{Expression, Block};
 
-use super::{Error};
 use super::{Operation, OperationsResult, expression, block};
-use super::scope::{ScopeStack, ScopeItem};
+use super::scope::ScopeStack;
 
 pub fn into_operations(
     scope: &mut ScopeStack,
