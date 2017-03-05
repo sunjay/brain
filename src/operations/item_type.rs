@@ -1,6 +1,6 @@
 use memory::Size;
 
-use super::scope::{ScopeItem, ScopeStack};
+use super::scope::{ScopeItem, ScopeStack, TypeId};
 
 /// The arguments that will get passed to a function
 /// Distinct to the function's actual type because these are
@@ -8,7 +8,7 @@ use super::scope::{ScopeItem, ScopeStack};
 /// Arguments can be assumed to match the type of that function
 pub type FuncArgs = Vec<ScopeItem>;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FuncArgType {
     /// A single argument of the given type
     Arg(ItemType),
@@ -17,7 +17,7 @@ pub enum FuncArgType {
 }
 
 /// An item is anything that can be declared
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ItemType {
     /// Any type
     ///TODO: Replace with type bounds when generics are implemented in #45
