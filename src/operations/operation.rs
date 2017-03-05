@@ -2,6 +2,7 @@ use memory::{MemoryBlock, Size, CellPosition};
 
 pub type Operations = Vec<Operation>;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operation {
     /// Allocates the given size in bytes on the tape so that it is not used by any other code
     /// accidentally. The addr is generated automatically and represents the position which will

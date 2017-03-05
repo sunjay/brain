@@ -164,8 +164,7 @@ impl ScopeStack {
     /// The name is declared in the "current" scope which is at the top of the stack
     /// Returns the allocated memory block
     pub fn declare(&mut self, name: Identifier, type_id: TypeId) -> MemoryBlock {
-        let size = self.get_type(type_id).required_size(self);
-        let mem = self.allocator.allocate(size);
+        let mem = self.allocate(type_id);
         self.insert_current(name, ScopeItem::TypedBlock {
             type_id: type_id,
             memory: mem,
@@ -177,8 +176,8 @@ impl ScopeStack {
     /// Allocate a memory block that is large enough for the given type
     /// Does not associate memory block with a name which means it cannot be looked up later
     /// Returns the allocated memory block
-    pub fn allocate(&mut self, typ: &ItemType) -> MemoryBlock {
-        let size = typ.required_size(self);
+    pub fn allocate(&mut self, type_id: TypeId) -> MemoryBlock {
+        let size = self.get_type(type_id).required_size(self);
         self.allocator.allocate(size)
     }
 

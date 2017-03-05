@@ -1,6 +1,7 @@
 pub mod scope;
 pub mod item_type;
 pub mod program;
+pub mod block;
 pub mod statement;
 pub mod declaration;
 pub mod assignment;
