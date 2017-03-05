@@ -44,7 +44,7 @@ pub enum ItemType {
     /// A fixed-size array
     Array {
         /// The type of the elements in this array
-        type_name: String,
+        type_id: TypeId,
         /// The number of elements that this array can hold
         size: usize,
     },
