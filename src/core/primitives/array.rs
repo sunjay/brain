@@ -6,5 +6,9 @@ pub fn populate_scope(scope: &mut ScopeStack) {
     // https://github.com/brain-lang/brain/issues/37
     scope.push_scope();
 
-    //TODO
+    let array_type = scope.declare_type(
+        Identifier::from("[]"),
+        ItemType::Primitive(1)
+    );
+    scope.set_array_type_id(array_type);
 }

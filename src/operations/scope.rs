@@ -61,6 +61,7 @@ pub struct ScopeStack {
 
     /// The TypeId that corresponds with the bool type
     bool_type_id: Option<TypeId>,
+    array_type_id: Option<TypeId>,
 }
 
 impl ScopeStack {
@@ -74,6 +75,7 @@ impl ScopeStack {
             allocator: StaticAllocator::new(),
             types: vec![ItemType::Unit],
             bool_type_id: None,
+            array_type_id: None,
         }
     }
 
@@ -105,10 +107,10 @@ impl ScopeStack {
 
     /// Returns the TypeId of the bool type
     pub fn bool_type_id(&self) -> TypeId {
-        // NOTE: The unit type and the bool type are "special primitives". Both types are
-        // fundamentally required for the compiler to function and so we need to provide special
-        // access to them in the scope. We want a stronger guarantee than just relying on the name
-        // "bool".
+        // NOTE: The unit type, the bool type and the array type are "special primitives". These
+        // types are fundamentally required for the compiler to function and so we need to provide
+        // special access to them in the scope. We want a stronger guarantee than just relying on
+        // names like "bool".
         // We don't want to couple the types' implementation with this module, so we simply add a
         // hatch for the implementing modules to define which TypeId should be associated with bool
 
@@ -125,6 +127,25 @@ impl ScopeStack {
         debug_assert!(type_id != self.unit_type_id(), "Declared bool TypeId with the same TypeId as Unit");
 
         self.bool_type_id = Some(type_id)
+    }
+
+    /// Returns the TypeId of the array type
+    pub fn array_type_id(&self) -> TypeId {
+        // NOTE: See note in bool_type_id
+
+        self.array_type_id.expect("Expected a array TypeId to be defined in the scope")
+    }
+
+    /// Set the TypeId for the primitive array type
+    pub fn set_array_type_id(&mut self, type_id: TypeId) {
+        // NOTE: See note in bool_type_id
+
+        // This should only be called once
+        debug_assert!(self.array_type_id.is_none(), "Redefined array TypeId in scope");
+
+        debug_assert!(type_id != self.unit_type_id(), "Declared array TypeId with the same TypeId as Unit");
+
+        self.array_type_id = Some(type_id)
     }
 
     /// Looks up a name starting at the current scope
@@ -275,6 +296,71 @@ mod tests {
 
         scope.set_bool_type_id(1);
         scope.set_bool_type_id(2);
+    }
+
+    #[test]
+    fn array_type_id() {
+        const ARRAY_TYPE_ID: TypeId = 2;
+
+        let mut scope = ScopeStack::new();
+        scope.set_array_type_id(ARRAY_TYPE_ID);
+
+        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
+    }
+
+    #[test]
+    #[should_panic(expected = "Declared array TypeId with the same TypeId as Unit")]
+    fn array_type_id_is_unit() {
+        let mut scope = ScopeStack::new();
+
+        let unit_id = scope.unit_type_id();
+        scope.set_array_type_id(unit_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "Expected a array TypeId to be defined in the scope")]
+    fn access_array_type_id_without_declaration() {
+        let scope = ScopeStack::new();
+
+        scope.array_type_id();
+    }
+
+    #[test]
+    #[should_panic(expected = "Redefined array TypeId in scope")]
+    fn redefine_array_type_id() {
+        let mut scope = ScopeStack::new();
+
+        scope.set_array_type_id(2);
+        scope.set_array_type_id(3);
+    }
+
+    #[test]
+    fn bool_array_types_different() {
+        // Make sure we are setting the right fields in the setter methods
+        const BOOL_TYPE_ID: TypeId = 1;
+        const ARRAY_TYPE_ID: TypeId = 2;
+
+        let mut scope = ScopeStack::new();
+        scope.set_array_type_id(ARRAY_TYPE_ID);
+        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
+        scope.set_bool_type_id(BOOL_TYPE_ID);
+        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
+
+        // Should not change
+        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
+
+        assert!(scope.bool_type_id() != scope.array_type_id());
+
+        let mut scope = ScopeStack::new();
+        scope.set_bool_type_id(BOOL_TYPE_ID);
+        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
+        scope.set_array_type_id(ARRAY_TYPE_ID);
+        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
+
+        // Should not change
+        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
+
+        assert!(scope.bool_type_id() != scope.array_type_id());
     }
 
     #[test]
