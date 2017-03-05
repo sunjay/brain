@@ -25,4 +25,19 @@ pub enum Error {
         expected: ItemType,
         found: ItemType,
     },
+
+    /// Same as MismatchedTypes but for literals
+    /// Found is still a type
+    /// Mismatched types:
+    ///     expected type: `expected`
+    ///     found type: `found`
+    MismatchedLiteral {
+        expected: ItemType,
+        found: String,
+    },
+
+    /// Overflowing literal: literal out of range for `typ`
+    OverflowingLiteral {
+        typ: ItemType,
+    }
 }
