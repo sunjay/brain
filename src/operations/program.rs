@@ -18,6 +18,6 @@ mod tests {
         let program = Program::new();
 
         let ops = into_operations(&mut scope, program).unwrap();
-        assert_eq!(ops.len(), 0);
+        assert_eq!(ops.len(), 1);
     }
 }

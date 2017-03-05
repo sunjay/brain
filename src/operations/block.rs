@@ -1,6 +1,6 @@
 use parser::Block;
 
-use super::{OperationsResult, statement};
+use super::{Operation, OperationsResult, statement};
 use super::scope::ScopeStack;
 
 pub fn into_operations(scope: &mut ScopeStack, block: Block) -> OperationsResult {
@@ -14,7 +14,9 @@ pub fn into_operations(scope: &mut ScopeStack, block: Block) -> OperationsResult
 
     scope.pop_scope();
 
-    Ok(ops)
+    Ok(vec![Operation::Block {
+        body: ops,
+    }])
 }
 
 #[cfg(test)]
@@ -23,12 +25,12 @@ mod tests {
     use parser::Block;
 
     #[test]
-    fn empty_program() {
+    fn empty_block() {
         let mut scope = ScopeStack::new();
         let block = Block::new();
 
         let ops = into_operations(&mut scope, block).unwrap();
-        assert_eq!(ops.len(), 0);
+        assert_eq!(ops.len(), 1);
     }
 
     #[test]
@@ -47,6 +49,6 @@ mod tests {
         ];
 
         let ops = into_operations(&mut scope, block).unwrap();
-        assert_eq!(ops.len(), 0);
+        assert_eq!(ops.len(), 1);
     }
 }

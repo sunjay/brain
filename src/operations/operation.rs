@@ -4,6 +4,12 @@ pub type Operations = Vec<Operation>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operation {
+    /// Denotes a "block" of operations
+    /// Any allocations in this block will be freed at the end of the block
+    Block {
+        body: Vec<Operation>,
+    },
+
     /// Allocates the given size in bytes on the tape so that it is not used by any other code
     /// accidentally. The addr is generated automatically and represents the position which will
     /// eventually be determined when the memory layout is generated. Nothing is guaranteed about
