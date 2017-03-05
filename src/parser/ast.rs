@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn concat_identifiers() {
-        let mut ident = Identifier::from("foo::bar::Bar::spam")
+        let ident = Identifier::from("foo::bar::Bar::spam")
             .concat(Identifier::from("car::bar::star"));
 
         let concated = Identifier::from("foo::bar::Bar::spam::car::bar::star");
