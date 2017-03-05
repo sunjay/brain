@@ -31,7 +31,7 @@ impl_rdp! {
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { func_call | field_access | identifier | conditional | string_literal | number }
+            { func_call | field_access | string_literal | identifier | conditional | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = { op_bool_or }
@@ -67,7 +67,7 @@ impl_rdp! {
         func_args_end = { [")"] }
         func_arg = _{ expr }
 
-        string_literal = @{ ["\""] ~ literal_char* ~ ["\""] }
+        string_literal = @{ ["b\""] ~ literal_char* ~ ["\""] }
         literal_char = { escape_sequence | (!["\""] ~ any) }
         escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] }
 
@@ -212,7 +212,7 @@ impl_rdp! {
                 Expression::Identifier(ident.into())
             },
             (_: string_literal, s: _literal_chars()) => {
-                Expression::StringLiteral(s.into_iter().collect())
+                Expression::ByteLiteral(s.into_iter().collect())
             },
             (&s: number) => {
                 // If our grammar is correct, we are guarenteed that this will work
@@ -360,7 +360,7 @@ impl_rdp! {
             },
             () => {
                 VecDeque::new()
-            }
+            },
         }
 
         _identifier(&self) -> Identifier {
@@ -459,15 +459,15 @@ mod tests {
 
     #[test]
     fn string_literal() {
-        test_parse(r#""""#, |p| p.string_literal(), vec![
-            Token::new(Rule::string_literal, 0, 2),
+        test_parse(r#"b"""#, |p| p.string_literal(), vec![
+            Token::new(Rule::string_literal, 0, 3),
         ]);
 
-        test_parse(r#""foo""#, |p| p.string_literal(), vec![
-            Token::new(Rule::string_literal, 0, 5),
-            Token::new(Rule::literal_char, 1, 2),
+        test_parse(r#"b"foo""#, |p| p.string_literal(), vec![
+            Token::new(Rule::string_literal, 0, 6),
             Token::new(Rule::literal_char, 2, 3),
             Token::new(Rule::literal_char, 3, 4),
+            Token::new(Rule::literal_char, 4, 5),
         ]);
     }
 
@@ -531,27 +531,27 @@ mod tests {
 
     #[test]
     fn string_literal_escapes() {
-        test_method(r#""foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("foo".to_owned()));
+        test_method(r#"b"foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::ByteLiteral("foo".to_owned()));
 
-        test_method(r#""\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::StringLiteral("\\ \" \' \n \r \t \0".to_owned()));
+        test_method(r#"b"\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+            Expression::ByteLiteral("\\ \" \' \n \r \t \0".to_owned()));
     }
 
     #[test]
     fn functions_field_access() {
-        test_method(r#"func(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+        test_method(r#"func(1, b"foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
                 method: Box::new(Expression::Identifier(Identifier::from("func"))),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::ByteLiteral("foo".to_owned()),
                     Expression::Number(3),
                 ],
             }
         );
 
-        test_method(r#"thing.prop(1, "foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
+        test_method(r#"thing.prop(1, b"foo", 3)"#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
             Expression::Call {
                 method: Box::new(Expression::Access {
                     target: Box::new(Expression::Identifier(Identifier::from("thing"))),
@@ -559,7 +559,7 @@ mod tests {
                 }),
                 args: vec![
                     Expression::Number(1),
-                    Expression::StringLiteral("foo".to_owned()),
+                    Expression::ByteLiteral("foo".to_owned()),
                     Expression::Number(3),
                 ],
             }

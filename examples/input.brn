@@ -3,12 +3,12 @@
 // if this many characters aren't available yet, it waits for you to send that many
 let b: [u8; 5];
 stdin.read(b);
-stdout.write("b = ", b, "\n");
+stdout.write(b"b = ", b, b"\n");
 
 let c: [u8; 1];
 stdin.read(c);
-stdout.write("c = ", c, "\n");
+stdout.write(b"c = ", c, b"\n");
 
 // You can reuse allocated space again
 stdin.read(b);
-stdout.write("b = ", b, "\n");
+stdout.write(b"b = ", b, b"\n");

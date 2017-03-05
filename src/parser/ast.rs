@@ -106,7 +106,7 @@ pub enum TypeDefinition {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    StringLiteral(String),
+    ByteLiteral(String),
     Identifier(Identifier),
     Number(Number),
     Call {
