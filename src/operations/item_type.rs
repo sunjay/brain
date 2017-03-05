@@ -2,13 +2,23 @@ use memory::Size;
 
 use super::scope::{ScopeStack, TypeId};
 
-/// An item is anything that can be declared
+/// Possible types for function arguments
 #[derive(Debug, Clone, PartialEq)]
-pub enum ItemType {
+pub enum FuncArgType {
     /// Any type
     ///TODO: Replace with type bounds when generics are implemented in #45
     Any,
 
+    /// A single value of the specified type
+    Arg(TypeId),
+
+    /// Zero or more values of the specified type
+    Variadic(TypeId),
+}
+
+/// An item is anything that can be declared
+#[derive(Debug, Clone, PartialEq)]
+pub enum ItemType {
     /// Unit type
     /// The unit type is a type with a single zero-size value.
     /// Both the type and the value are specified: ()
@@ -37,10 +47,8 @@ pub enum ItemType {
 
     /// Definition of a function's type
     Function {
-        args: Vec<TypeId>,
+        args: Vec<FuncArgType>,
         return_type: TypeId,
-        /// If true, the **last** argument type can be provided any number of times (including 0)
-        variadic: bool,
     },
 }
 
