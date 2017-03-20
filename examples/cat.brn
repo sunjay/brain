@@ -1,5 +1,5 @@
 // cat program
-let ch: u8;
+let mut ch: u8;
 
 // stdin.read returns false when EOF is reached
 while stdin.read(ch) {

@@ -18,7 +18,7 @@ impl_rdp! {
         block_comment = _{ ["/*"] ~ ((!(["*/"]) ~ any) | block_comment)* ~ ["*/"] }
 
         assignment = { identifier ~ op_assign ~ expr ~ semi}
-        declaration = { ["let"] ~ pattern ~ op_declare_type ~ type_def ~ (op_assign ~ expr)? ~ semi}
+        declaration = { ["let"] ~ ["mut"]? ~ pattern ~ op_declare_type ~ type_def ~ (op_assign ~ expr)? ~ semi}
         op_declare_type = { [":"] }
         op_assign = { ["="] }
         pattern = { identifier }

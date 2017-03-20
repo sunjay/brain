@@ -5,7 +5,7 @@ stdout.writeln(b"MAGIC NAME GUESSER");
 
 let prompt: [u8; _] = b"Enter the first letter of your name:";
 
-let c: [u8; 1];
+let mut c: [u8; 1];
 stdout.writeln(prompt);
 stdin.read(c);
 

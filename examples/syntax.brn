@@ -35,7 +35,7 @@ else {
 
 // A single byte-sized numeric type is supported
 // value must be in the range for the type
-let counter: u8 = 200;
+let mut counter: u8 = 200;
 // the while condition must evaluate to a boolean
 while counter > 0 {
     // This is a placeholder function that mutates counter and subtracts one
