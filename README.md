@@ -5,27 +5,47 @@
 [![Build Status](https://travis-ci.org/brain-lang/brain.svg?branch=master)](https://travis-ci.org/brain-lang/brain)
 [![Gitter](https://img.shields.io/gitter/room/brain-lang/brain.svg)](https://gitter.im/brain-lang/brain)
 
-brain is a high level programming language that compiles into brainfuck. It is
-implemented using the Rust programming language.
+brain is a strongly-typed, high-level programming language that compiles into
+brainfuck. Its syntax is based on the [Rust programming language][rust] (which
+it is also implemented in). Though many Rust concepts will work in brain, it
+deviates when necessary in order to better suit the needs of brainfuck
+programming.
 
-[brainfuck][brainfuck] is an esoteric programming language with 8 very simple
-instructions. Unfortunately, brainfuck code is quite difficult to understand and
-write. brain makes it easier to write brainfuck programs by allowing you to
-write in a more familiar syntax. The compiler is designed to optimize the
-generated brainfuck code as much as possible.
+[brainfuck] is an esoteric programming language with only 8 single-byte
+instructions: `+`, `-`, `>`, `<`, `,`, `.`, `[`, `]`. These limited instructions
+make brainfuck code extremely verbose and difficult to write. It can take a long
+time to figure out what a brainfuck program is trying to do. brain makes it
+easier to create brainfuck programs by allowing you to write in a more readable
+and understandable language.
+
+The type system makes it possible to detect a variety of logical errors when
+compiling, instead of waiting until runtime. This is an extra layer of
+convenience that brainfuck does not have. The compiler takes care of generating
+all the necessary brainfuck code to work with the raw bytes in the brainfuck
+turing machine.
+
+The brain programming language compiles directly into brainfuck. The generated
+brainfuck code can be run by a [brainfuck interpreter][brainfuck-interpreter].
+brain only targets this interpreter which means that its generated programs are
+only guaranteed to work when run with that. The interpreter implements a
+[brainfuck specification][bf-spec] specially designed and written for the brain
+programming language project.
 
 ## Optimization Goals
+
+The brain compiler is designed to optimize the generated brainfuck code as much
+as possible.
 
 1. Generate small brainfuck files (use as few instructions as possible)
 2. Generate memory efficient code (use as few brainfuck cells as possible)
 
-As the project reaches 1.0.0, these goals will become more expressed in the
-compiled output of the program.
+Optimization is an ongoing effort. As the project matures, these goals will
+become more expressed in the compiled output of the program.
 
 ## brain syntax
 
-For full examples, please see the `examples/` directory. Some
-examples aren't fully implemented yet in the compiler.
+For full examples, please see the `examples/` directory. Some examples aren't
+fully implemented yet in the compiler.
 
 The following examples are all working syntax:
 
@@ -142,7 +162,7 @@ You can also specify an output filename. Run `brain --help` for more information
 
 This project contains both the brain compiler and a basic brainfuck interpreter.
 
-Make sure you have [rust][rust] and cargo (comes with rust) installed.
+Make sure you have [Rust][rust] and cargo (comes with Rust) installed.
 
 ### brain compiler
 
@@ -158,7 +178,7 @@ cargo run --bin brain -- --help
 ```
 
 **If the brain compiler seems to be taking too long or "hanging", try running
-`cargo build` first to see if the rust compiler is just taking too long for
+`cargo build` first to see if the Rust compiler is just taking too long for
 some reason.**
 
 ## Examples
@@ -177,3 +197,5 @@ the code generation in this compiler.
 [rust]: https://www.rust-lang.org/
 [cargo-install]: https://crates.io/install
 [bf-algorithms]: https://esolangs.org/wiki/Brainfuck_algorithms
+[brainfuck-interpreter]: https://github.com/brain-lang/brainfuck
+[bf-spec]: https://github.com/brain-lang/brainfuck/blob/master/brainfuck.md
