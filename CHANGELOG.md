@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - Allows you to defer initialization to whenever makes sense in your code
   - Note that static checking is not fully functional
     (see [#7](https://github.com/brain-lang/brain/issues/7))
+- `mut` keyword allows you to declare mutable variables (see examples)
+  - This is currently not checked or enforced by the compiler, however it will
+    be when [#64](https://github.com/brain-lang/brain/issues/64) is implemented
+  - It is **highly** recommended that you adopt `mut` early to avoid breakage
 - Simple wrapping unsigned 8-bit `u8` type
 - Much cleaner and easier to build on codebase underneath the compiler which
   means more features sooner!
