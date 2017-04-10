@@ -1,29 +1,29 @@
 // Name guesser program
 // Asks for the first letter of your name, then tries to guess your name
 
-stdout.writeln(b"MAGIC NAME GUESSER");
+stdout.println(b"MAGIC NAME GUESSER");
 
 let prompt: [u8; _] = b"Enter the first letter of your name:";
 
 let mut c: [u8; 1];
-stdout.writeln(prompt);
-stdin.read(c);
+stdout.println(prompt);
+stdin.read_exact(c);
 
 while c {
-    stdout.writeln(b"My guess is that your name is:");
+    stdout.println(b"My guess is that your name is:");
     if c == b"a" {
-        stdout.writeln(b"Alexander");
+        stdout.println(b"Alexander");
     }
     else if c == b"e" {
-        stdout.writeln(b"Emily");
+        stdout.println(b"Emily");
     }
     else if c == b"m" {
-        stdout.writeln(b"Matthew");
+        stdout.println(b"Matthew");
     }
     else {
-        stdout.writeln(b"I don't know.");
+        stdout.println(b"I don't know.");
     }
 
-    stdout.writeln(prompt);
-    stdin.read(c);
+    stdout.println(prompt);
+    stdin.read_exact(c);
 }

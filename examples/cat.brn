@@ -1,7 +1,8 @@
 // cat program
-let mut ch: u8;
+let mut ch: [u8; 1];
 
 // stdin.read returns false when EOF is reached
-while stdin.read(ch) {
-  stdout.write(ch);
+while true {
+  stdin.read_exact(ch);
+  stdout.print(ch);
 }

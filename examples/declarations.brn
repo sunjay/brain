@@ -1,11 +1,11 @@
 // automatically determine the length of the right
 let a: [u8; _] = b"Hello, world\n";
 // Outputs "Hello, world\n"
-stdout.write(a);
+stdout.print(a);
 // error if rhs is not the length declared on the left
 let mut b: [u8; 3] = b"abc";
-stdout.write(b"a: ", a);
-stdout.write(b"b: ", b, b"\n");
+stdout.print(b"a: ", a);
+stdout.print(b"b: ", b, b"\n");
 
 // invalid because different sizes (addressed in issue #3)
 //a = b;
@@ -16,20 +16,20 @@ stdout.write(b"b: ", b, b"\n");
 
 // copies a to a new variable c. c is the same size as a.
 let c: [u8; _] = a;
-stdout.write(c);
+stdout.print(c);
 
 // Invalid:
 //a = a;
 
 // Explicitly declaring the size here even though its a copy
 let d: [u8; 3] = b;
-stdout.write(b"d = ", d, b" (should be abc)\n");
+stdout.print(b"d = ", d, b" (should be abc)\n");
 
-stdout.write(b"b = ", b, b" (should be abc)\n");
+stdout.print(b"b = ", b, b" (should be abc)\n");
 b = b"dbd";
-stdout.write(b"b = ", b, b" (should be dbd)\n");
+stdout.print(b"b = ", b, b" (should be dbd)\n");
 b = d;
-stdout.write(b"b = ", b, b" (should be abc)\n");
+stdout.print(b"b = ", b, b" (should be abc)\n");
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number

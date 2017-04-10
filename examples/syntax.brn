@@ -11,26 +11,26 @@ let s: [u8; _] = b"foo bar";
 // The type that len() returns is `usize` and for the time-being that is u8
 // This mean
 // writeln outputs a b"\n" at the end
-stdout.writeln(s.len());
+stdout.println(s.len());
 // The write statement supports a variable number of both identifier and string literal arguments
-stdout.write(s, b"\n");
+stdout.print(s, b"\n");
 
 // if the length cannot be determined automatically, it must be specified
 let a: [u8; 4];
 // length must be greater than zero
 let b: [u8; 1];
 // read needs to be a statement so the type information can be used to determine the length
-stdin.read(a, b);
+stdin.read_exact(a, b);
 
 // both sides have to have the same length
 if b == b"a" {
-    stdout.writeln(b"equal");
+    stdout.println(b"equal");
 }
 else if a == b"fooo" {
-    stdout.writeln(b"foo");
+    stdout.println(b"foo");
 }
 else {
-    stdout.writeln(b"not equal");
+    stdout.println(b"not equal");
 }
 
 // A single byte-sized numeric type is supported
@@ -41,7 +41,7 @@ while counter > 0 {
     // This is a placeholder function that mutates counter and subtracts one
     // This exists because we don't want to implement a complete set of numeric operations right now
     decrement(counter);
-    stdout.writeln(counter);
+    stdout.println(counter);
 }
 
 //NOT SUPPORTED FOR NOW:
@@ -52,5 +52,5 @@ while counter > 0 {
 // This is basically implemented as a brainfuck loop that goes from
 // 0 to (end-start) and start is added to the cell *within* the loop
 //for i in 1..10 {
-//    stdout.writeln(b"i = ", counter);
+//    stdout.println(b"i = ", counter);
 //}

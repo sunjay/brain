@@ -2,13 +2,13 @@
 // always reads exactly this many characters or panics if EOF is reached before then
 // if this many characters aren't available yet, it waits for you to send that many
 let mut b: [u8; 5];
-stdin.read(b);
-stdout.write(b"b = ", b, b"\n");
+stdin.read_exact(b);
+stdout.print(b"b = ", b, b"\n");
 
 let mut c: [u8; 1];
-stdin.read(c);
-stdout.write(b"c = ", c, b"\n");
+stdin.read_exact(c);
+stdout.print(b"c = ", c, b"\n");
 
 // You can reuse allocated space again
-stdin.read(b);
-stdout.write(b"b = ", b, b"\n");
+stdin.read_exact(b);
+stdout.print(b"b = ", b, b"\n");
