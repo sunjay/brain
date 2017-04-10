@@ -24,11 +24,12 @@ fn define_stdin(scope: &mut ScopeStack) {
     let unit_type = scope.unit_type_id();
 
     scope.declare_builtin_function(
-        type_name.clone().concat(Identifier::from("read")),
+        type_name.clone().concat(Identifier::from("read_exact")),
         ItemType::Function {
             args: vec![
                 FuncArgType::Arg(stdin_type),
-                FuncArgType::Variadic(None),
+                // Need an arg here for the thing being read into
+                unimplemented!(),
             ],
             return_type: unit_type,
         },
@@ -48,7 +49,7 @@ fn define_stdout(scope: &mut ScopeStack) {
 
     let unit_type = scope.unit_type_id();
 
-    let write_method_name = type_name.clone().concat(Identifier::from("write"));
+    let write_method_name = type_name.clone().concat(Identifier::from("print"));
     scope.declare_builtin_function(
         write_method_name.clone(),
         ItemType::Function {
@@ -64,7 +65,7 @@ fn define_stdout(scope: &mut ScopeStack) {
     );
 
     scope.declare_builtin_function(
-        type_name.clone().concat(Identifier::from("writeln")),
+        type_name.clone().concat(Identifier::from("println")),
         ItemType::Function {
             args: vec![
                 FuncArgType::Arg(stdout_type),
