@@ -16,7 +16,7 @@ pub fn define_stdin(scope: &mut ScopeStack, u8_type: TypeId) -> TypeId {
     );
     scope.declare(Identifier::from("stdin"), stdin_type);
 
-    let unit_type = scope.unit_type_id();
+    let unit_type = scope.primitives().unit();
 
     scope.declare_builtin_function(
         type_name.clone().concat(Identifier::from("read_exact")),
@@ -49,7 +49,7 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
     );
     scope.declare(Identifier::from("stdout"), stdout_type);
 
-    let unit_type = scope.unit_type_id();
+    let unit_type = scope.primitives().unit();
 
     let write_method_name = type_name.clone().concat(Identifier::from("print"));
     scope.declare_builtin_function(

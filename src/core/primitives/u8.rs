@@ -9,12 +9,13 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
     // https://github.com/brain-lang/brain/issues/37
     scope.push_scope();
 
-    let unit_type = scope.unit_type_id();
+    let unit_type = scope.primitives().unit();
 
     let u8_type = scope.declare_type(
         Identifier::from("u8"),
         ItemType::Primitive(1)
     );
+    scope.register_primitive("u8", u8_type);
 
     scope.declare_builtin_function(
         // Special method for converting from literal
@@ -74,4 +75,22 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
     );
 
     u8_type
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use operations::scope::{ScopeType};
+
+    #[test]
+    fn defines_primitive() {
+        let mut scope = ScopeStack::new();
+        define_u8(&mut scope);
+
+        let u8_type_id = match **scope.lookup_type(&Identifier::from("u8")).first().unwrap() {
+            ScopeType::Type(id) => id,
+        };
+        assert_eq!(scope.primitives().u8(), u8_type_id);
+    }
 }

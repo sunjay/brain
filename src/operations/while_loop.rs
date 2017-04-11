@@ -8,7 +8,7 @@ pub fn into_operations(
     condition: Expression,
     body: Block,
 ) -> OperationsResult {
-    let bool_type = scope.bool_type_id();
+    let bool_type = scope.primitives().bool();
     let cond_mem = scope.allocate(bool_type);
 
     let cond_ops = expression::into_operations(scope, condition, bool_type, cond_mem)?;

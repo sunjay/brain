@@ -12,7 +12,7 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
         Identifier::from("bool"),
         ItemType::Primitive(1)
     );
-    scope.set_bool_type_id(bool_type);
+    scope.register_primitive("bool", bool_type);
 
     scope.declare_constant(
         Identifier::from("true"),
@@ -43,6 +43,17 @@ mod tests {
 
     use parser::Identifier;
     use operations::scope::{ScopeType, ScopeItem};
+
+    #[test]
+    fn defines_primitive() {
+        let mut scope = ScopeStack::new();
+        define_boolean(&mut scope);
+
+        let bool_type_id = match **scope.lookup_type(&Identifier::from("bool")).first().unwrap() {
+            ScopeType::Type(id) => id,
+        };
+        assert_eq!(scope.primitives().bool(), bool_type_id);
+    }
 
     #[test]
     fn constants() {

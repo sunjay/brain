@@ -31,11 +31,7 @@ fn store_numeric_literal(
 ) -> OperationsResult {
     let converter_name = Identifier::from(&*format!("std::convert::From<{}>", literal_type));
 
-    let u8_type = scope.lookup_type(&Identifier::from("u8")).last()
-        .map(|st| match **st {
-            ScopeType::Type(id) => id,
-        })
-        .expect("No u8 type was defined for some reason");
+    let u8_type = scope.primitives().u8();
 
     let mut operations = None;
     for item in scope.lookup(&converter_name) {

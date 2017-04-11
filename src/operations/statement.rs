@@ -24,7 +24,7 @@ pub fn into_operations(scope: &mut ScopeStack, node: Statement) -> OperationsRes
             while_loop::into_operations(scope, condition, body)
         },
         Expression {expr} => {
-            let unit_type = scope.unit_type_id();
+            let unit_type = scope.primitives().unit();
             expression::into_operations(scope, expr, unit_type, MemoryBlock::default())
         },
     }

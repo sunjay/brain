@@ -12,7 +12,25 @@ pub fn define_array(scope: &mut ScopeStack) -> TypeId {
         Identifier::from("[T; N]"),
         ItemType::Array {item: None},
     );
-    scope.set_array_type_id(array_type);
+    scope.register_primitive("array", array_type);
 
     array_type
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use operations::scope::{ScopeType};
+
+    #[test]
+    fn defines_primitive() {
+        let mut scope = ScopeStack::new();
+        define_array(&mut scope);
+
+        let array_type_id = match **scope.lookup_type(&Identifier::from("[T; N]")).first().unwrap() {
+            ScopeType::Type(id) => id,
+        };
+        assert_eq!(scope.primitives().array(), array_type_id);
+    }
 }

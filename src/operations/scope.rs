@@ -7,6 +7,8 @@ use memory::{StaticAllocator, MemoryBlock};
 use super::OperationsResult;
 use super::item_type::ItemType;
 
+pub use super::primitives::Primitives;
+
 pub type TypeId = usize;
 
 /// Represents the number of items in an array
@@ -109,9 +111,11 @@ pub struct ScopeStack {
     /// Also used in functions/closures to uniquely refer to types in that context
     types: Vec<(Identifier, ItemType)>,
 
-    /// The TypeId that corresponds with the bool type
-    bool_type_id: Option<TypeId>,
-    array_type_id: Option<TypeId>,
+    /// Special primitive types
+    /// This is used because the compiler needs some assurance that primitive types are who
+    /// they say they are. For example, if the compiler needs to refer to `bool`, it needs to
+    /// be able to lookup that type without worrying about conflicting with user defined types
+    primitives: Primitives,
 }
 
 impl ScopeStack {
@@ -124,8 +128,12 @@ impl ScopeStack {
             },
             allocator: StaticAllocator::new(),
             types: vec![(Identifier::from("()"), ItemType::Unit)],
-            bool_type_id: None,
-            array_type_id: None,
+            primitives: {
+                let mut primitives = Primitives::new();
+                // 0 is the index of the Unit type in the types array declared above
+                primitives.register("unit", 0);
+                primitives
+            }
         }
     }
 
@@ -157,52 +165,18 @@ impl ScopeStack {
         &self.types.get(type_id).expect("Invalid TypeId used to lookup type").1
     }
 
-    /// Returns the TypeId of the Unit `()` type
-    pub fn unit_type_id(&self) -> TypeId {
-        0
+    /// Access special primitives
+    /// e.g. `scope.primitives().unit()`
+    pub fn primitives(&self) -> &Primitives {
+        &self.primitives
     }
 
-    /// Returns the TypeId of the bool type
-    pub fn bool_type_id(&self) -> TypeId {
-        // NOTE: The unit type, the bool type and the array type are "special primitives". These
-        // types are fundamentally required for the compiler to function and so we need to provide
-        // special access to them in the scope. We want a stronger guarantee than just relying on
-        // names like "bool".
-        // We don't want to couple the types' implementation with this module, so we simply add a
-        // hatch for the implementing modules to define which TypeId should be associated with bool
-
-        self.bool_type_id.expect("Expected a bool TypeId to be defined in the scope")
-    }
-
-    /// Set the TypeId for the primitive bool type
-    pub fn set_bool_type_id(&mut self, type_id: TypeId) {
-        // NOTE: See note in bool_type_id
-
-        // This should only be called once
-        debug_assert!(self.bool_type_id.is_none(), "Redefined bool TypeId in scope");
-
-        debug_assert!(type_id != self.unit_type_id(), "Declared bool TypeId with the same TypeId as Unit");
-
-        self.bool_type_id = Some(type_id)
-    }
-
-    /// Returns the TypeId of the array type
-    pub fn array_type_id(&self) -> TypeId {
-        // NOTE: See note in bool_type_id
-
-        self.array_type_id.expect("Expected a array TypeId to be defined in the scope")
-    }
-
-    /// Set the TypeId for the primitive array type
-    pub fn set_array_type_id(&mut self, type_id: TypeId) {
-        // NOTE: See note in bool_type_id
-
-        // This should only be called once
-        debug_assert!(self.array_type_id.is_none(), "Redefined array TypeId in scope");
-
-        debug_assert!(type_id != self.unit_type_id(), "Declared array TypeId with the same TypeId as Unit");
-
-        self.array_type_id = Some(type_id)
+    /// Register a primitive type
+    /// The type will automatically be checked for uniqueness. That is, no other primitive has
+    /// been defined with the same TypeID
+    /// Primitives can only be declared once per primitive and then never redeclared
+    pub fn register_primitive(&mut self, name: &str, type_id: TypeId) {
+        self.primitives.register(name, type_id);
     }
 
     /// Looks up a name starting at the current scope
@@ -353,114 +327,11 @@ mod tests {
     use operations::item_type::ItemType;
 
     #[test]
-    fn unit_type_id() {
+    fn defines_unit_primitive() {
         let scope = ScopeStack::new();
 
-        assert!(match *scope.get_type(scope.unit_type_id()) {
-            ItemType::Unit => true,
-            _ => false,
-        });
-    }
-
-    #[test]
-    fn bool_type_id() {
-        const BOOL_TYPE_ID: TypeId = 1;
-
-        let mut scope = ScopeStack::new();
-        scope.set_bool_type_id(BOOL_TYPE_ID);
-
-        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
-    }
-
-    #[test]
-    #[should_panic(expected = "Declared bool TypeId with the same TypeId as Unit")]
-    fn bool_type_id_is_unit() {
-        let mut scope = ScopeStack::new();
-
-        let unit_id = scope.unit_type_id();
-        scope.set_bool_type_id(unit_id);
-    }
-
-    #[test]
-    #[should_panic(expected = "Expected a bool TypeId to be defined in the scope")]
-    fn access_bool_type_id_without_declaration() {
-        let scope = ScopeStack::new();
-
-        scope.bool_type_id();
-    }
-
-    #[test]
-    #[should_panic(expected = "Redefined bool TypeId in scope")]
-    fn redefine_bool_type_id() {
-        let mut scope = ScopeStack::new();
-
-        scope.set_bool_type_id(1);
-        scope.set_bool_type_id(2);
-    }
-
-    #[test]
-    fn array_type_id() {
-        const ARRAY_TYPE_ID: TypeId = 2;
-
-        let mut scope = ScopeStack::new();
-        scope.set_array_type_id(ARRAY_TYPE_ID);
-
-        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
-    }
-
-    #[test]
-    #[should_panic(expected = "Declared array TypeId with the same TypeId as Unit")]
-    fn array_type_id_is_unit() {
-        let mut scope = ScopeStack::new();
-
-        let unit_id = scope.unit_type_id();
-        scope.set_array_type_id(unit_id);
-    }
-
-    #[test]
-    #[should_panic(expected = "Expected a array TypeId to be defined in the scope")]
-    fn access_array_type_id_without_declaration() {
-        let scope = ScopeStack::new();
-
-        scope.array_type_id();
-    }
-
-    #[test]
-    #[should_panic(expected = "Redefined array TypeId in scope")]
-    fn redefine_array_type_id() {
-        let mut scope = ScopeStack::new();
-
-        scope.set_array_type_id(2);
-        scope.set_array_type_id(3);
-    }
-
-    #[test]
-    fn bool_array_types_different() {
-        // Make sure we are setting the right fields in the setter methods
-        const BOOL_TYPE_ID: TypeId = 1;
-        const ARRAY_TYPE_ID: TypeId = 2;
-
-        let mut scope = ScopeStack::new();
-        scope.set_array_type_id(ARRAY_TYPE_ID);
-        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
-        scope.set_bool_type_id(BOOL_TYPE_ID);
-        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
-
-        // Should not change
-        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
-
-        assert!(scope.bool_type_id() != scope.array_type_id());
-
-        let mut scope = ScopeStack::new();
-        scope.set_bool_type_id(BOOL_TYPE_ID);
-        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
-        scope.set_array_type_id(ARRAY_TYPE_ID);
-        assert_eq!(scope.array_type_id(), ARRAY_TYPE_ID);
-
-        // Should not change
-        assert_eq!(scope.bool_type_id(), BOOL_TYPE_ID);
-
-        assert!(scope.bool_type_id() != scope.array_type_id());
+        let unit_type_id = scope.primitives().unit();
+        assert_eq!(*scope.get_type(unit_type_id), ItemType::Unit);
     }
 
     #[test]

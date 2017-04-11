@@ -10,6 +10,7 @@ pub mod while_loop;
 pub mod expression;
 
 mod operation;
+mod primitives;
 mod error;
 
 pub use self::operation::*;
