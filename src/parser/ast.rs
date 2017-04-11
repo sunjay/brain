@@ -108,7 +108,7 @@ pub enum TypeDefinition {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
-    ByteLiteral(String),
+    ByteLiteral(Vec<u8>),
     Identifier(Identifier),
     Number(Number),
     Call {

@@ -335,25 +335,25 @@ impl_rdp! {
             },
         }
 
-        _literal_chars(&self) -> VecDeque<char> {
+        _literal_chars(&self) -> VecDeque<u8> {
             (&c: literal_char, mut tail: _literal_chars()) => {
                 if c.len() == 2 {
-                    debug_assert!(c.chars().next().unwrap() == '\\');
-                    tail.push_front(match c.chars().nth(1).unwrap() {
-                        '\\' => '\\',
-                        '"' => '"',
-                        '\'' => '\'',
-                        'n' => '\n',
-                        'r' => '\r',
-                        't' => '\t',
-                        '0' => '\0',
+                    debug_assert!(c.bytes().next().unwrap() == b'\\');
+                    tail.push_front(match c.bytes().nth(1).unwrap() {
+                        b'\\' => b'\\',
+                        b'"' => b'"',
+                        b'\'' => b'\'',
+                        b'n' => b'\n',
+                        b'r' => b'\r',
+                        b't' => b'\t',
+                        b'0' => b'\0',
                         //TODO: Replace this with a proper result when upgrading to pest 1.0
                         _ => panic!("Unknown escape: {}", c)
                     });
                 }
                 else {
                     debug_assert!(c.len() == 1);
-                    tail.push_front(c.chars().next().unwrap());
+                    tail.push_front(c.bytes().next().unwrap());
                 }
 
                 tail
@@ -532,10 +532,10 @@ mod tests {
     #[test]
     fn string_literal_escapes() {
         test_method(r#"b"foo""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::ByteLiteral("foo".to_owned()));
+            Expression::ByteLiteral(b"foo".to_vec()));
 
         test_method(r#"b"\\ \" \' \n \r \t \0""#, |p| p.expr(), |p| {p.inc_queue_index(); p._expr()},
-            Expression::ByteLiteral("\\ \" \' \n \r \t \0".to_owned()));
+            Expression::ByteLiteral(b"\\ \" \' \n \r \t \0".to_vec()));
     }
 
     #[test]
@@ -545,7 +545,7 @@ mod tests {
                 method: Box::new(Expression::Identifier(Identifier::from("func"))),
                 args: vec![
                     Expression::Number(1),
-                    Expression::ByteLiteral("foo".to_owned()),
+                    Expression::ByteLiteral(b"foo".to_vec()),
                     Expression::Number(3),
                 ],
             }
@@ -559,7 +559,7 @@ mod tests {
                 }),
                 args: vec![
                     Expression::Number(1),
-                    Expression::ByteLiteral("foo".to_owned()),
+                    Expression::ByteLiteral(b"foo".to_vec()),
                     Expression::Number(3),
                 ],
             }
