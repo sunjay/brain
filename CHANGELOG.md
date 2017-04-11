@@ -26,8 +26,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Brand new syntax based on Rust but adapted to suit the needs of brain
 
 ### Removed
-- The `in` and `out` statements are gone and replaced with
-  new method calls on global `stdin` and `stdout` objects (see examples for details)
+- The `in` and `out` statements are gone and replaced with new method calls on
+  global `stdin` and `stdout` objects (see examples for details)
 
 ## [0.1.2] - 2017-02-03
 ### Fixed
