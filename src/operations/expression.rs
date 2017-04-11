@@ -3,7 +3,7 @@ use memory::MemoryBlock;
 
 use super::{Error, Operation, OperationsResult};
 use super::item_type::{ItemType, FuncArgType};
-use super::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
+use super::scope::{TypeId, ScopeStack, ScopeType, ScopeItem, FuncArgs};
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
@@ -41,9 +41,6 @@ fn store_identifier(
         // The clone() above is completely unnecssary and is a hack to work around this problem
         // in the Rust compiler
         // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
-
-        ScopeItem::Type(..) => Err(Error::UnresolvedName(name)),
-
         ScopeItem::Constant {type_id, ref bytes} => {
             if target_type == type_id {
                 increment_to_value(target, bytes)
@@ -70,6 +67,10 @@ fn store_identifier(
             else {
                 mismatched_types(scope, target_type, type_id)
             }
+        },
+
+        ScopeItem::Array {item, size, memory} => {
+            unimplemented!();
         },
 
         ScopeItem::BuiltInFunction { .. } => {
@@ -105,20 +106,26 @@ fn store_numeric_literal(
 ) -> OperationsResult {
     let converter_name = Identifier::from(&*format!("std::convert::From<{}>", literal_type));
 
+    let u8_type = scope.lookup_type(&Identifier::from("u8")).last()
+        .map(|st| match **st {
+            ScopeType::Type(id) => id,
+        })
+        .expect("No u8 type was defined for some reason");
+
     let mut operations = None;
     for item in scope.lookup(&converter_name) {
         operations = match *item {
             ScopeItem::BuiltInFunction { id, ref operations } => {
                 match *scope.get_type(id) {
                     ItemType::Function { ref args, return_type } => {
-                        if args.len() == 1 && args[0] == FuncArgType::Any && return_type == target_type {
+                        if args.len() == 1 && args[0].is_array_of(u8_type) && return_type == target_type {
                             Some(operations.clone())
                         }
                         else {
                             None
                         }
                     },
-                    _ => None,
+                    _ => unreachable!("A literal converter was defined that was not a Function"),
                 }
             },
             _ => unreachable!("A literal converter was defined that was not a BuiltInFunction"),

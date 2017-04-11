@@ -9,18 +9,27 @@ use super::item_type::ItemType;
 
 pub type TypeId = usize;
 
+/// Represents the number of items in an array
+/// NOT the number of bytes allocated to the array
+pub type ArraySize = usize;
+
 /// The arguments that will get passed to a function
 /// Arguments are guaranteed by static analysis to match the type defined for the function
 pub type FuncArgs = Vec<ScopeItem>;
 
-/// Represents a single item in a scope
-#[derive(Clone)]
-pub enum ScopeItem {
+/// Represents a type declared in a scope
+pub enum ScopeType {
     /// A type, not associated with any memory
     /// Used for a struct/type declaration, not the declaration
     /// of a variable with a type (TypedBlock should be used for that)
     Type(TypeId),
 
+    //TODO: Generic types, etc. will all go here
+}
+
+/// Represents a single item in a scope
+#[derive(Clone)]
+pub enum ScopeItem {
     /// A constant set of bytes inlined whenever used
     /// These items have no memory address
     /// The bytes of the constant are stored directly
@@ -40,7 +49,19 @@ pub enum ScopeItem {
         memory: MemoryBlock,
     },
 
-    /// A built-in function definition
+    /// A specialization of the generic array type [T; N]
+    Array {
+        /// The type of the items held by the array
+        item: TypeId,
+        /// The declared number of items held by the array
+        size: ArraySize,
+        /// The block of memory allocated to this array
+        /// Size of this block is always sizeof(item) * size
+        memory: MemoryBlock,
+    },
+
+    /// The implementation of a built-in function
+    /// Note that the type signature is stored separately
     BuiltInFunction {
         /// The ID of the type associated with this function
         id: TypeId,
@@ -62,7 +83,19 @@ impl ScopeItem {
 }
 
 /// Represents a single level of scope
-pub type Scope = HashMap<Identifier, ScopeItem>;
+pub struct Scope {
+    types: HashMap<Identifier, ScopeType>,
+    items: HashMap<Identifier, ScopeItem>,
+}
+
+impl Scope {
+    pub fn new() -> Scope {
+        Scope {
+            types: HashMap::new(),
+            items: HashMap::new(),
+        }
+    }
+}
 
 pub struct ScopeStack {
     stack: VecDeque<Scope>,
@@ -177,7 +210,16 @@ impl ScopeStack {
     /// Definitions are returned in order from latest definition to oldest
     /// Always use the first definition that matches the type you are looking for
     pub fn lookup(&self, name: &Identifier) -> Vec<&ScopeItem> {
-        self.stack.iter().rev().map(|sc| sc.get(name)).fold(Vec::new(), |mut acc, r| match r {
+        self.search_stack(name, |sc| &sc.items)
+    }
+
+    pub fn lookup_type(&self, name: &Identifier) -> Vec<&ScopeType> {
+        self.search_stack(name, |sc| &sc.types)
+    }
+
+    fn search_stack<T, F>(&self, name: &Identifier, scope_table: F) -> Vec<&T>
+        where F: Fn(&Scope) -> &HashMap<Identifier, T> {
+        self.stack.iter().rev().map(|sc| scope_table(sc).get(name)).fold(Vec::new(), |mut acc, r| match r {
             Some(def) => {
                 acc.push(def);
                 acc
@@ -189,8 +231,7 @@ impl ScopeStack {
     /// Declares a type with the given name
     /// Returns the unique identifier of that type
     pub fn declare_type(&mut self, name: Identifier, typ: ItemType) -> TypeId {
-        let type_id = self.insert_type(&name, typ);
-        self.insert_current(name, ScopeItem::Type(type_id));
+        let type_id = self.insert_type(name, typ);
 
         type_id
     }
@@ -202,7 +243,7 @@ impl ScopeStack {
             value.len() == size
         });
 
-        self.insert_current(name, ScopeItem::Constant {
+        self.insert_item_into_current(name, ScopeItem::Constant {
             type_id: type_id,
             bytes: value,
         });
@@ -213,7 +254,7 @@ impl ScopeStack {
     /// Returns the allocated memory block
     pub fn declare(&mut self, name: Identifier, type_id: TypeId) -> MemoryBlock {
         let mem = self.allocate(type_id);
-        self.insert_current(name, ScopeItem::TypedBlock {
+        self.insert_item_into_current(name, ScopeItem::TypedBlock {
             type_id: type_id,
             memory: mem,
         });
@@ -243,30 +284,39 @@ impl ScopeStack {
             _ => false,
         });
 
-        let type_id = self.insert_type(&name, typ);
-        self.insert_current(name, ScopeItem::BuiltInFunction {
+        let type_id = self.insert_type(name.clone(), typ);
+        self.insert_item_into_current(name, ScopeItem::BuiltInFunction {
             id: type_id,
             operations: Rc::new(f),
         });
     }
 
     /// Inserts a ScopeItem into the current scope
-    fn insert_current(&mut self, name: Identifier, item: ScopeItem) {
+    fn insert_item_into_current(&mut self, name: Identifier, item: ScopeItem) {
         // Notice that we insert directly without caring about whether the name already exists
         // It's OK to overwrite existing names because we support rebinding
-        if let Some(scope) = self.stack.back_mut() {
-            scope.insert(name, item);
-        }
-        else {
-            panic!("Attempt to declare name despite having no current scope");
-        }
+        let scope = self.stack.back_mut()
+            .expect("Attempt to declare item despite having no current scope");
+        scope.items.insert(name, item);
+    }
+
+    /// Inserts a ScopeType into the current scope
+    fn insert_type_into_current(&mut self, name: Identifier, item: ScopeType) {
+        // Notice that we insert directly without caring about whether the name already exists
+        // It's OK to overwrite existing names because we support rebinding
+        let scope = self.stack.back_mut()
+            .expect("Attempt to declare type despite having no current scope");
+        scope.types.insert(name, item);
     }
 
     /// Inserts a type defintion into the types field and returns its new TypeId
-    fn insert_type(&mut self, name: &Identifier, typ: ItemType) -> TypeId {
+    fn insert_type(&mut self, name: Identifier, typ: ItemType) -> TypeId {
         self.types.push((name.clone(), typ));
 
-        self.types.len() - 1
+        let type_id = self.types.len() - 1;
+        self.insert_type_into_current(name, ScopeType::Type(type_id));
+
+        type_id
     }
 }
 

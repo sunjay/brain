@@ -1,17 +1,23 @@
 use memory::Size;
 
-use super::scope::{ScopeStack, TypeId};
+use super::scope::{ScopeStack, TypeId, ArraySize};
 
 /// Possible types for function arguments
 #[derive(Debug, Clone, PartialEq)]
 pub enum FuncArgType {
-    /// Represents Any type
-    /// TODO: This is mostly a hack to allow for generics before we support them. It would be nice
-    /// to eventually implement this properly when #45 comes along
-    Any,
-
     /// A single value of the specified type
     Arg(TypeId),
+
+    /// A single value that is an array containing the specified item type
+    Array {
+        item: TypeId,
+        /// The exact, required size of the array argument
+        /// If size is None, the function can dynamically handle any size, otherwise only this size
+        /// will be accepted
+        /// TODO: Remove the ability for this to be optional when slices and references are
+        /// implemented since dynamically handling any length of array will not work for most things
+        size: Option<ArraySize>,
+    },
 
     /// Zero or more values of the specified type
     /// If the type is None, that means that there is no specific type being required
@@ -19,6 +25,16 @@ pub enum FuncArgType {
     /// TODO: This is mostly a hack to allow for generics before we support them. It would be nice
     /// to eventually implement this properly when #45 comes along
     Variadic(Option<TypeId>),
+}
+
+impl FuncArgType {
+    /// Returns true if this function argument is an array with the given item type
+    pub fn is_array_of(&self, target: TypeId) -> bool {
+        match *self {
+            FuncArgType::Array {item, ..} => item == target,
+            _ => false,
+        }
+    }
 }
 
 /// An item is anything that can be declared
@@ -42,12 +58,11 @@ pub enum ItemType {
         //TODO: fields, generics, etc.
     },
 
-    /// A fixed-size array
+    /// A declaration of an array type, optionally specialized for the given item type
     Array {
-        /// The type of the elements in this array
-        type_id: TypeId,
-        /// The number of elements that this array can hold
-        size: usize,
+        /// The type of the items stored in this array
+        /// If this is None, this is the base, generic array type
+        item: Option<TypeId>,
     },
 
     /// Definition of a function's type

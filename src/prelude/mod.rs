@@ -12,10 +12,11 @@ pub fn populate_scope(scope: &mut ScopeStack) {
     // https://github.com/brain-lang/brain/issues/37
     scope.push_scope();
 
-    stdio::populate_scope(scope);
+    array::define_array(scope);
 
-    boolean::populate_scope(scope);
-    u8::populate_scope(scope);
+    boolean::define_boolean(scope);
+    let u8_type = u8::define_u8(scope);
 
-    array::populate_scope(scope);
+    stdio::define_stdin(scope, u8_type);
+    stdio::define_stdout(scope);
 }

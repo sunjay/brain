@@ -1,19 +1,14 @@
 use parser::{Expression, Identifier};
 use operations::item_type::{ItemType, FuncArgType};
-use operations::scope::ScopeStack;
+use operations::scope::{ScopeStack, TypeId};
 use operations::expression;
 
-pub fn populate_scope(scope: &mut ScopeStack) {
+pub fn define_stdin(scope: &mut ScopeStack, u8_type: TypeId) -> TypeId {
     // Taking advantage of the scope system to simulate modules
     // This will be replaced with something better in:
     // https://github.com/brain-lang/brain/issues/37
     scope.push_scope();
 
-    define_stdin(scope);
-    define_stdout(scope);
-}
-
-fn define_stdin(scope: &mut ScopeStack) {
     let type_name = Identifier::from("std::io::Stdin");
     let stdin_type = scope.declare_type(
         type_name.clone(),
@@ -29,7 +24,7 @@ fn define_stdin(scope: &mut ScopeStack) {
             args: vec![
                 FuncArgType::Arg(stdin_type),
                 // Need an arg here for the thing being read into
-                unimplemented!(),
+                FuncArgType::Array {item: u8_type, size: None},
             ],
             return_type: unit_type,
         },
@@ -37,9 +32,16 @@ fn define_stdin(scope: &mut ScopeStack) {
             unimplemented!();
         }
     );
+
+    stdin_type
 }
 
-fn define_stdout(scope: &mut ScopeStack) {
+pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
+    // Taking advantage of the scope system to simulate modules
+    // This will be replaced with something better in:
+    // https://github.com/brain-lang/brain/issues/37
+    scope.push_scope();
+
     let type_name = Identifier::from("std::io::Stdout");
     let stdout_type = scope.declare_type(
         type_name.clone(),
@@ -83,4 +85,6 @@ fn define_stdout(scope: &mut ScopeStack) {
             Ok(ops)
         }
     );
+
+    stdout_type
 }

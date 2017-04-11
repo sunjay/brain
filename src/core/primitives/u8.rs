@@ -1,9 +1,9 @@
 use parser::Identifier;
 use operations::{Operation, Error};
 use operations::item_type::{ItemType, FuncArgType};
-use operations::scope::ScopeStack;
+use operations::scope::{ScopeStack, TypeId};
 
-pub fn populate_scope(scope: &mut ScopeStack) {
+pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
     // Taking advantage of the scope system to simulate modules
     // This will be replaced with something better in:
     // https://github.com/brain-lang/brain/issues/37
@@ -22,7 +22,7 @@ pub fn populate_scope(scope: &mut ScopeStack) {
         ItemType::Function {
             // This takes a single literal of the type specific within
             // the curly braces {} in the name
-            args: vec![FuncArgType::Any],
+            args: vec![FuncArgType::Array {item: u8_type, size: None}],
             // Return type signifies which type we are declaring supports integer literals
             return_type: u8_type,
         },
@@ -46,5 +46,7 @@ pub fn populate_scope(scope: &mut ScopeStack) {
                 ])
             }
         }
-    )
+    );
+
+    u8_type
 }

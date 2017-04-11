@@ -1,8 +1,8 @@
 use parser::Identifier;
 use operations::item_type::ItemType;
-use operations::scope::ScopeStack;
+use operations::scope::{ScopeStack, TypeId};
 
-pub fn populate_scope(scope: &mut ScopeStack) {
+pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
     // Taking advantage of the scope system to simulate modules
     // This will be replaced with something better in:
     // https://github.com/brain-lang/brain/issues/37
@@ -33,6 +33,8 @@ pub fn populate_scope(scope: &mut ScopeStack) {
     // circuiting. This behaviour cannot be modelled by a trait, so these special
     // operators are not definable by the user.
     //TODO
+
+    bool_type
 }
 
 #[cfg(test)]
@@ -40,15 +42,15 @@ mod tests {
     use super::*;
 
     use parser::Identifier;
-    use operations::scope::ScopeItem;
+    use operations::scope::{ScopeType, ScopeItem};
 
     #[test]
     fn constants() {
         let mut scope = ScopeStack::new();
-        populate_scope(&mut scope);
+        define_boolean(&mut scope);
 
-        let bool_type_id = match **scope.lookup(&Identifier::from("bool")).first().unwrap() {
-            ScopeItem::Type(id) => id,
+        let bool_type_id = match **scope.lookup_type(&Identifier::from("bool")).first().unwrap() {
+            ScopeType::Type(id) => id,
             _ => unreachable!(),
         };
 
