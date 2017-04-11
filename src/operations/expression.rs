@@ -3,7 +3,7 @@ use memory::MemoryBlock;
 
 use super::{Error, Operation, OperationsResult};
 use super::item_type::{ItemType};
-use super::scope::{TypeId, ScopeStack, ScopeType, ScopeItem, FuncArgs};
+use super::scope::{TypeId, ScopeStack, ScopeType, ScopeItem, FuncArgs, ArraySize};
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
@@ -20,6 +20,21 @@ pub fn into_operations(
         Expression::Number(value) => store_number(scope, value, target_type, target),
         _ => unimplemented!(),
     }
+}
+
+/// Generates operations for evaluating the given expression
+/// and storing its result in the given target memory block
+/// that represents an array
+/// NOTE: Assumes that the target memory block is **zero**
+/// so that it can be mutated
+pub fn into_operations_array(
+    scope: &mut ScopeStack,
+    expr: Expression,
+    item_type: TypeId,
+    size: ArraySize,
+    target: MemoryBlock,
+) -> OperationsResult {
+    unimplemented!();
 }
 
 /// Call the provided method with the given arguments

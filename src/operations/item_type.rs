@@ -14,7 +14,7 @@ pub enum FuncArgType {
         /// The exact, required size of the array argument
         /// If size is None, the function can dynamically handle any size, otherwise only this size
         /// will be accepted
-        /// TODO: Remove the ability for this to be optional when slices and references are
+        ///TODO: Remove the ability for this to be optional when slices and references are
         /// implemented since dynamically handling any length of array will not work for most things
         size: Option<ArraySize>,
     },
@@ -22,7 +22,7 @@ pub enum FuncArgType {
     /// Zero or more values of the specified type
     /// If the type is None, that means that there is no specific type being required
     /// so any type can be passed as an argument
-    /// TODO: This is mostly a hack to allow for generics before we support them. It would be nice
+    ///TODO: This is mostly a hack to allow for generics before we support them. It would be nice
     /// to eventually implement this properly when #45 comes along
     Variadic(Option<TypeId>),
 }

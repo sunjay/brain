@@ -7,7 +7,6 @@ pub mod statement;
 pub mod declaration;
 pub mod assignment;
 pub mod while_loop;
-pub mod type_definition;
 pub mod expression;
 
 mod operation;

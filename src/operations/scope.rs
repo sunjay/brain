@@ -52,6 +52,7 @@ pub enum ScopeItem {
     /// A specialization of the generic array type [T; N]
     Array {
         /// The type of the items held by the array
+        ///TODO: This type will need to be made more flexible in order to support nested arrays
         item: TypeId,
         /// The declared number of items held by the array
         size: ArraySize,
@@ -262,6 +263,30 @@ impl ScopeStack {
         mem
     }
 
+    /// Declares a name with an array type with the given item type and allocates enough space for
+    /// that type and all its elements
+    /// The array is allocated as a single, contiguous block of memory
+    /// The name is declared in the "current" scope which is at the top of the stack
+    /// Returns the allocated memory block
+    pub fn declare_array(&mut self, name: Identifier, item: TypeId, size: ArraySize) -> MemoryBlock {
+        let mem = self.allocate_array(item, size);
+        self.insert_item_into_current(name, ScopeItem::Array {
+            item: item,
+            size: size,
+            memory: mem,
+        });
+
+        mem
+    }
+
+    /// Allocate a contiguous block of memory that can fit `size` of the given `item` types
+    /// Does not associate memory block with a name which means it cannot be looked up later
+    /// Returns the allocated memory block
+    pub fn allocate_array(&mut self, item: TypeId, size: ArraySize) -> MemoryBlock {
+        let size = self.get_type(item).required_size(self) * size;
+        self.allocator.allocate(size)
+    }
+
     /// Allocate a memory block that is large enough for the given type
     /// Does not associate memory block with a name which means it cannot be looked up later
     /// Returns the allocated memory block
@@ -291,6 +316,16 @@ impl ScopeStack {
         });
     }
 
+    /// Inserts a type defintion into the types field and returns its new TypeId
+    fn insert_type(&mut self, name: Identifier, typ: ItemType) -> TypeId {
+        self.types.push((name.clone(), typ));
+
+        let type_id = self.types.len() - 1;
+        self.insert_type_into_current(name, ScopeType::Type(type_id));
+
+        type_id
+    }
+
     /// Inserts a ScopeItem into the current scope
     fn insert_item_into_current(&mut self, name: Identifier, item: ScopeItem) {
         // Notice that we insert directly without caring about whether the name already exists
@@ -307,16 +342,6 @@ impl ScopeStack {
         let scope = self.stack.back_mut()
             .expect("Attempt to declare type despite having no current scope");
         scope.types.insert(name, item);
-    }
-
-    /// Inserts a type defintion into the types field and returns its new TypeId
-    fn insert_type(&mut self, name: Identifier, typ: ItemType) -> TypeId {
-        self.types.push((name.clone(), typ));
-
-        let type_id = self.types.len() - 1;
-        self.insert_type_into_current(name, ScopeType::Type(type_id));
-
-        type_id
     }
 }
 
