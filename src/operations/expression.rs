@@ -2,7 +2,7 @@ use parser::{Expression, Identifier, Number};
 use memory::MemoryBlock;
 
 use super::{Error, Operation, OperationsResult};
-use super::item_type::{ItemType, FuncArgType};
+use super::item_type::{ItemType};
 use super::scope::{TypeId, ScopeStack, ScopeType, ScopeItem, FuncArgs};
 
 /// Generates operations for evaluating the given expression

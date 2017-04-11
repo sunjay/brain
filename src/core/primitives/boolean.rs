@@ -51,7 +51,6 @@ mod tests {
 
         let bool_type_id = match **scope.lookup_type(&Identifier::from("bool")).first().unwrap() {
             ScopeType::Type(id) => id,
-            _ => unreachable!(),
         };
 
         let true_bytes = match **scope.lookup(&Identifier::from("true")).first().unwrap() {
