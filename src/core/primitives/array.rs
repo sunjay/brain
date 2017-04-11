@@ -10,7 +10,7 @@ pub fn define_array(scope: &mut ScopeStack) -> TypeId {
 
     let array_type = scope.declare_type(
         Identifier::from("[T; N]"),
-        ItemType::Array {item: None},
+        ItemType::Array {item: None, size: None},
     );
     scope.register_primitive("array", array_type);
 

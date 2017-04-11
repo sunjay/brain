@@ -15,7 +15,7 @@ pub enum FuncArgType {
         /// If size is None, the function can dynamically handle any size, otherwise only this size
         /// will be accepted
         ///TODO: Remove the ability for this to be optional when slices and references are
-        /// implemented since dynamically handling any length of array will not work for most things
+        /// implemented since our dynamic handling any length of array will not work for most things
         size: Option<ArraySize>,
     },
 
@@ -63,6 +63,11 @@ pub enum ItemType {
         /// The type of the items stored in this array
         /// If this is None, this is the base, generic array type
         item: Option<TypeId>,
+        /// The exact, required size of the array argument
+        /// If size is None, this represents any size of array (i.e. the wildcard size `_`)
+        ///TODO: Remove the ability for this to be optional when slices and references are
+        /// implemented since our dynamic handling any length of array will not work for most things
+        size: Option<ArraySize>,
     },
 
     /// Definition of a function's type

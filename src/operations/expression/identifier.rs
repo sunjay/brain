@@ -21,7 +21,7 @@ pub fn store_identifier(
         // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
         ScopeItem::Constant {type_id, ref bytes} => {
             if target_type == type_id {
-                increment_to_value(target, bytes)
+                Ok(Operation::increment_to_value(target, bytes))
             }
             else {
                 mismatched_types(scope, target_type, type_id)
@@ -56,17 +56,6 @@ pub fn store_identifier(
             unreachable!();
         },
     })
-}
-
-fn increment_to_value(mem: MemoryBlock, value: &Vec<u8>) -> OperationsResult {
-    debug_assert!(mem.size() == value.len());
-
-    Ok(value.iter().enumerate().map(|(i, &byte)| {
-        Operation::Increment {
-            target: mem.position_at(i),
-            amount: byte as usize,
-        }
-    }).collect())
 }
 
 fn mismatched_types(scope: &ScopeStack, expected: TypeId, found: TypeId) -> OperationsResult {

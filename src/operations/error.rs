@@ -27,7 +27,7 @@ pub enum Error {
     },
 
     /// Same as MismatchedTypes but for literals
-    /// Found is still a type
+    /// Found is a special literal type like `{unsigned integer}`
     /// Mismatched types:
     ///     expected type: `expected`
     ///     found type: `found`

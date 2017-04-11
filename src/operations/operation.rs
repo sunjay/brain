@@ -102,3 +102,16 @@ pub enum Operation {
         target: MemoryBlock,
     },
 }
+
+impl Operation {
+    pub fn increment_to_value(mem: MemoryBlock, value: &Vec<u8>) -> Operations {
+        debug_assert!(mem.size() == value.len());
+
+        value.iter().enumerate().map(|(i, &byte)| {
+            Operation::Increment {
+                target: mem.position_at(i),
+                amount: byte as usize,
+            }
+        }).collect()
+    }
+}
