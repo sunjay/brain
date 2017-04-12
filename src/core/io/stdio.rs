@@ -80,7 +80,7 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
         move |scope, args, _| {
             let mut ops = expression::call(
                 scope,
-                Expression::Identifier(print_method_name.clone()),
+                print_method_name.clone(),
                 args,
                 unit_type,
                 MemoryBlock::default()

@@ -5,6 +5,8 @@ use operations::{Error, OperationsResult};
 use operations::item_type::{ItemType};
 use operations::scope::{TypeId, ScopeStack, ScopeType, ScopeItem};
 
+use super::call;
+
 pub fn store_number(
     scope: &mut ScopeStack,
     value: Number,
