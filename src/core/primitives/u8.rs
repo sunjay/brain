@@ -75,6 +75,53 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
     );
 
     scope.declare_builtin_function(
+        Identifier::from("increment"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(u8_type)],
+            return_type: unit_type,
+        },
+        move |scope, args, target| {
+            let mem = match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => memory,
+                _ => unreachable!(),
+            };
+
+            debug_assert!(mem.size() == 1);
+
+            Ok(vec![
+                Operation::Increment {
+                    target: mem.position(),
+                    amount: 1,
+                }
+            ])
+        }
+    );
+
+    scope.declare_builtin_function(
+        Identifier::from("decrement"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(u8_type)],
+            return_type: unit_type,
+        },
+        move |scope, args, target| {
+            let mem = match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => memory,
+                _ => unreachable!(),
+            };
+
+            debug_assert!(mem.size() == 1);
+
+            Ok(vec![
+                Operation::Decrement {
+                    target: mem.position(),
+                    amount: 1,
+                }
+            ])
+        }
+    );
+
+    // Method on [u8; _]
+    scope.declare_builtin_function(
         // Special method for displaying this primitive (used from print/println)
         // This name is such that it could never be called directly
         // from the language itself
