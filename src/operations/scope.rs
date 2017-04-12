@@ -42,8 +42,14 @@ pub enum ScopeItem {
     },
 
     /// A constant value that represents a numeric literal without a specific number type
-    /// Stored in a temporary memory location for non-built-in functions
+    /// Reserved for use with internal compiler functions
+    /// Numeric literals are stored in a temporary memory location of the appropriate type for
+    /// non-built-in functions
     NumericLiteral(Number),
+
+    /// A constant value that represents a byte literal
+    /// Reserved for use with internal compiler functions
+    ByteLiteral(Vec<u8>),
 
     /// A typed block of memory
     TypedBlock {

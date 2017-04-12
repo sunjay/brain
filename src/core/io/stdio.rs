@@ -1,4 +1,6 @@
 use parser::{Expression, Identifier};
+use memory::{MemoryBlock};
+
 use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{ScopeStack, TypeId};
 use operations::expression;
@@ -51,9 +53,9 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
 
     let unit_type = scope.primitives().unit();
 
-    let write_method_name = type_name.clone().concat(Identifier::from("print"));
+    let print_method_name = type_name.clone().concat(Identifier::from("print"));
     scope.declare_builtin_function(
-        write_method_name.clone(),
+        print_method_name.clone(),
         ItemType::Function {
             args: vec![
                 FuncArgType::Arg(stdout_type),
@@ -76,7 +78,13 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
             return_type: unit_type,
         },
         move |scope, args, _| {
-            let mut ops = expression::call(scope, Expression::Identifier(write_method_name.clone()), args)?;
+            let mut ops = expression::call(
+                scope,
+                Expression::Identifier(print_method_name.clone()),
+                args,
+                unit_type,
+                MemoryBlock::default()
+            )?;
 
             // Write a newline using a temporary cell
             //TODO: ops.extend(...);

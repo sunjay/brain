@@ -2,6 +2,7 @@ use parser::Identifier;
 use memory::MemoryBlock;
 
 use operations::{Error, Operation, OperationsResult};
+use operations::item_type::ItemType;
 use operations::scope::{TypeId, ScopeStack, ScopeItem};
 
 use super::number::store_number;
@@ -29,6 +30,14 @@ pub fn store_identifier(
         },
 
         ScopeItem::NumericLiteral(number) => store_number(scope, number, target_type, target),
+
+        ScopeItem::ByteLiteral(bytes) => Err(Error::MismatchedTypes {
+            expected: scope.get_type(target_type).clone(),
+            found: ItemType::Array {
+                item: Some(scope.primitives().u8()),
+                size: Some(bytes.len()),
+            },
+        }),
 
         ScopeItem::TypedBlock {type_id, memory} => {
             if target_type == type_id {

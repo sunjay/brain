@@ -14,6 +14,7 @@ use operations::scope::{TypeId, ScopeStack, ArraySize};
 use self::identifier::store_identifier;
 use self::number::store_number;
 use self::byte_literal::store_byte_literal;
+use self::call::call_with_exprs;
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
@@ -28,6 +29,7 @@ pub fn into_operations(
     match expr {
         Expression::Identifier(name) => store_identifier(scope, name, target_type, target),
         Expression::Number(value) => store_number(scope, value, target_type, target),
+        Expression::Call {method, args} => call_with_exprs(scope, *method, args, target_type, target),
         _ => unimplemented!(),
     }
 }
