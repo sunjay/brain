@@ -57,6 +57,29 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
         // from the language itself
         Identifier::from("std::fmt::Display::print"),
         ItemType::Function {
+            args: vec![FuncArgType::Arg(u8_type)],
+            return_type: unit_type,
+        },
+        move |scope, args, target| {
+            let mem = match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => memory,
+                _ => unreachable!(),
+            };
+
+            Ok(vec![
+                Operation::Write {
+                    target: mem,
+                }
+            ])
+        }
+    );
+
+    scope.declare_builtin_function(
+        // Special method for displaying this primitive (used from print/println)
+        // This name is such that it could never be called directly
+        // from the language itself
+        Identifier::from("std::fmt::Display::print"),
+        ItemType::Function {
             args: vec![FuncArgType::Array {item: u8_type, size: None}],
             return_type: unit_type,
         },

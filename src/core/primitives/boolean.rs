@@ -1,6 +1,7 @@
 use parser::Identifier;
-use operations::item_type::ItemType;
-use operations::scope::{ScopeStack, TypeId};
+use operations::{Operation};
+use operations::item_type::{ItemType, FuncArgType};
+use operations::scope::{ScopeStack, ScopeItem, TypeId};
 
 pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
     // Taking advantage of the scope system to simulate modules
@@ -24,6 +25,31 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
         Identifier::from("false"),
         bool_type,
         vec![0u8]
+    );
+
+    let unit_type = scope.primitives().unit();
+
+    scope.declare_builtin_function(
+        // Special method for displaying this primitive (used from print/println)
+        // This name is such that it could never be called directly
+        // from the language itself
+        Identifier::from("std::fmt::Display::print"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(bool_type)],
+            return_type: unit_type,
+        },
+        move |scope, args, target| {
+            let mem = match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => memory,
+                _ => unreachable!(),
+            };
+
+            Ok(vec![
+                Operation::Write {
+                    target: mem,
+                }
+            ])
+        }
     );
 
     // boolean and operator (operator&&) and boolean or operator (operator||)
