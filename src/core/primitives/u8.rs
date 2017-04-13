@@ -60,7 +60,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(u8_type)],
             return_type: unit_type,
         },
-        move |scope, args, target| {
+        move |_scope, args, _target| {
             let mem = match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => memory,
                 _ => unreachable!(),
@@ -80,7 +80,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(u8_type)],
             return_type: unit_type,
         },
-        move |scope, args, target| {
+        move |_scope, args, _target| {
             let mem = match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => memory,
                 _ => unreachable!(),
@@ -103,7 +103,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(u8_type)],
             return_type: unit_type,
         },
-        move |scope, args, target| {
+        move |_scope, args, _target| {
             let mem = match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => memory,
                 _ => unreachable!(),
@@ -130,7 +130,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Array {item: u8_type, size: None}],
             return_type: unit_type,
         },
-        move |scope, args, target| {
+        move |_scope, args, _target| {
             let mem = match args[0] {
                 ScopeItem::Array {memory, ..} => memory,
                 _ => unreachable!(),

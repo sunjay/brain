@@ -38,7 +38,7 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(bool_type)],
             return_type: unit_type,
         },
-        move |scope, args, target| {
+        move |_scope, args, _target| {
             let mem = match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => memory,
                 _ => unreachable!(),
