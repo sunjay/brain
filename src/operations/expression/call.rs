@@ -26,7 +26,7 @@ pub fn call_with_exprs(
     let (target_instance, method_name): (Option<ScopeItem>, Identifier) = match method {
         Expression::Identifier(name) => (None, name),
         Expression::Access {target, field} => {
-            let (target, method_name) = resolve_field_name(scope, *target, *field)?;
+            let (target, method_name) = resolve_field_name(scope, *target, field)?;
             (Some(target), method_name)
         },
         // The grammar should prevent any other expressions from
@@ -63,7 +63,7 @@ pub fn call(
 /// Also returns the target ScopeItem of this operation
 /// Since this is a field access, it needs to operate on the target object that the `target`
 /// expression refers to
-fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Expression) -> Result<(ScopeItem, Identifier), Error> {
+fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier) -> Result<(ScopeItem, Identifier), Error> {
     // The full path of the target type
     // Something like `std::foo::Foo` or `u8` or `()`
     let target_type_path = match target {
@@ -71,7 +71,7 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Expression)
             unimplemented!();
         },
 
-        Expression::Access {target, field} => resolve_field_name(scope, *target, *field),
+        Expression::Access {target, field} => resolve_field_name(scope, *target, field),
 
         //TODO: ByteLiterals are valid targets for field access
         // In this case, we need to return [u8; N] where N is the length of the byte literal

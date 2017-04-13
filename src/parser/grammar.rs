@@ -225,7 +225,7 @@ impl_rdp! {
                 Expression::Call {
                     method: Box::new(Expression::Access {
                         target: Box::new(Expression::Identifier(target)),
-                        field: Box::new(Expression::Identifier(field)),
+                        field: field,
                     }),
                     args: args,
                 }
@@ -233,7 +233,7 @@ impl_rdp! {
             (target: _identifier(), _: op_access, field: _identifier()) => {
                 Expression::Access {
                     target: Box::new(Expression::Identifier(target)),
-                    field: Box::new(Expression::Identifier(field)),
+                    field: field,
                 }
             },
         }
@@ -555,7 +555,7 @@ mod tests {
             Expression::Call {
                 method: Box::new(Expression::Access {
                     target: Box::new(Expression::Identifier(Identifier::from("thing"))),
-                    field: Box::new(Expression::Identifier(Identifier::from("prop"))),
+                    field: Identifier::from("prop"),
                 }),
                 args: vec![
                     Expression::Number(1),

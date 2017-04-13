@@ -116,8 +116,12 @@ pub enum Expression {
         args: CallArgs,
     },
     Access {
+        // target can be another field access, an identifier, or even a literal, etc.
         target: Box<Expression>,
-        field: Box<Expression>,
+        // field can only ever be an Identifier
+        // Numbers may also be fields when #40 is implemented
+        // https://github.com/brain-lang/brain/issues/40
+        field: Identifier,
     },
     Branch {
         /// Condition to be executed to determine which block
