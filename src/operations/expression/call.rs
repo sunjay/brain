@@ -66,12 +66,27 @@ pub fn call(
 fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier) -> Result<(ScopeItem, Identifier), Error> {
     // The full path of the target type
     // Something like `std::foo::Foo` or `u8` or `()`
-    let target_type_path = match target {
-        Expression::Identifier(target_name) => {
-            unimplemented!();
-        },
+    let (target_instance, target_type_path) = match target {
+        Expression::Identifier(target_name) => scope.lookup(&target_name).first().ok_or_else(|| {
+            Error::UnresolvedName(target_name.clone())
+        }).and_then(|item| match **item {
+            ScopeItem::Constant {type_id, ..} => Ok(((*item).clone(), type_id)),
+            ScopeItem::TypedBlock {type_id, ..} => Ok(((*item).clone(), type_id)),
+            ScopeItem::Array {..} => unimplemented!(),
+            ScopeItem::BuiltInFunction {type_id, ..} => Err(Error::UnresolvedField {
+                target_type: scope.get_type(type_id).clone(),
+                field: field.clone(),
+            }),
+            // These are unreachable because numeric literals and byte literals are never stored
+            // directly
+            ScopeItem::NumericLiteral(..) | ScopeItem::ByteLiteral(..) => unreachable!(),
+        }).map(|(item, type_id)| (item, scope.get_type_name(type_id).clone())),
 
-        Expression::Access {target, field} => resolve_field_name(scope, *target, field),
+        //TODO: It's likely that the below line will just not work at all
+        // because the scope item returned in the tuple is not the target we should return.
+        // I think we need to map on this result and return the field as the target...not sure.
+        //Expression::Access {target, field} => resolve_field_name(scope, *target, field),
+        Expression::Access {target, field} => unimplemented!(),
 
         //TODO: ByteLiterals are valid targets for field access
         // In this case, we need to return [u8; N] where N is the length of the byte literal
@@ -89,9 +104,9 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier)
         // the ops necessary for that
         Expression::Call {method, args} => unimplemented!(),
         Expression::Branch {..} => unreachable!(),
-    };
+    }?;
 
-    unimplemented!();
+    Ok((target_instance, target_type_path.concat(field)))
 }
 
 fn resolve_method(scope: &ScopeStack, method_name: Identifier) {

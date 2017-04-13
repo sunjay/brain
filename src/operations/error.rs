@@ -10,6 +10,14 @@ pub enum Error {
     /// Unresolved name: `name`
     UnresolvedName(Identifier),
 
+    /// No field `field` on type `target_type`
+    UnresolvedField {
+        /// The target of the field acccess
+        target_type: ItemType,
+        /// The field name that was attempted
+        field: Identifier,
+    },
+
     /// `name` is not a valid type
     InvalidType(Identifier),
 
