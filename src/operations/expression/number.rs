@@ -38,8 +38,8 @@ fn store_numeric_literal(
     let mut operations = None;
     for item in scope.lookup(&converter_name) {
         operations = match *item {
-            ScopeItem::BuiltInFunction { id, ref operations } => {
-                match *scope.get_type(id) {
+            ScopeItem::BuiltInFunction { type_id, ref operations } => {
+                match *scope.get_type(type_id) {
                     ItemType::Function { ref args, return_type } => {
                         if args.len() == 1 && args[0].is_array_of(u8_type) && return_type == target_type {
                             Some(operations.clone())

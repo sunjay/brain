@@ -73,7 +73,7 @@ pub enum ScopeItem {
     /// Note that the type signature is stored separately
     BuiltInFunction {
         /// The ID of the type associated with this function
-        id: TypeId,
+        type_id: TypeId,
         /// Generates operations that represent calling the
         /// function with the given arguments
         /// Function should store the result in the memory block represented by the third
@@ -291,7 +291,7 @@ impl ScopeStack {
 
         let type_id = self.insert_type(name.clone(), typ);
         self.insert_item_into_current(name, ScopeItem::BuiltInFunction {
-            id: type_id,
+            type_id: type_id,
             operations: Rc::new(f),
         });
     }
