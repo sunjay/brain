@@ -2,7 +2,7 @@ use parser::{Expression, CallArgs, Identifier};
 use memory::MemoryBlock;
 
 use operations::{Error, OperationsResult};
-use operations::item_type::FuncArgType;
+use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
 
 /// Evaluates the arguments first, then supplies them to the given method
@@ -70,14 +70,43 @@ pub fn call(
     // We keep searching until we find something that matches or we return the first error.
     scope.lookup(&method_name).into_iter().fold(Err(Error::UnresolvedName(method_name.clone())), |acc, item| acc.or_else(|err| match *item {
         ScopeItem::BuiltInFunction {type_id, ref operations} => {
-            if scope.get_type(type_id).matches_signature(&method_args_types, target_type) {
+            let method_type = scope.get_type(type_id);
+            if method_type.matches_signature(&method_args_types, target_type) {
                 Ok(operations.clone())
             }
             else {
-                Err(err)
+                // If we have at least one matching item, the error should not be UnresolvedName
+                // anymore. Only the latest (first) match is considered for this.
+                Err(match err {
+                    Error::UnresolvedName(..) => Error::MismatchedTypes {
+                        expected: ItemType::Function {
+                            args: method_args_types.clone(),
+                            return_type: target_type,
+                        },
+                        found: method_type.clone(),
+                    },
+                    _ => err,
+                })
             }
         },
-        _ => Err(err),
+        // If we have at least one matching item, the error should not be UnresolvedName
+        // anymore. Only the latest (first) match is considered for this.
+        ref item => Err(match err {
+            Error::UnresolvedName(..) => Error::MismatchedTypes {
+                expected: ItemType::Function {
+                    args: method_args_types.clone(),
+                    return_type: target_type,
+                },
+                found: match *item {
+                    //TODO: Update this when more numeric types are added
+                    ScopeItem::NumericLiteral(..) => scope.get_type(scope.primitives().u8()).clone(),
+                    ScopeItem::ByteLiteral(ref bytes) => ItemType::Array {item: Some(scope.primitives().u8()), size: Some(bytes.len())},
+                    ScopeItem::Array {item, size, ..} => ItemType::Array {item: Some(item), size: Some(size)},
+                    ref arg => scope.get_type(arg.type_id()).clone(),
+                },
+            },
+            _ => err,
+        }),
     })).and_then(|operations| (*operations)(scope, args, target))
 }
 
