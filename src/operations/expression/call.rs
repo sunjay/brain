@@ -56,23 +56,21 @@ pub fn call(
 ) -> OperationsResult {
     // The first stage of calling a function is finding an implementation that matches the correct
     // function signature.
-    let method_type = ItemType::Function {
-        args: args.iter().map(|arg| match *arg {
-            //TODO: Update this when more numeric types are added
-            ScopeItem::NumericLiteral(..) => FuncArgType::Arg(scope.primitives().u8()),
-            ScopeItem::ByteLiteral(..) => FuncArgType::Array {item: scope.primitives().u8(), size: None},
-            ScopeItem::Array {item, ..} => FuncArgType::Array {item: item, size: None},
-            ref arg => FuncArgType::Arg(arg.type_id()),
-        }).collect(),
-        return_type: target_type,
-    };
+    let method_args_types = args.iter().map(|arg| match *arg {
+        //TODO: Update this when more numeric types are added
+        ScopeItem::NumericLiteral(..) => FuncArgType::Arg(scope.primitives().u8()),
+        ScopeItem::ByteLiteral(..) => FuncArgType::Array {item: scope.primitives().u8(), size: None},
+        ScopeItem::Array {item, ..} => FuncArgType::Array {item: item, size: None},
+        ref arg => FuncArgType::Arg(arg.type_id()),
+    }).collect();
+
     // TODO: Since we don't have proper generics, we just search through and try every function
     // with the given name to see if its arguments match. This is more similar to what C++ does
     // than Rust, but it works for the timebeing.
     // We keep searching until we find something that matches or we return the first error.
     scope.lookup(&method_name).into_iter().fold(Err(Error::UnresolvedName(method_name.clone())), |acc, item| acc.or_else(|err| match *item {
         ScopeItem::BuiltInFunction {type_id, ref operations} => {
-            if method_type == *scope.get_type(type_id) {
+            if scope.get_type(type_id).matches_signature(&method_args_types, target_type) {
                 Ok(operations.clone())
             }
             else {
