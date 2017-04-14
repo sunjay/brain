@@ -89,6 +89,22 @@ impl ScopeItem {
             _ => panic!("Called `ScopeItem::numeric_literal_value()` on a non `NumericLiteral` value"),
         }
     }
+
+    /// Returns the TypeId of this ScopeItem
+    ///
+    /// # Panics
+    /// Panics if the ScopeItem does not store its TypeId, those variants should be handled
+    /// separately
+    pub fn type_id(&self) -> TypeId {
+        use self::ScopeItem::*;
+
+        match *self {
+            Constant { type_id, .. } => type_id,
+            TypedBlock { type_id, .. } => type_id,
+            BuiltInFunction { type_id, .. } => type_id,
+            NumericLiteral(..) | ByteLiteral(..) | Array {..} => panic!("Variant does not store its TypeId"),
+        }
+    }
 }
 
 /// Represents a single level of scope

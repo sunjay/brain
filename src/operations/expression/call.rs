@@ -2,6 +2,7 @@ use parser::{Expression, CallArgs, Identifier};
 use memory::MemoryBlock;
 
 use operations::{Error, OperationsResult};
+use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
 
 /// Evaluates the arguments first, then supplies them to the given method
@@ -53,9 +54,35 @@ pub fn call(
     target_type: TypeId,
     target: MemoryBlock,
 ) -> OperationsResult {
-    let function = resolve_method(scope, method_name);
-
-    unimplemented!();
+    // The first stage of calling a function is finding an implementation that matches the correct
+    // function signature.
+    let method_type = ItemType::Function {
+        args: args.iter().map(|arg| match *arg {
+            //TODO: Update this when more numeric types are added
+            ScopeItem::NumericLiteral(..) => FuncArgType::Arg(scope.primitives().u8()),
+            ScopeItem::ByteLiteral(..) => FuncArgType::Array {item: scope.primitives().u8(), size: None},
+            ScopeItem::Array {item, ..} => FuncArgType::Array {item: item, size: None},
+            ref arg => FuncArgType::Arg(arg.type_id()),
+        }).collect(),
+        return_type: target_type,
+    };
+    // TODO: Since we don't have proper generics, we just search through and try every function
+    // with the given name to see if its arguments match. This is more similar to what C++ does
+    // than Rust, but it works for the timebeing.
+    // We keep searching until we find something that matches or we return the first error.
+    scope.lookup(&method_name).into_iter().fold(Err(Error::UnresolvedName(method_name.clone())), |acc, item| acc.or_else(|err| match *item {
+        ScopeItem::BuiltInFunction {type_id, ref operations} => {
+            if method_type == *scope.get_type(type_id) {
+                Ok(operations.clone())
+            }
+            else {
+                Err(err)
+            }
+        },
+        _ => Err(err),
+    })).and_then(|operations| {
+        unimplemented!();
+    })
 }
 
 /// Returns the full path of the target type with the field appended to it
@@ -107,8 +134,4 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier)
     }?;
 
     Ok((target_instance, target_type_path.concat(field)))
-}
-
-fn resolve_method(scope: &ScopeStack, method_name: Identifier) {
-    unimplemented!();
 }
