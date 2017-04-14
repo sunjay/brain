@@ -2,7 +2,7 @@ use parser::{Expression, CallArgs, Identifier};
 use memory::MemoryBlock;
 
 use operations::{Error, OperationsResult};
-use operations::item_type::{ItemType, FuncArgType};
+use operations::item_type::FuncArgType;
 use operations::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
 
 /// Evaluates the arguments first, then supplies them to the given method
@@ -109,7 +109,7 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier)
         // because the scope item returned in the tuple is not the target we should return.
         // I think we need to map on this result and return the field as the target...not sure.
         //Expression::Access {target, field} => resolve_field_name(scope, *target, field),
-        Expression::Access {target, field} => unimplemented!(),
+        Expression::Access {..} => unimplemented!(),
 
         //TODO: ByteLiterals are valid targets for field access
         // In this case, we need to return [u8; N] where N is the length of the byte literal
@@ -125,7 +125,7 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier)
         // In this case, we need to return the type name of the return type
         // Implementing this will be a bit more complicated since we need to do the call and return
         // the ops necessary for that
-        Expression::Call {method, args} => unimplemented!(),
+        Expression::Call {..} => unimplemented!(),
         Expression::Branch {..} => unreachable!(),
     }?;
 
