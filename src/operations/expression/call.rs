@@ -78,9 +78,7 @@ pub fn call(
             }
         },
         _ => Err(err),
-    })).and_then(|operations| {
-        unimplemented!();
-    })
+    })).and_then(|operations| (*operations)(scope, args, target))
 }
 
 /// Returns the full path of the target type with the field appended to it
