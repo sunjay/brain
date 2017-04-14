@@ -114,17 +114,17 @@ impl ItemType {
                 // All the args must match an argument in expected_args
                 args.iter().all(|arg| match *arg {
                     FuncArgType::Arg(type_id) => match expected_args.peek() {
-                        Some(&&FuncArgType::Arg(arg_id)) => if type_id == arg_id {
+                        Some(&&FuncArgType::Arg(arg_id)) if type_id == arg_id => {
                             expected_args.next();
                             true
-                        } else { false },
+                        },
                         _ => false,
                     },
                     FuncArgType::Array {item, size} => match expected_args.peek() {
-                        Some(&&FuncArgType::Array {item: arg_item, size: arg_size}) => if item == arg_item && size == arg_size {
+                        Some(&&FuncArgType::Array {item: arg_item, size: arg_size}) if item == arg_item && size == arg_size => {
                             expected_args.next();
                             true
-                        } else { false },
+                        },
                         _ => false,
                     },
                     FuncArgType::Variadic(None) => {
@@ -133,10 +133,10 @@ impl ItemType {
                         true
                     },
                     FuncArgType::Variadic(Some(type_id)) => match expected_args.peek() {
-                        Some(&&FuncArgType::Variadic(Some(arg_id))) => if type_id == arg_id {
+                        Some(&&FuncArgType::Variadic(Some(arg_id))) if type_id == arg_id => {
                             expected_args.next();
                             true
-                        } else { false },
+                        },
                         Some(&&FuncArgType::Arg(_)) => matches_variadic(type_id, &mut expected_args),
                         _ => false,
                     },
