@@ -48,6 +48,7 @@ pub fn into_operations_array(
 ) -> OperationsResult {
     match expr {
         Expression::ByteLiteral(bytes) => store_byte_literal(scope, bytes, item_type, size, target),
+        Expression::Identifier(name) => unimplemented!(),
         _ => unimplemented!(),
     }
 }

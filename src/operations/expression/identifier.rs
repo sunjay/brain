@@ -56,9 +56,14 @@ pub fn store_identifier(
             }
         },
 
-        ScopeItem::Array {item, size, memory} => {
-            unimplemented!();
-        },
+        // Arrays don't have their own type_ids, so this is clearly a type error
+        ScopeItem::Array {item, size, ..} => Err(Error::MismatchedTypes {
+            expected: scope.get_type(target_type).clone(),
+            found: ItemType::Array {
+                item: Some(item),
+                size: Some(size),
+            },
+        }),
 
         ScopeItem::BuiltInFunction { .. } => {
             // This is not supported for now
