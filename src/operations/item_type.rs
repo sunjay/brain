@@ -89,7 +89,11 @@ impl ItemType {
             ItemType::Unit => Size::default(),
             ItemType::Primitive(size) => size,
             ItemType::Struct { .. } => Size::default(), //TODO: Update this when fields are supported
-            _ => unimplemented!(),
+            ItemType::Array {item: Some(item), size: Some(size)} => {
+                scope.get_type(item).required_size(scope) * size
+            },
+            ItemType::Function { .. } => Size::default(),
+            _ => unreachable!(),
         }
     }
 
