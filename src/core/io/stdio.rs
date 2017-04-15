@@ -1,9 +1,9 @@
-use parser::{Expression, Identifier};
+use parser::Identifier;
 use memory::{MemoryBlock};
 
+use operations::{Operation, expression};
 use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{ScopeStack, TypeId};
-use operations::expression;
 
 pub fn define_stdin(scope: &mut ScopeStack, u8_type: TypeId) -> TypeId {
     // Taking advantage of the scope system to simulate modules
@@ -64,7 +64,16 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
             return_type: unit_type,
         },
         |scope, args, _| {
-            unimplemented!();
+            let unit_type = scope.primitives().unit();
+            args.into_iter().skip(1).map(|arg| expression::call(
+                scope,
+                Identifier::from("std::fmt::Display::print"),
+                vec![arg],
+                unit_type,
+                MemoryBlock::default()
+            )).collect::<Result<Vec<_>, _>>().map(|op_vecs| {
+                op_vecs.into_iter().flat_map(|ops| ops).collect()
+            })
         }
     );
 
@@ -87,8 +96,17 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
             )?;
 
             // Write a newline using a temporary cell
-            //TODO: ops.extend(...);
-            unimplemented!();
+            let u8_type = scope.primitives().u8();
+            let mem = scope.allocate(u8_type);
+            ops.push(Operation::TempAllocate {
+                temp: mem,
+                body: vec![
+                    Operation::Increment {
+                        target: mem.position(),
+                        amount: b'\n',
+                    },
+                ],
+            });
 
             Ok(ops)
         }
