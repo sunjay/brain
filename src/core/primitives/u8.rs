@@ -44,7 +44,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
                 Ok(vec![
                     Operation::Increment {
                         target: target.position(),
-                        amount: value as usize,
+                        amount: value as u8,
                     }
                 ])
             }
@@ -142,17 +142,38 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Array {item: u8_type, size: None}],
             return_type: unit_type,
         },
-        move |_scope, args, _target| {
-            let mem = match args[0] {
-                ScopeItem::Array {memory, ..} => memory,
-                _ => unreachable!(),
-            };
+        move |scope, args, _| {
+            match args[0] {
+                ScopeItem::Array {memory, ..} => Ok(vec![
+                    Operation::Write {
+                        target: memory,
+                    },
+                ]),
+                ScopeItem::ByteLiteral(ref bytes) => {
+                    let u8_type = scope.primitives().u8();
+                    let mem = scope.allocate(u8_type);
 
-            Ok(vec![
-                Operation::Write {
-                    target: mem,
-                }
-            ])
+                    Ok(vec![
+                        Operation::TempAllocate {
+                            temp: mem,
+                            body: bytes.iter().flat_map(|&ch| vec![
+                                Operation::Increment {
+                                    target: mem.position(),
+                                    amount: ch,
+                                },
+                                Operation::Write {
+                                    target: mem,
+                                },
+                                Operation::Decrement {
+                                    target: mem.position(),
+                                    amount: ch,
+                                },
+                            ]).collect(),
+                        },
+                    ])
+                },
+                _ => unreachable!(),
+            }
         }
     );
 
