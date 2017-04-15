@@ -132,6 +132,9 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
         }
     );
 
+    // Need this so that this next method definition does not overwrite the previous one
+    scope.push_scope();
+
     // Method on [u8; _]
     scope.declare_builtin_function(
         // Special method for displaying this primitive (used from print/println)
