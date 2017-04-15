@@ -7,6 +7,14 @@ let mut b: [u8; 3] = b"abc";
 stdout.print(b"a: ", a);
 stdout.print(b"b: ", b, b"\n");
 
+// u8 is an 8-bit unsigned numeric type (a byte)
+// In brainfuck, this is equivalent to one "cell"
+let x: u8 = 32;
+// Note: There is a bug open about printing numbers correctly.
+// Currently, numbers greater than 9 will print as punctuation and then letters.
+// This is unfortunate, and will be fixed soon: https://github.com/brain-lang/brain/issues/68
+stdout.println(b"x: ", x);
+
 // invalid because different sizes (addressed in issue #3)
 //a = b;
 
