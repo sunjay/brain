@@ -3,7 +3,7 @@ use memory::MemoryBlock;
 
 use operations::{Error, OperationsResult};
 use operations::item_type::{ItemType};
-use operations::scope::{TypeId, ScopeStack, ScopeType, ScopeItem};
+use operations::scope::{TypeId, ScopeStack, ScopeItem};
 
 use super::call;
 
