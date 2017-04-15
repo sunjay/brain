@@ -25,7 +25,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
         ItemType::Function {
             // This takes a single literal of the type specific within
             // the curly braces {} in the name
-            args: vec![FuncArgType::Array {item: u8_type, size: None}],
+            args: vec![FuncArgType::Arg(u8_type)],
             // Return type signifies which type we are declaring supports integer literals
             return_type: u8_type,
         },
