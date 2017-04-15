@@ -4,7 +4,8 @@ use parser::{Identifier, Pattern, TypeDefinition, Expression};
 use memory::{MemoryBlock};
 
 use super::{Operation, OperationsResult, expression};
-use super::scope::{TypeId, ScopeStack, ScopeType, ArraySize};
+use super::item_type::{ItemType};
+use super::scope::{TypeId, ScopeStack, ScopeItem, ScopeType, ArraySize};
 use super::Error;
 
 pub fn into_operations(
@@ -48,10 +49,9 @@ fn declare_array(
     size_expr: Option<Expression>,
     expr: Option<Expression>,
 ) -> OperationsResult {
-    let size = infer_size(size_expr, &expr, &name)?;
-
     match item_type_def {
         TypeDefinition::Name {name: ref item_name} => resolve_type_id(scope, item_name).and_then(|item_type| {
+            let size = infer_size(scope, item_type, size_expr, &expr, &name)?;
             let mem = scope.declare_array(name, item_type, size);
 
             declaration_operations(mem, expr, |expr| {
@@ -67,24 +67,52 @@ fn declare_array(
 
 /// Attempts to infer the size of the array from various pieces of information
 fn infer_size(
+    scope: &ScopeStack,
+    item_type: TypeId,
     size_expr: Option<Expression>,
     expr: &Option<Expression>,
     name: &Identifier,
 ) -> Result<ArraySize, Error> {
     //TODO: Do this better. Ideally, this kind of inference would be done in a separate
     // pass with all the other inference that needs to be done.
-    size_expr.and_then(|expr| match expr {
-        Expression::Number(value) if value > 0 => Some(value as ArraySize),
-        _ => None,
-    }).ok_or_else(|| {
-        Error::UnsupportedArrayType {name: name.clone()}
-    }).or_else(|err| match *expr {
+    match size_expr {
+        Some(Expression::Number(value)) if value > 0 => Ok(value as ArraySize),
         // Since no size was declared, try to infer it from the expression
-        Some(Expression::ByteLiteral(ref literal)) => Ok(literal.len()),
-        // If there was no expression to begin with, just propogate the original error
-        None => Err(err),
-        _ => Err(Error::InvalidArrayLiteral {name: name.clone()}),
-    })
+        None if expr.is_some() => match *expr.as_ref().unwrap() {
+            Expression::ByteLiteral(ref literal) => Ok(literal.len()),
+            Expression::Identifier(ref name) => scope.lookup(name).first().ok_or_else(|| {
+                Error::UnresolvedName(name.clone())
+            }).and_then(|item| match **item {
+                ScopeItem::ByteLiteral(ref bytes) => Ok(bytes.len()),
+                ScopeItem::Array {item, size, ..} if item == item_type => Ok(size),
+                ref item => Err(Error::MismatchedTypes {
+                    expected: ItemType::Array {
+                        item: Some(item_type),
+                        size: None,
+                    },
+                    found: match *item {
+                        //TODO: Update this when more numeric types are added
+                        ScopeItem::NumericLiteral(..) => scope.get_type(scope.primitives().u8()).clone(),
+                        ScopeItem::ByteLiteral(..) => unreachable!(),
+                        ScopeItem::Array {item, size, ..} => ItemType::Array {item: Some(item), size: Some(size)},
+                        ref arg => scope.get_type(arg.type_id()).clone(),
+                    },
+                }),
+            }),
+            Expression::Number(..) => Err(Error::MismatchedTypes {
+                expected: ItemType::Array {
+                    item: Some(item_type),
+                    size: None,
+                },
+                //TODO: Update this when more numeric types are added
+                found: scope.get_type(scope.primitives().u8()).clone(),
+            }),
+            // These are unimplemented until a more robust static analysis is implemented
+            //TODO: These can all be inferred, it would just be way too messy to do it here
+            Expression::Call {..} | Expression::Access {..} | Expression::Branch {..} => unimplemented!(),
+        },
+        _ => Err(Error::UnsupportedArrayType {name: name.clone()}),
+    }
 }
 
 fn resolve_type_id(

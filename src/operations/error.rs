@@ -50,18 +50,11 @@ pub enum Error {
     },
 
     /// Unsupported array type declaration
-    /// Nested array types are NOT currently supported
-    /// Non-numeric literal array sizes are NOT currently supported
-    /// Negative array sizes are NOT supported
-    /// Cannot infer without expression
+    /// * Nested array types are NOT currently supported
+    /// * Array sizes that are not numeric literals are NOT currently supported
+    /// * Negative array sizes are NOT supported
+    /// * Cannot infer without expression
     UnsupportedArrayType {
-        name: Identifier,
-    },
-
-    /// Invalid array literal
-    /// Could be something we just don't support or trying to do something like assign
-    /// a number to an array type
-    InvalidArrayLiteral {
         name: Identifier,
     },
 }
