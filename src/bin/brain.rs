@@ -90,6 +90,7 @@ fn compile(source: String) -> String {
     let mut global_scope = ScopeStack::new();
     prelude::populate_scope(&mut global_scope);
     let operations = program.into_operations(&mut global_scope);
+    println!("{:#?}", operations);
 
     unimplemented!();
 }
