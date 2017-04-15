@@ -43,14 +43,16 @@ pub enum Operation {
     /// current amount in the cell is)
     Increment {
         target: CellPosition,
-        amount: usize,
+        // u8 since cells are byte-sized
+        amount: u8,
     },
 
     /// Decrement the value of the given cell by a certain amount (relative to whatever the
     /// current amount in the cell is)
     Decrement {
         target: CellPosition,
-        amount: usize,
+        // u8 since cells are byte-sized
+        amount: u8,
     },
 
     /// Read bytes into the given memory block
@@ -110,7 +112,7 @@ impl Operation {
         value.iter().enumerate().map(|(i, &byte)| {
             Operation::Increment {
                 target: mem.position_at(i),
-                amount: byte as usize,
+                amount: byte,
             }
         }).collect()
     }
