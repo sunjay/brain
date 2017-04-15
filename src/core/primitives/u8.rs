@@ -60,16 +60,28 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(u8_type)],
             return_type: unit_type,
         },
-        move |_scope, args, _target| {
+        move |_, args, _| {
             let mem = match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => memory,
                 _ => unreachable!(),
             };
 
             Ok(vec![
+                // Need to display numbers as numbers by first incrementing them to the proper
+                // ascii code and then decrementing them again
+                Operation::Increment {
+                    target: mem.position(),
+                    amount: b'0',
+                },
                 Operation::Write {
                     target: mem,
-                }
+                },
+                // Need to make sure we reverse the operation after or else there will be
+                // unintended consequences
+                Operation::Decrement {
+                    target: mem.position(),
+                    amount: b'0',
+                },
             ])
         }
     );
