@@ -11,7 +11,7 @@ use memory::MemoryBlock;
 use operations::OperationsResult;
 use operations::scope::{TypeId, ScopeStack, ArraySize};
 
-use self::identifier::store_identifier;
+use self::identifier::{store_identifier, store_identifier_array};
 use self::number::store_number;
 use self::byte_literal::store_byte_literal;
 use self::call::call_with_exprs;
@@ -48,7 +48,7 @@ pub fn into_operations_array(
 ) -> OperationsResult {
     match expr {
         Expression::ByteLiteral(bytes) => store_byte_literal(scope, bytes, item_type, size, target),
-        Expression::Identifier(name) => unimplemented!(),
+        Expression::Identifier(name) => store_identifier_array(scope, name, item_type, size, target),
         _ => unimplemented!(),
     }
 }

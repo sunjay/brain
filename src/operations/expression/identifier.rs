@@ -3,9 +3,10 @@ use memory::MemoryBlock;
 
 use operations::{Error, Operation, OperationsResult};
 use operations::item_type::ItemType;
-use operations::scope::{TypeId, ScopeStack, ScopeItem};
+use operations::scope::{TypeId, ScopeStack, ScopeItem, ArraySize};
 
 use super::number::store_number;
+use super::byte_literal::store_byte_literal;
 
 pub fn store_identifier(
     scope: &mut ScopeStack,
@@ -69,6 +70,48 @@ pub fn store_identifier(
             // This is not supported for now
             unreachable!();
         },
+    })
+}
+
+pub fn store_identifier_array(
+    scope: &mut ScopeStack,
+    name: Identifier,
+    item_type: TypeId,
+    size: ArraySize,
+    target: MemoryBlock,
+) -> OperationsResult {
+    scope.lookup(&name).first().ok_or_else(|| {
+        Error::UnresolvedName(name.clone())
+    }).map(|item| (**item).clone()).and_then(|item| match item {
+        // There is a non-lexical lifetimes issue here which was introduced by calling store_byte_literal() below
+        // The clone() above is completely unnecssary and is a hack to work around this problem
+        // in the Rust compiler
+        // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
+        ScopeItem::ByteLiteral(bytes) => store_byte_literal(scope, bytes, item_type, size, target),
+        ScopeItem::Array {item, size: asize, memory} if item == item_type && size == asize => {
+            // Need to check this invariant or else this can lead to
+            // many very subtle bugs
+            debug_assert!(memory.size() == target.size());
+
+            Ok(vec![Operation::Copy {
+                source: memory.position(),
+                target: target.position(),
+                size: memory.size(),
+            }])
+        },
+        item => Err(Error::MismatchedTypes {
+            expected: ItemType::Array {
+                item: Some(item_type),
+                size: Some(size),
+            },
+            found: match item {
+                //TODO: Update this when more numeric types are added
+                ScopeItem::NumericLiteral(..) => scope.get_type(scope.primitives().u8()).clone(),
+                ScopeItem::ByteLiteral(..) => unreachable!(),
+                ScopeItem::Array {item, size, ..} => ItemType::Array {item: Some(item), size: Some(size)},
+                ref arg => scope.get_type(arg.type_id()).clone(),
+            },
+        }),
     })
 }
 
