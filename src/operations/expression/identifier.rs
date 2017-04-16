@@ -21,6 +21,7 @@ pub fn store_identifier(
         // The clone() above is completely unnecssary and is a hack to work around this problem
         // in the Rust compiler
         // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
+
         ScopeItem::Constant {type_id, ref bytes} => {
             if target_type == type_id {
                 Ok(Operation::increment_to_value(target, bytes))
@@ -87,6 +88,7 @@ pub fn store_identifier_array(
         // The clone() above is completely unnecssary and is a hack to work around this problem
         // in the Rust compiler
         // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
+
         ScopeItem::ByteLiteral(bytes) => store_byte_literal(scope, bytes, item_type, size, target),
         ScopeItem::Array {item, size: asize, memory} if item == item_type && size == asize => {
             // Need to check this invariant or else this can lead to

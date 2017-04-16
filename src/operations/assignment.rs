@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use parser::{Identifier, Expression};
 
 use super::{Error};
@@ -11,18 +13,24 @@ pub fn into_operations(
 ) -> OperationsResult {
     scope.lookup(&lhs).first().ok_or_else(|| {
         Error::UnresolvedName(lhs.clone())
-    }).and_then(|item| match **item {
-        ScopeItem::TypedBlock {type_id, memory} => Ok((type_id, memory)),
-        _ => Err(Error::InvalidLeftHandSide(lhs)),
-    }).and_then(|(type_id, memory)| {
-        //TODO: Figure out if it is necessary to zero by whether the memory
-        //TODO: has been initialized yet or not
-        let mut ops = vec![Operation::Zero {
-            target: memory,
-        }];
+    }).map(|item| (**item).clone()).and_then(|item| match item {
+        // There is a non-lexical lifetimes issue here which was introduced by calling into_operations*() below
+        // The clone() above is completely unnecssary and is a hack to work around this problem
+        // in the Rust compiler
+        // http://smallcultfollowing.com/babysteps/blog/2016/04/27/non-lexical-lifetimes-introduction/#problem-case-2-conditional-control-flow
 
-        ops.extend(expression::into_operations(scope, expr, type_id, memory)?);
-
-        Ok(ops)
+        ScopeItem::TypedBlock {type_id, memory} => {
+            Ok(once(Operation::Zero {target: memory}).chain(
+                expression::into_operations(scope, expr, type_id, memory)?.into_iter()
+            ).collect())
+        },
+        ScopeItem::Array {item, size, memory} => {
+            Ok(once(Operation::Zero {target: memory}).chain(
+                expression::into_operations_array(scope, expr, item, size, memory)?.into_iter()
+            ).collect())
+        },
+        ScopeItem::Constant {..} | ScopeItem::NumericLiteral(..) | ScopeItem::ByteLiteral(..) | ScopeItem::BuiltInFunction {..} => {
+            Err(Error::InvalidLeftHandSide(lhs))
+        },
     })
 }
