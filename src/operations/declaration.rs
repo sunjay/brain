@@ -1,9 +1,6 @@
-use std::iter::once;
-
 use parser::{Identifier, Pattern, TypeDefinition, Expression};
-use memory::{MemoryBlock};
 
-use super::{Operation, OperationsResult, expression};
+use super::{OperationsResult, expression};
 use super::item_type::{ItemType};
 use super::scope::{TypeId, ScopeStack, ScopeItem, ScopeType, ArraySize};
 use super::Error;
@@ -36,9 +33,7 @@ fn declare_name(
     resolve_type_id(scope, &type_name).and_then(|type_id| {
         let mem = scope.declare(name, type_id);
 
-        declaration_operations(mem, expr, |expr| {
-            expression::into_operations(scope, expr, type_id, mem)
-        })
+        expr.map_or(Ok(Vec::new()), |expr| expression::into_operations(scope, expr, type_id, mem))
     })
 }
 
@@ -54,9 +49,7 @@ fn declare_array(
             let size = infer_size(scope, item_type, size_expr, &expr, &name)?;
             let mem = scope.declare_array(name, item_type, size);
 
-            declaration_operations(mem, expr, |expr| {
-                expression::into_operations_array(scope, expr, item_type, size, mem)
-            })
+            expr.map_or(Ok(Vec::new()), |expr| expression::into_operations_array(scope, expr, item_type, size, mem))
         }),
         //TODO: Deal with infinitely sized (self-referential) types
         TypeDefinition::Array { .. } => {
@@ -126,17 +119,6 @@ fn resolve_type_id(
     })
 }
 
-fn declaration_operations<F>(
-    mem: MemoryBlock,
-    expr: Option<Expression>,
-    generate: F,
-) -> OperationsResult
-    where F: FnOnce(Expression) -> OperationsResult {
-    Ok(once(Operation::Allocate(mem)).chain(
-        expr.map_or(Ok(Vec::new()), generate)?
-    ).collect())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,6 +141,6 @@ mod tests {
         ).unwrap();
 
         assert!(!scope.lookup(&Identifier::from("foo")).is_empty(), "No value was declared");
-        assert_eq!(ops.len(), 1);
+        assert_eq!(ops.len(), 0);
     }
 }
