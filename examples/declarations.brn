@@ -41,7 +41,7 @@ stdout.print(b"b = ", b, b" (should be abc)\n");
 
 // Should accept any [a-zA-z0-9_] as identifier names
 // Cannot start with a number
-let qqq: [u8; _];
-let _bar: [u8; _];
+let qqq: [u8; 2];
+let _bar: [u8; 2];
 // invalid:
 //let 12abc: [u8; _];
