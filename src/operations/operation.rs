@@ -1,4 +1,4 @@
-use memory::{MemoryBlock, Size, CellPosition};
+use memory::{MemoryBlock, MemSize, CellPosition};
 
 pub type Operations = Vec<Operation>;
 
@@ -80,7 +80,7 @@ pub enum Operation {
     Copy {
         source: CellPosition,
         target: CellPosition,
-        size: Size,
+        size: MemSize,
     },
 
     /// Relocate the value at the source memory block to the target memory block

@@ -1,7 +1,7 @@
 use std::iter::Peekable;
 use std::slice::Iter;
 
-use memory::Size;
+use memory::MemSize;
 
 use super::scope::{ScopeStack, TypeId, ArraySize};
 
@@ -53,7 +53,7 @@ pub enum ItemType {
     /// A primitive type is a raw interpretation of some memory cells
     /// These primitive types are built-in and cannot be declared
     /// within the language itself
-    Primitive(Size),
+    Primitive(MemSize),
 
     /// A struct has a single definition with any number of
     /// fields and generics
@@ -84,15 +84,15 @@ pub enum ItemType {
 
 impl ItemType {
     /// Computes the required size in cells of an *instance* of this type
-    pub fn required_size(&self, scope: &ScopeStack) -> Size {
+    pub fn required_size(&self, scope: &ScopeStack) -> MemSize {
         match *self {
-            ItemType::Unit => Size::default(),
+            ItemType::Unit => MemSize::default(),
             ItemType::Primitive(size) => size,
-            ItemType::Struct { .. } => Size::default(), //TODO: Update this when fields are supported
+            ItemType::Struct { .. } => MemSize::default(), //TODO: Update this when fields are supported
             ItemType::Array {item: Some(item), size: Some(size)} => {
                 scope.get_type(item).required_size(scope) * size
             },
-            ItemType::Function { .. } => Size::default(),
+            ItemType::Function { .. } => MemSize::default(),
             _ => unreachable!(),
         }
     }

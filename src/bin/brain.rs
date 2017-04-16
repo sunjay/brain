@@ -12,6 +12,7 @@ use clap::{Arg, App};
 
 use brain::parser::{Program, ParseError};
 use brain::operations::scope::ScopeStack;
+use brain::memory::MemoryLayout;
 use brain::prelude;
 
 macro_rules! exit_with_error(
@@ -89,8 +90,15 @@ fn compile(source: String) -> String {
 
     let mut global_scope = ScopeStack::new();
     prelude::populate_scope(&mut global_scope);
-    let operations = program.into_operations(&mut global_scope);
+    let operations = program.into_operations(&mut global_scope).unwrap_or_else(|error| {
+        println!("{:?}", error);
+        // Print the error properly
+        unimplemented!();
+    });
     println!("{:#?}", operations);
+
+    let memory_layout = MemoryLayout::from(&operations);
+    println!("{:#?}", memory_layout);
 
     unimplemented!();
 }

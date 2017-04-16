@@ -1,11 +1,11 @@
-// Kept private because MemoryBlocks cannot be created outside of this static allocator
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-struct Id(usize);
+// Exposes no public constructor since MemoryBlocks cannot be created outside of this static allocator
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub struct MemId(usize);
 
 /// Size of a memory block in cells
 /// One cell is typically equivalent to a byte, however that depends on the implementation of
 /// the brainfuck interpreter being used. This definition of size is interpreter-agnostic.
-pub type Size = usize;
+pub type MemSize = usize;
 
 /// Index of a position within a MemoryBlocks, must be within the allocated size of the MemoryBlock
 /// to prevent buffer overrun
@@ -16,19 +16,25 @@ pub type Index = usize;
 /// Use CellPositions to represent locations within a memory block pointed to by an MemoryBlock
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct MemoryBlock {
-    id: Id,
-    size: Size,
+    id: MemId,
+    size: MemSize,
 }
 
 impl MemoryBlock {
+    /// Returns the unique identifier of this memory block
+    /// This CANNOT be used to construct other memory blocks
+    pub fn id(&self) -> MemId {
+        self.id
+    }
+
     /// Returns the size of this memory block
-    pub fn size(&self) -> Size {
+    pub fn size(&self) -> MemSize {
         self.size
     }
 
     /// Returns the cell position of the first cell within this MemoryBlock
     pub fn position(&self) -> CellPosition {
-        CellPosition(self.id, 0)
+        self.position_at(0)
     }
 
     /// Returns the position of the cell at the given index within this MemoryBlock
@@ -41,7 +47,7 @@ impl MemoryBlock {
         debug_assert!(index < self.size,
             "Attempt to access a position outside of the memory allocated for a MemoryBlock");
 
-        CellPosition(self.id, index)
+        CellPosition(*self, index)
     }
 }
 
@@ -54,7 +60,7 @@ impl Default for MemoryBlock {
     /// This saves the allocator from wasting too many IDs on zero-sized blocks of memory
     fn default() -> Self {
         MemoryBlock {
-            id: Id(0),
+            id: MemId(0),
             size: 0,
         }
     }
@@ -63,7 +69,13 @@ impl Default for MemoryBlock {
 /// The position of a cell within an MemoryBlock
 /// Index = 0 indicates the start of the memory block
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct CellPosition(Id, Index);
+pub struct CellPosition(MemoryBlock, Index);
+
+impl CellPosition {
+    pub fn associated_memory(&self) -> MemoryBlock {
+        self.0
+    }
+}
 
 pub struct StaticAllocator {
     next_id: usize,
@@ -78,13 +90,13 @@ impl StaticAllocator {
 
     /// Allocates a memory block of the given size and gives it a unique ID
     /// so that this memory block can be referred to uniquely
-    pub fn allocate(&mut self, size: Size) -> MemoryBlock {
+    pub fn allocate(&mut self, size: MemSize) -> MemoryBlock {
         if size == 0 {
             return MemoryBlock::default();
         }
 
         let blk = MemoryBlock {
-            id: Id(self.next_id),
+            id: MemId(self.next_id),
             size: size,
         };
         self.next_id += 1;
