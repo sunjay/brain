@@ -113,9 +113,14 @@ fn into_instructions_index(
                 ], current_cell, target.size())).collect()
         },
         Loop {cond, body} => {
-            unimplemented!();
+            move_to(current_cell, layout.position(&cond)).into_iter()
+                .chain(once(Instruction::JumpForwardIfZero))
+                .chain(into_instructions_index(body, layout, current_cell))
+                .chain(move_to(current_cell, layout.position(&cond)))
+                .chain(once(Instruction::JumpBackwardUnlessZero))
+                .collect()
         },
-        Copy {ref source, ref target, ..} => {
+        Copy {source, target, size} => {
             unimplemented!();
         },
         Relocate {source, target} => {
