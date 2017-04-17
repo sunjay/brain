@@ -8,3 +8,4 @@ pub mod operations;
 pub mod memory;
 pub mod core;
 pub mod prelude;
+pub mod codegen;

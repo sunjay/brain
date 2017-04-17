@@ -13,6 +13,7 @@ use clap::{Arg, App};
 use brain::parser::{Program, ParseError};
 use brain::operations::scope::ScopeStack;
 use brain::memory::MemoryLayout;
+use brain::codegen::Instructions;
 use brain::prelude;
 
 macro_rules! exit_with_error(
@@ -99,6 +100,9 @@ fn compile(source: String) -> String {
 
     let memory_layout = MemoryLayout::from(&operations);
     println!("{:#?}", memory_layout);
+
+    let instructions: Instructions = (operations, memory_layout).into();
+    println!("{:#?}", instructions);
 
     unimplemented!();
 }
