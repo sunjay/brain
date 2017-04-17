@@ -105,6 +105,9 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
                         target: mem.position(),
                         amount: b'\n',
                     },
+                    Operation::Write {
+                        target: mem,
+                    },
                 ],
             });
 
