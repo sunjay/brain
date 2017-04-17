@@ -75,6 +75,14 @@ impl CellPosition {
     pub fn associated_memory(&self) -> MemoryBlock {
         self.0
     }
+
+    pub fn id(&self) -> MemId {
+        self.0.id()
+    }
+
+    pub fn offset(&self) -> Index {
+        self.1
+    }
 }
 
 pub struct StaticAllocator {

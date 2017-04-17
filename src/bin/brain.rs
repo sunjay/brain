@@ -64,6 +64,7 @@ fn main() {
     });
 
     let generated_code: String = compile(source);
+    println!("{:?}", generated_code);
 
     let mut output_file = File::create(output_path).unwrap_or_else(|e| {
         exit_with_error!("Could not create target file: {}", e);
@@ -102,7 +103,6 @@ fn compile(source: String) -> String {
     println!("{:#?}", memory_layout);
 
     let instructions: Instructions = (operations, memory_layout).into();
-    println!("{:#?}", instructions);
 
-    unimplemented!();
+    instructions.into()
 }

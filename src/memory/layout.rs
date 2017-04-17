@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use operations::{Operation, Operations};
 
-use super::{MemId, MemSize, MemoryBlock};
+use super::{MemId, MemSize, MemoryBlock, CellPosition};
 
 /// Represents a zero-indexed position in the brainfuck tape
 pub type CellIndex = usize;
@@ -53,6 +53,11 @@ impl MemoryLayout {
         // If a memory identifier does not exist in the layout, it's likely a bug
         self.table.get(id)
             .expect("Attempt to get memory that is not part of the layout")
+    }
+
+    /// Gets the CellIndex of the given CellPosition based on its position in the memory layout
+    pub fn position(&self, pos: &CellPosition) -> CellIndex {
+        self.get(&pos.id()).position() + pos.offset()
     }
 
     /// Populates a memory layout based on the given operations.
