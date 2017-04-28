@@ -3,6 +3,8 @@
 [![Crates.io](https://img.shields.io/crates/v/brain.svg)](https://crates.io/crates/brain)
 [![Crates.io](https://img.shields.io/crates/l/brain.svg)](https://crates.io/crates/brain)
 [![Build Status](https://travis-ci.org/brain-lang/brain.svg?branch=master)](https://travis-ci.org/brain-lang/brain)
+[![Build status](https://ci.appveyor.com/api/projects/status/hh3q7wbsna55inv6?svg=true)](https://ci.appveyor.com/project/sunjay/brain)
+[![Dependency Status](https://dependencyci.com/github/brain-lang/brain/badge)](https://dependencyci.com/github/brain-lang/brain)
 [![Gitter](https://img.shields.io/gitter/room/brain-lang/brain.svg)](https://gitter.im/brain-lang/brain)
 
 brain is a strongly-typed, high-level programming language that compiles into
