@@ -26,5 +26,6 @@ pub fn into_operations(
     Ok(vec![Operation::TempAllocate {
         temp: cond_mem,
         body: ops,
+        should_zero: true,
     }])
 }

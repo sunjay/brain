@@ -2,7 +2,7 @@ use std::fmt;
 use std::iter::{once, repeat, FromIterator};
 use std::ops::Index;
 
-use memory::{MemoryLayout, CellIndex, MemSize};
+use memory::{MemoryLayout, MemoryBlock, CellIndex, MemSize};
 use operations::{Operation, Operations};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -104,8 +104,16 @@ fn into_instructions_index(
 ) -> Instructions {
     use self::Operation::*;
     ops.into_iter().flat_map(|op| match op {
-        Block {body} | TempAllocate {body, ..} => {
-            into_instructions_index(body, layout, current_cell)
+        Block {body} => into_instructions_index(body, layout, current_cell),
+        TempAllocate {temp, body, should_zero} => {
+            let instrs = into_instructions_index(body, layout, current_cell);
+            layout.remove(&temp);
+            if should_zero {
+                instrs.into_iter().chain(zero(current_cell, layout, temp)).collect()
+            }
+            else {
+                instrs
+            }
         },
         Increment {target, amount} => {
             move_to(current_cell, layout.position(&target)).into_iter()
@@ -123,14 +131,7 @@ fn into_instructions_index(
             move_to(current_cell, layout.position(&target.position())).into_iter()
                 .chain(consecutive(vec![Instruction::Write], current_cell, target.size())).collect()
         },
-        Zero {target} => {
-            move_to(current_cell, layout.position(&target.position())).into_iter()
-                .chain(consecutive(vec![
-                    Instruction::JumpForwardIfZero,
-                    Instruction::Decrement,
-                    Instruction::JumpBackwardUnlessZero,
-                ], current_cell, target.size())).collect()
-        },
+        Zero {target} => zero(current_cell, layout, target),
         Loop {cond, body} => {
             move_to(current_cell, layout.position(&cond)).into_iter()
                 .chain(once(Instruction::JumpForwardIfZero))
@@ -203,6 +204,15 @@ fn into_instructions_index(
             }).collect()
         },
     }).collect()
+}
+
+fn zero(current_cell: &mut CellIndex, layout: &mut MemoryLayout, target: MemoryBlock) -> Instructions {
+    move_to(current_cell, layout.position(&target.position())).into_iter()
+        .chain(consecutive(vec![
+            Instruction::JumpForwardIfZero,
+            Instruction::Decrement,
+            Instruction::JumpBackwardUnlessZero,
+        ], current_cell, target.size())).collect()
 }
 
 fn move_to(current_cell: &mut CellIndex, target: CellIndex) -> Vec<Instruction> {

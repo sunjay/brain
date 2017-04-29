@@ -109,6 +109,7 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
                         target: mem,
                     },
                 ],
+                should_zero: true,
             });
 
             Ok(ops)

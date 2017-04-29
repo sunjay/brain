@@ -24,6 +24,10 @@ pub enum Operation {
         /// temp should only be used in these operations.
         /// It will be freed afterwards.
         body: Operations,
+        // If this is true, temp will be zeroed explicitly using the Zero operation
+        // If this is false, we assume that you zeroed temp already before this ran and do nothing
+        // other than removing it from the memory layout so the memory can be reused
+        should_zero: bool,
     },
 
     /// Increment the value of the given cell by a certain amount (relative to whatever the

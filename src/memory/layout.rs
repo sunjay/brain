@@ -44,6 +44,21 @@ impl MemoryLayout {
         self.size
     }
 
+    /// Removes a memory block from the memory layout
+    ///
+    /// NOTE: This **DOES NOT** guarantee that the associated cells have been zeroed. That is up
+    /// to you.
+    pub fn remove(&mut self, mem: &MemoryBlock) {
+        let cells = self.table.remove(&mem.id()).expect("Removed memory block that was already removed or never present");
+        // We currently just free up that space for reuse if its at the end of the buffer
+        // Ideally this memory layout would be implemented as some sort of efficient memory pool
+        // where we could find the nearest space and put the cells there
+        // Then this remove operation would just remove that item in the memory pool
+        if cells.position() + cells.size() == self.size {
+            self.size -= cells.size();
+        }
+    }
+
     /// Gets the brainfuck cells associated to the given memory block
     pub fn get(&mut self, mem: &MemoryBlock) -> &Cells {
         self.maybe_layout(mem);

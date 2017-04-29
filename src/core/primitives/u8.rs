@@ -172,6 +172,7 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
                                     amount: ch,
                                 },
                             ]).collect(),
+                            should_zero: false,
                         },
                     ])
                 },
