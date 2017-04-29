@@ -1,8 +1,8 @@
 // cat program
 let mut ch: [u8; 1];
 
-// stdin.read returns false when EOF is reached
 while true {
+  // stdin.read_exact() panics if EOF is reached
   stdin.read_exact(ch);
   stdout.print(ch);
 }

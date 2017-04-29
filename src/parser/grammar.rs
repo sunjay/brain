@@ -31,7 +31,7 @@ impl_rdp! {
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { func_call | field_access | string_literal | identifier | conditional | number }
+            { func_call | field_access | string_literal | bool_literal | identifier | conditional | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = { op_bool_or }
@@ -70,6 +70,8 @@ impl_rdp! {
         string_literal = @{ ["b\""] ~ literal_char* ~ ["\""] }
         literal_char = { escape_sequence | (!["\""] ~ any) }
         escape_sequence = _{ ["\\\\"] | ["\\\""] | ["\\\'"] | ["\\n"] | ["\\r"] | ["\\t"] | ["\\0"] }
+
+        bool_literal = @{ ["true"] | ["false"] }
 
         identifier = @{ !keyword ~ (alpha | ["_"]) ~ (alphanumeric | ["_"])* }
         alpha = _{ ['a'..'z'] | ['A'..'Z'] }
@@ -207,6 +209,9 @@ impl_rdp! {
                     }))),
                     args: vec![lhs, rhs],
                 }
+            },
+            (&ident: bool_literal) => {
+                Expression::Identifier(ident.into())
             },
             (&ident: identifier) => {
                 Expression::Identifier(ident.into())
@@ -410,6 +415,7 @@ impl fmt::Display for Rule {
             keyword => "keyword",
             number => "number",
             string_literal => "string literal",
+            bool_literal => "boolean literal",
             literal_char => "character",
             any => "any character",
 
@@ -418,6 +424,7 @@ impl fmt::Display for Rule {
 
             bool_or => "`or`",
             bool_and => "`and`",
+            conditional => "`if`",
             op_else_if => "`else if`",
             op_else => "`else`",
 
@@ -444,7 +451,7 @@ impl fmt::Display for Rule {
             // We don't want to use the "_" wildcard because we want Rust
             // to tell us when a new rule has to be added here
             statement | assignment | declaration | pattern | array_type | while_loop | comparison |
-            conditional | func_call | field_access | expr | soi => unreachable!("{:?}", *self),
+            func_call | field_access | expr | soi => unreachable!("{:?}", *self),
         })
     }
 }
