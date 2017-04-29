@@ -13,6 +13,7 @@ use clap::{Arg, App};
 use brain::parser::{Program, ParseError};
 use brain::operations::scope::ScopeStack;
 use brain::codegen::Instructions;
+use brain::optimizations::{OptimizationLevel, Optimize};
 use brain::prelude;
 
 macro_rules! exit_with_error(
@@ -100,5 +101,5 @@ fn compile(source: String) -> String {
 
     let instructions: Instructions = operations.into();
 
-    instructions.into()
+    instructions.optimize(OptimizationLevel::On).into()
 }

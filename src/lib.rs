@@ -9,3 +9,4 @@ pub mod memory;
 pub mod core;
 pub mod prelude;
 pub mod codegen;
+pub mod optimizations;

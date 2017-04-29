@@ -1,11 +1,29 @@
 use std::fmt;
 use std::iter::{once, repeat, FromIterator};
+use std::ops::Index;
 
 use memory::{MemoryLayout, CellIndex, MemSize};
 use operations::{Operation, Operations};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Instructions(Vec<Instruction>);
+
+impl Instructions {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn remove(&mut self, index: usize) -> Instruction {
+        self.0.remove(index)
+    }
+}
+
+impl Index<usize> for Instructions {
+    type Output = Instruction;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 impl IntoIterator for Instructions {
     type Item = Instruction;
