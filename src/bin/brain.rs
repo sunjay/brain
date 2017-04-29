@@ -12,7 +12,6 @@ use clap::{Arg, App};
 
 use brain::parser::{Program, ParseError};
 use brain::operations::scope::ScopeStack;
-use brain::memory::MemoryLayout;
 use brain::codegen::Instructions;
 use brain::prelude;
 
@@ -99,10 +98,7 @@ fn compile(source: String) -> String {
     });
     println!("{:#?}", operations);
 
-    let memory_layout = MemoryLayout::from(&operations);
-    println!("{:#?}", memory_layout);
-
-    let instructions: Instructions = (operations, memory_layout).into();
+    let instructions: Instructions = operations.into();
 
     instructions.into()
 }

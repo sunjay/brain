@@ -70,17 +70,18 @@ impl fmt::Display for Instruction {
     }
 }
 
-impl From<(Operations, MemoryLayout)> for Instructions {
-    fn from((ops, layout): (Operations, MemoryLayout)) -> Instructions {
+impl From<Operations> for Instructions {
+    fn from(ops: Operations) -> Instructions {
         let mut current_cell = 0;
+        let mut layout = MemoryLayout::new();
 
-        into_instructions_index(ops, &layout, &mut current_cell)
+        into_instructions_index(ops, &mut layout, &mut current_cell)
     }
 }
 
 fn into_instructions_index(
     ops: Operations,
-    layout: &MemoryLayout,
+    layout: &mut MemoryLayout,
     current_cell: &mut CellIndex,
 ) -> Instructions {
     use self::Operation::*;
@@ -121,10 +122,67 @@ fn into_instructions_index(
                 .collect()
         },
         Copy {source, target, size} => {
-            unimplemented!();
+            debug_assert!(source.associated_memory().size() - source.offset() == size);
+            debug_assert!(target.associated_memory().size() - target.offset() == size);
+
+            // Algorithm for copying cells:
+            // 1. In a loop, decrement the source cell and increment both the target cell and a
+            //    temporary cell until the source cell is zero
+            // 2. In a loop, decrement the temporary cell and increment the source cell until the
+            //    temporary cell is zero
+            // 3. Repeat these steps for each cell to be copied
+
+            let source = layout.position(&source);
+            let target = layout.position(&target);
+            let temp = layout.temporary(1);
+            (0..size).flat_map(|i| {
+                move_to(current_cell, source + i).into_iter()
+                    // Fill the target and the temporary with the value of the source cell
+                    .chain(once(Instruction::JumpForwardIfZero))
+
+                    .chain(move_to(current_cell, target + i))
+                    .chain(once(Instruction::Increment))
+
+                    .chain(move_to(current_cell, temp.position()))
+                    .chain(once(Instruction::Increment))
+
+                    .chain(move_to(current_cell, source + i))
+                    .chain(once(Instruction::Decrement))
+
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+
+                    // Refill the source cell with the temporary
+                    .chain(move_to(current_cell, temp.position()))
+                    .chain(once(Instruction::JumpForwardIfZero))
+
+                    .chain(move_to(current_cell, source + i))
+                    .chain(once(Instruction::Increment))
+
+                    .chain(move_to(current_cell, temp.position()))
+                    .chain(once(Instruction::Decrement))
+
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+            }).collect()
         },
         Relocate {source, target} => {
-            unimplemented!();
+            debug_assert!(source.size() == target.size());
+            let size = source.size();
+
+            let source = layout.position(&source.position());
+            let target = layout.position(&target.position());
+
+            (0..size).flat_map(|i| {
+                move_to(current_cell, source + i).into_iter()
+                    .chain(once(Instruction::JumpForwardIfZero))
+
+                    .chain(move_to(current_cell, target + i))
+                    .chain(once(Instruction::Increment))
+
+                    .chain(move_to(current_cell, source + i))
+                    .chain(once(Instruction::Decrement))
+
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+            }).collect()
         },
     }).collect()
 }
