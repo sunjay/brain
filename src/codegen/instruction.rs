@@ -32,6 +32,11 @@ impl Instructions {
     pub fn truncate(&mut self, len: usize) {
         self.0.truncate(len)
     }
+
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
+
 }
 
 impl Index<usize> for Instructions {

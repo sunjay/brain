@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use codegen::Instructions;
 use codegen::Instruction::*;
 
@@ -12,7 +14,7 @@ impl Optimize for Instructions {
         // do not conflict or contradict each other
         let optimizers: Vec<fn(&mut Instructions)> = match level {
             OptimizationLevel::On => vec![
-                trim_no_side_effects,
+                truncate_no_side_effects,
                 remove_opposites,
             ],
             OptimizationLevel::Off => vec![],
@@ -35,38 +37,41 @@ impl Optimize for Instructions {
 /// Often, the reason these instructions are there in the first place is because the compiler
 /// ensures that certain memory cells are "freed" or "zeroed" after their use. There is no reason
 /// to do this at the end of a program, so let's get rid of it entirely.
-fn trim_no_side_effects(instructions: &mut Instructions) {
-    'outer: while let Some(&instr) = instructions.last() {
-        match instr {
-            Left | Right | Increment | Decrement => {
-                instructions.pop();
-            },
-            // Stop only if this loop can have side effects
-            JumpBackwardUnlessZero => {
-                let mut forward = 0;
-                for (i, &instr) in instructions.iter().enumerate().rev().skip(1) {
-                    match instr {
-                        // This loop has side effects
-                        Read | Write => break 'outer,
-                        // This loop has no side effects
-                        JumpForwardIfZero => {
-                            forward = i;
-                            break;
-                        },
-                        //TODO: We only support one level of search for this right now
-                        JumpBackwardUnlessZero => break 'outer,
-                        // Not sure yet otherwise
-                        Left | Right | Increment | Decrement => {},
-                    }
-                }
+fn truncate_no_side_effects(instructions: &mut Instructions) {
+    // In this algorithm, we're going to search for the last instruction that has a side effect,
+    // and remove (truncate) everything past it
+    let mut last_side_effect = None;
+    // If we find a side effect inside a loop, we want to leave the loop intact
+    let mut jump_stack = VecDeque::new();
 
-                instructions.truncate(forward);
+    for (i, &instr) in instructions.iter().enumerate().rev() {
+        match instr {
+            // no side effects
+            Left | Right | Increment | Decrement => {},
+            // side effects
+            Read | Write => {
+                last_side_effect = Some(i);
+                break;
             },
-            // Should only be reached by finding a JumpBackwardUnlessZero instruction first
-            JumpForwardIfZero => unreachable!(),
-            // Stop at the last side effect in the program
-            Read | Write => break,
+            JumpBackwardUnlessZero => jump_stack.push_back(i),
+            JumpForwardIfZero => {jump_stack.pop_back().unwrap();},
         }
+    }
+
+    if let Some(last_side_effect) = last_side_effect {
+        if jump_stack.is_empty() {
+            instructions.truncate(last_side_effect + 1);
+        }
+        else {
+            instructions.truncate(jump_stack.front().unwrap() + 1);
+        }
+    }
+    else {
+        // no side effects, so the instructions may as well not be there at all
+        //TODO: Determine if we should actually be doing this?
+        //TODO: Maybe it would be better to just leave them as is if there are no side effects
+        //TODO: Even if that means that nothing can possibly be read or written at runtime
+        instructions.clear();
     }
 }
 
