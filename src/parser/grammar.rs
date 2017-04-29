@@ -444,7 +444,7 @@ impl fmt::Display for Rule {
             // We don't want to use the "_" wildcard because we want Rust
             // to tell us when a new rule has to be added here
             statement | assignment | declaration | pattern | array_type | while_loop | comparison |
-            conditional | func_call | field_access | expr | soi => unreachable!(*self),
+            conditional | func_call | field_access | expr | soi => unreachable!("{:?}", *self),
         })
     }
 }
