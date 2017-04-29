@@ -13,11 +13,14 @@ impl Optimize for Instructions {
         // Optimizers should be ordered appropriately so that they
         // do not conflict or contradict each other
         let optimizers: Vec<fn(&mut Instructions)> = match level {
-            OptimizationLevel::On => vec![
+            OptimizationLevel::Off => vec![],
+            OptimizationLevel::L1 => vec![
+                remove_opposites,
+            ],
+            OptimizationLevel::L2 => vec![
                 truncate_no_side_effects,
                 remove_opposites,
             ],
-            OptimizationLevel::Off => vec![],
         };
 
         for optimize in optimizers {

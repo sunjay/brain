@@ -1,8 +1,9 @@
 #[derive(Debug, Clone, Copy)]
 pub enum OptimizationLevel {
-    // May be room for more optimization levels later
+    // The higher the optimization level, the more aggressive the optimizations
     Off,
-    On,
+    L1,
+    L2,
 }
 
 pub trait Optimize {

@@ -101,5 +101,5 @@ fn compile(source: String) -> String {
 
     let instructions: Instructions = operations.into();
 
-    instructions.optimize(OptimizationLevel::On).into()
+    instructions.optimize(OptimizationLevel::L1).into()
 }
