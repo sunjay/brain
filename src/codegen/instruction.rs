@@ -13,8 +13,24 @@ impl Instructions {
         self.0.len()
     }
 
+    pub fn last(&self) -> Option<&Instruction> {
+        self.0.last()
+    }
+
+    pub fn iter(&self) -> ::std::slice::Iter<Instruction> {
+        self.0.iter()
+    }
+
     pub fn remove(&mut self, index: usize) -> Instruction {
         self.0.remove(index)
+    }
+
+    pub fn pop(&mut self) -> Option<Instruction> {
+        self.0.pop()
+    }
+
+    pub fn truncate(&mut self, len: usize) {
+        self.0.truncate(len)
     }
 }
 
