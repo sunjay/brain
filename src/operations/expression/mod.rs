@@ -2,6 +2,7 @@ mod number;
 mod identifier;
 mod call;
 mod byte_literal;
+mod branch;
 
 pub use self::call::call;
 
@@ -16,6 +17,7 @@ use self::identifier::{store_identifier, store_identifier_array};
 use self::number::store_number;
 use self::byte_literal::store_byte_literal;
 use self::call::call_with_exprs;
+use self::branch::branch;
 
 /// Generates operations for evaluating the given expression
 /// and storing its result in the given target memory block
@@ -38,6 +40,9 @@ pub fn into_operations(
                 size: Some(bytes.len()),
             },
         }),
+        Expression::Branch {condition, body, otherwise} => {
+            branch(scope, *condition, body, otherwise, target_type, target)
+        },
         _ => unimplemented!(),
     }
 }

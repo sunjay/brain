@@ -1,0 +1,24 @@
+if false {
+    stdout.writeln(b"a");
+}
+else if false {
+    stdout.writeln(b"b");
+}
+else if true {
+    stdout.writeln(b"c");
+    if true {
+        stdout.writeln(b"ca");
+    }
+    else if false {
+        stdout.writeln(b"cb");
+    }
+    else if true {
+        stdout.writeln(b"cc");
+    }
+    else {
+        stdout.writeln(b"cd");
+    }
+}
+else {
+    stdout.writeln(b"d");
+}
