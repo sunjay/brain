@@ -1,7 +1,7 @@
 use parser::Identifier;
 use memory::{MemoryBlock};
 
-use operations::{Operation, expression};
+use operations::{Operation, expression, Target};
 use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{ScopeStack, TypeId};
 
@@ -69,8 +69,10 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
                 scope,
                 Identifier::from("std::fmt::Display::print"),
                 vec![arg],
-                unit_type,
-                MemoryBlock::default()
+                Target::TypedBlock {
+                    type_id: unit_type,
+                    memory: MemoryBlock::default(),
+                }
             )).collect::<Result<Vec<_>, _>>().map(|op_vecs| {
                 op_vecs.into_iter().flat_map(|ops| ops).collect()
             })
@@ -91,8 +93,10 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
                 scope,
                 print_method_name.clone(),
                 args,
-                unit_type,
-                MemoryBlock::default()
+                Target::TypedBlock {
+                    type_id: unit_type,
+                    memory: MemoryBlock::default(),
+                }
             )?;
 
             // Write a newline using a temporary cell

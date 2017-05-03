@@ -13,6 +13,7 @@ mod operation;
 mod primitives;
 mod error;
 
+pub use self::expression::Target;
 pub use self::operation::*;
 pub use self::error::*;
 

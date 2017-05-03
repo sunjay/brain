@@ -5,22 +5,34 @@ use operations::{Error, OperationsResult};
 use operations::item_type::{ItemType};
 use operations::scope::{TypeId, ScopeStack, ScopeItem};
 
-use super::call;
+use super::{Target, call};
 
 pub fn store_number(
     scope: &mut ScopeStack,
     value: Number,
-    target_type: TypeId,
-    target: MemoryBlock,
+    target: Target,
 ) -> OperationsResult {
-    store_numeric_literal(scope, value, target_type, target, "{signed integer}").or_else(|err| {
-        if value >= 0 {
-            store_numeric_literal(scope, value, target_type, target, "{unsigned integer}")
-        }
-        else {
-            Err(err)
-        }
-    })
+    match target {
+        Target::TypedBlock {type_id, memory} => {
+            store_numeric_literal(scope, value, type_id, memory, "{signed integer}").or_else(|err| {
+                if value >= 0 {
+                    store_numeric_literal(scope, value, type_id, memory, "{unsigned integer}")
+                }
+                else {
+                    Err(err)
+                }
+            })
+        },
+
+        Target::Array {item, size, ..} => Err(Error::MismatchedTypes {
+            expected: ItemType::Array {
+                item: Some(item),
+                size: Some(size),
+            },
+            //TODO: Update this when more numeric types are added
+            found: scope.get_type(scope.primitives().u8()).clone(),
+        }),
+    }
 }
 
 /// Attempts to store a specific type of numeric literal
@@ -28,7 +40,7 @@ fn store_numeric_literal(
     scope: &mut ScopeStack,
     value: Number,
     target_type: TypeId,
-    target: MemoryBlock,
+    target_memory: MemoryBlock,
     literal_type: &'static str,
 ) -> OperationsResult {
     let converter_name = Identifier::from(format!("std::convert::From<{}>", literal_type).as_str());
@@ -37,8 +49,7 @@ fn store_numeric_literal(
         scope,
         converter_name.clone(),
         vec![ScopeItem::NumericLiteral(value)],
-        target_type,
-        target
+        Target::TypedBlock {type_id: target_type, memory: target_memory},
     ).map_err(|err| match err {
         // No literal converter defined, so the literal must not match the type
         Error::UnresolvedName(ref name) if *name == converter_name => {

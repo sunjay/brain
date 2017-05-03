@@ -8,6 +8,7 @@ use super::{
     assignment,
     while_loop,
     expression,
+    Target,
 };
 use super::scope::ScopeStack;
 
@@ -25,7 +26,10 @@ pub fn into_operations(scope: &mut ScopeStack, node: Statement) -> OperationsRes
         },
         Expression {expr} => {
             let unit_type = scope.primitives().unit();
-            expression::into_operations(scope, expr, unit_type, MemoryBlock::default())
+            expression::into_operations(scope, expr, Target::TypedBlock {
+                type_id: unit_type,
+                memory: MemoryBlock::default(),
+            })
         },
     }
 }

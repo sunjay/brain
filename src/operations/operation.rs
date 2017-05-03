@@ -97,7 +97,7 @@ pub enum Operation {
 }
 
 impl Operation {
-    pub fn increment_to_value(mem: MemoryBlock, value: &Vec<u8>) -> Operations {
+    pub fn increment_to_value(mem: MemoryBlock, value: &[u8]) -> Operations {
         debug_assert!(mem.size() == value.len());
 
         value.iter().enumerate().map(|(i, &byte)| {

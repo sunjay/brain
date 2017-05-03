@@ -78,6 +78,7 @@ pub enum ItemType {
     /// Definition of a function's type
     Function {
         args: Vec<FuncArgType>,
+        //TODO: Support array return types
         return_type: TypeId,
     },
 }

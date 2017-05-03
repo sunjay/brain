@@ -3,7 +3,7 @@ use std::iter::once;
 use parser::{Identifier, Expression};
 
 use super::{Error};
-use super::{Operation, OperationsResult, expression};
+use super::{Operation, OperationsResult, expression, Target};
 use super::scope::{ScopeStack, ScopeItem};
 
 pub fn into_operations(
@@ -21,12 +21,12 @@ pub fn into_operations(
 
         ScopeItem::TypedBlock {type_id, memory} => {
             Ok(once(Operation::Zero {target: memory}).chain(
-                expression::into_operations(scope, expr, type_id, memory)?.into_iter()
+                expression::into_operations(scope, expr, Target::TypedBlock {type_id, memory})?.into_iter()
             ).collect())
         },
         ScopeItem::Array {item, size, memory} => {
             Ok(once(Operation::Zero {target: memory}).chain(
-                expression::into_operations_array(scope, expr, item, size, memory)?.into_iter()
+                expression::into_operations(scope, expr, Target::Array {item, size, memory})?.into_iter()
             ).collect())
         },
         ScopeItem::Constant {..} | ScopeItem::NumericLiteral(..) | ScopeItem::ByteLiteral(..) | ScopeItem::BuiltInFunction {..} => {

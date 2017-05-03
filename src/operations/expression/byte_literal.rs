@@ -1,30 +1,41 @@
-use memory::MemoryBlock;
-
 use operations::{Error, Operation, OperationsResult};
-use operations::scope::{TypeId, ScopeStack, ArraySize};
+use operations::scope::ScopeStack;
 use operations::item_type::{ItemType};
+
+use super::Target;
 
 pub fn store_byte_literal(
     scope: &mut ScopeStack,
-    bytes: Vec<u8>,
-    item_type: TypeId,
-    size: ArraySize,
-    target: MemoryBlock,
+    bytes: &[u8],
+    target: Target,
 ) -> OperationsResult {
-    let u8_type = scope.primitives().u8();
-
-    if item_type != u8_type || bytes.len() != size {
-        return Err(Error::MismatchedTypes {
-            expected: ItemType::Array {
-                item: Some(u8_type),
+    match target {
+        Target::TypedBlock {type_id, ..} => Err(Error::MismatchedTypes {
+            expected: scope.get_type(type_id).clone(),
+            found: ItemType::Array {
+                item: Some(scope.primitives().u8()),
                 size: Some(bytes.len()),
             },
-            found: ItemType::Array {
-                item: Some(item_type),
-                size: Some(size),
-            },
-        });
+        }),
+
+        Target::Array {item, size, memory} => {
+            let u8_type = scope.primitives().u8();
+
+            if item != u8_type || bytes.len() != size {
+                return Err(Error::MismatchedTypes {
+                    expected: ItemType::Array {
+                        item: Some(item),
+                        size: Some(size),
+                    },
+                    found: ItemType::Array {
+                        item: Some(u8_type),
+                        size: Some(bytes.len()),
+                    },
+                });
+            }
+
+            Ok(Operation::increment_to_value(memory, bytes))
+        },
     }
 
-    Ok(Operation::increment_to_value(target, &bytes))
 }

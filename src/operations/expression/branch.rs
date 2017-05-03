@@ -1,17 +1,16 @@
 use parser::{Expression, Block};
-use memory::MemoryBlock;
 
 use operations::{Error, Operation, OperationsResult, expression, block};
 use operations::scope::{TypeId, ScopeStack, ArraySize};
-use operations::item_type::{ItemType};
+
+use super::Target;
 
 pub fn branch(
     scope: &mut ScopeStack,
     condition: Expression,
     body: Block,
     otherwise: Option<Block>,
-    target_type: TypeId,
-    target: MemoryBlock,
+    target: Target,
 ) -> OperationsResult {
     // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#if_.28x.29_.7B_code1_.7D_else_.7B_code2_.7D
     //
@@ -41,6 +40,9 @@ pub fn branch(
     // Probably shouldn't be using associated_memory() here. It's only safe because cond_mem is at
     // the beginning of the MemoryBlock. This relies on internal implementation details of
     // into_operations--which is an extremely brittle way of doing this.
-    let cond_ops = expression::into_operations(scope, condition, bool_type, cond_mem.associated_memory())?;
+    let cond_ops = expression::into_operations(scope, condition, Target::TypedBlock {
+        type_id: bool_type,
+        memory: cond_mem.associated_memory()
+    })?;
     let if_block = unimplemented!();
 }

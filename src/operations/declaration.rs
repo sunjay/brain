@@ -1,6 +1,6 @@
 use parser::{Identifier, Pattern, TypeDefinition, Expression};
 
-use super::{OperationsResult, expression};
+use super::{OperationsResult, expression, Target};
 use super::item_type::{ItemType};
 use super::scope::{TypeId, ScopeStack, ScopeItem, ScopeType, ArraySize};
 use super::Error;
@@ -31,9 +31,11 @@ fn declare_name(
     expr: Option<Expression>,
 ) -> OperationsResult {
     resolve_type_id(scope, &type_name).and_then(|type_id| {
-        let mem = scope.declare(name, type_id);
+        let memory = scope.declare(name, type_id);
 
-        expr.map_or(Ok(Vec::new()), |expr| expression::into_operations(scope, expr, type_id, mem))
+        expr.map_or(Ok(Vec::new()), |expr| {
+            expression::into_operations(scope, expr, Target::TypedBlock {type_id, memory})
+        })
     })
 }
 
@@ -45,11 +47,13 @@ fn declare_array(
     expr: Option<Expression>,
 ) -> OperationsResult {
     match item_type_def {
-        TypeDefinition::Name {name: ref item_name} => resolve_type_id(scope, item_name).and_then(|item_type| {
-            let size = infer_size(scope, item_type, size_expr, &expr, &name)?;
-            let mem = scope.declare_array(name, item_type, size);
+        TypeDefinition::Name {name: ref item_name} => resolve_type_id(scope, item_name).and_then(|item| {
+            let size = infer_size(scope, item, size_expr, &expr, &name)?;
+            let memory = scope.declare_array(name, item, size);
 
-            expr.map_or(Ok(Vec::new()), |expr| expression::into_operations_array(scope, expr, item_type, size, mem))
+            expr.map_or(Ok(Vec::new()), |expr| {
+                expression::into_operations(scope, expr, Target::Array {item, size, memory})
+            })
         }),
         //TODO: Deal with infinitely sized (self-referential) types
         TypeDefinition::Array { .. } => {

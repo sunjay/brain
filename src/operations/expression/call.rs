@@ -1,17 +1,17 @@
 use parser::{Expression, CallArgs, Identifier};
-use memory::MemoryBlock;
 
 use operations::{Error, OperationsResult};
 use operations::item_type::{ItemType, FuncArgType};
-use operations::scope::{TypeId, ScopeStack, ScopeItem, FuncArgs};
+use operations::scope::{ScopeStack, ScopeItem, FuncArgs};
+
+use super::Target;
 
 /// Evaluates the arguments first, then supplies them to the given method
 pub fn call_with_exprs(
     scope: &mut ScopeStack,
     method: Expression,
     arg_exprs: CallArgs,
-    target_type: TypeId,
-    target: MemoryBlock,
+    target: Target,
 ) -> OperationsResult {
     let (mut args, ops): (Vec<_>, Vec<_>) = arg_exprs.into_iter().map(|expr| match expr {
         Expression::ByteLiteral(bytes) => Ok((ScopeItem::ByteLiteral(bytes), Vec::new())),
@@ -42,7 +42,7 @@ pub fn call_with_exprs(
     }
 
     Ok(ops.into_iter().flat_map(|o| o.into_iter()).chain(
-        call(scope, method_name, args, target_type, target)?
+        call(scope, method_name, args, target)?
     ).collect())
 }
 
@@ -51,8 +51,7 @@ pub fn call(
     scope: &mut ScopeStack,
     method_name: Identifier,
     args: FuncArgs,
-    target_type: TypeId,
-    target: MemoryBlock,
+    target: Target,
 ) -> OperationsResult {
     // The first stage of calling a function is finding an implementation that matches the correct
     // function signature.
@@ -63,6 +62,12 @@ pub fn call(
         ScopeItem::Array {item, ..} => FuncArgType::Array {item: item, size: None},
         ref arg => FuncArgType::Arg(arg.type_id()),
     }).collect();
+
+    let (target_type, target_memory) = match target {
+        Target::TypedBlock {type_id, memory} => (type_id, memory),
+        //TODO: This requires some significant refactoring, so it has been left out for now
+        Target::Array {..} => unreachable!("Returning arrays from functions is not supported yet"),
+    };
 
     // TODO: Since we don't have proper generics, we just search through and try every function
     // with the given name to see if its arguments match. This is more similar to what C++ does
@@ -107,7 +112,7 @@ pub fn call(
             },
             _ => err,
         }),
-    })).and_then(|operations| (*operations)(scope, args, target))
+    })).and_then(|operations| (*operations)(scope, args, target_memory))
 }
 
 /// Returns the full path of the target type with the field appended to it
