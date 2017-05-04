@@ -14,6 +14,7 @@ pub fn call_with_exprs(
     target: Target,
 ) -> OperationsResult {
     let (mut args, ops): (Vec<_>, Vec<_>) = arg_exprs.into_iter().map(|expr| match expr {
+        Expression::UnitLiteral => unimplemented!(),
         Expression::ByteLiteral(bytes) => Ok((ScopeItem::ByteLiteral(bytes), Vec::new())),
         Expression::Number(bytes) => Ok((ScopeItem::NumericLiteral(bytes), Vec::new())),
         Expression::Identifier(name) => scope.lookup(&name).first().ok_or_else(|| {
@@ -160,7 +161,15 @@ fn resolve_field_name(scope: &ScopeStack, target: Expression, field: Identifier)
         // Implementing this will be a bit more complicated since we need to do the call and return
         // the ops necessary for that
         Expression::Call {..} => unimplemented!(),
-        Expression::Branch {..} => unreachable!(),
+
+        //TODO: Branch expressions are valid targets for field access
+        // In this case, we need to return the type name of the branches
+        // Implementing this will be a bit more complicated since we need to do the branching and
+        // return the ops necessary for that
+        Expression::Branch {..} => unimplemented!(),
+
+        //TODO: This is not supported, probably want a good error here though
+        Expression::UnitLiteral => unreachable!(),
     }?;
 
     Ok((target_instance, target_type_path.concat(field)))

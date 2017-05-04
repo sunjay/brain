@@ -1,10 +1,15 @@
 use parser::Module;
+use memory::MemoryBlock;
 
-use super::{OperationsResult, block};
+use super::{OperationsResult, block, Target};
 use super::scope::ScopeStack;
 
 pub fn into_operations(scope: &mut ScopeStack, module: Module) -> OperationsResult {
-    block::into_operations(scope, module.body)
+    let unit_type = scope.primitives().unit();
+    block::into_operations(scope, module.body, Target::TypedBlock {
+        type_id: unit_type,
+        memory: MemoryBlock::default(),
+    })
 }
 
 #[cfg(test)]

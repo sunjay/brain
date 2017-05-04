@@ -1,4 +1,5 @@
 use parser::{Expression, Block};
+use memory::MemoryBlock;
 
 use super::{Operation, OperationsResult, expression, Target, block};
 use super::scope::ScopeStack;
@@ -8,6 +9,7 @@ pub fn into_operations(
     condition: Expression,
     body: Block,
 ) -> OperationsResult {
+    let unit_type = scope.primitives().unit();
     let bool_type = scope.primitives().bool();
     let cond_mem = scope.allocate(bool_type);
 
@@ -15,7 +17,10 @@ pub fn into_operations(
         type_id: bool_type,
         memory: cond_mem,
     })?;
-    let loop_body = block::into_operations(scope, body)?;
+    let loop_body = block::into_operations(scope, body, Target::TypedBlock {
+        type_id: unit_type,
+        memory: MemoryBlock::default(),
+    })?;
 
     // While loops need to evaluate the condition both before the loop and at the end
     // of the loop body

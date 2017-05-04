@@ -106,7 +106,7 @@ fn infer_size(
             }),
             // These are unimplemented until a more robust static analysis is implemented
             //TODO: These can all be inferred, it would just be way too messy to do it here
-            Expression::Call {..} | Expression::Access {..} | Expression::Branch {..} => unimplemented!(),
+            Expression::UnitLiteral | Expression::Call {..} | Expression::Access {..} | Expression::Branch {..} => unimplemented!(),
         },
         _ => Err(Error::UnsupportedArrayType {name: name.clone()}),
     }

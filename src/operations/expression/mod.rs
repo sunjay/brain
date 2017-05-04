@@ -41,6 +41,7 @@ pub fn into_operations(
     target: Target,
 ) -> OperationsResult {
     match expr {
+        Expression::UnitLiteral => Ok(Vec::new()),
         Expression::Identifier(name) => store_identifier(scope, name, target),
         Expression::Number(value) => store_number(scope, value, target),
         Expression::Call {method, args} => call_with_exprs(scope, *method, args, target),

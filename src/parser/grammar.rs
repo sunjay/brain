@@ -124,7 +124,10 @@ impl_rdp! {
                 tail
             },
             () => {
-                VecDeque::new()
+                let mut tail = VecDeque::new();
+                // We do this so the last statement in a block always represents its return type
+                tail.push_front(Statement::Expression {expr: Expression::UnitLiteral});
+                tail
             },
         }
 
@@ -325,18 +328,22 @@ impl_rdp! {
 
                 tail
             },
-            (_: expr, head: _expr(), mut tail: _block_deque()) => {
-                tail.push_front(Statement::Expression {expr: head});
-
-                tail
-            },
             (&text: comment, mut tail: _block_deque()) => {
                 tail.push_front(Statement::Comment(text.into()));
 
                 tail
             },
+            (_: expr, head: _expr(), _: block_end) => {
+                let mut tail = VecDeque::new();
+                tail.push_front(Statement::Expression {expr: head});
+
+                tail
+            },
             (_: block_end) => {
-                VecDeque::new()
+                let mut tail = VecDeque::new();
+                // We do this so the last statement in a block always represents its return type
+                tail.push_front(Statement::Expression {expr: Expression::UnitLiteral});
+                tail
             },
         }
 
