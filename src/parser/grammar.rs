@@ -583,16 +583,16 @@ mod tests {
     #[test]
     fn empty_program() {
         test_method(r#""#, |p| p.module(), |p| p.module_ast(),
-            Module::new());
+            Module::empty());
 
         test_method(r#"
         "#, |p| p.module(), |p| p.module_ast(),
-            Module::new());
+            Module::empty());
 
         test_method(r#"
 
         "#, |p| p.module(), |p| p.module_ast(),
-            Module::new());
+            Module::empty());
     }
 
     #[test]
@@ -607,7 +607,8 @@ mod tests {
                         method: Box::new(Expression::Identifier(Identifier::from("foo"))),
                         args: vec![],
                     },
-                }
+                },
+                Statement::Expression {expr: Expression::UnitLiteral},
             ])
         );
     }
@@ -897,6 +898,7 @@ mod tests {
                         ],
                     },
                 },
+                Statement::Expression {expr: Expression::UnitLiteral},
             ])
         );
     }
@@ -919,6 +921,7 @@ mod tests {
                                 args: vec![],
                             },
                         },
+                        Statement::Expression {expr: Expression::UnitLiteral},
                     ],
                     otherwise: None,
                 },
@@ -944,6 +947,7 @@ mod tests {
                                 args: vec![],
                             },
                         },
+                        Statement::Expression {expr: Expression::UnitLiteral},
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
@@ -952,6 +956,7 @@ mod tests {
                                 args: vec![],
                             }
                         },
+                        Statement::Expression {expr: Expression::UnitLiteral},
                     ]),
                 },
             }
@@ -982,6 +987,7 @@ mod tests {
                                 args: vec![],
                             },
                         },
+                        Statement::Expression {expr: Expression::UnitLiteral},
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
@@ -994,6 +1000,7 @@ mod tests {
                                             args: vec![],
                                         },
                                     },
+                                    Statement::Expression {expr: Expression::UnitLiteral},
                                 ],
                                 otherwise: Some(vec![
                                     Statement::Expression {
@@ -1006,6 +1013,7 @@ mod tests {
                                                         args: vec![],
                                                     },
                                                 },
+                                                Statement::Expression {expr: Expression::UnitLiteral},
                                             ],
                                             otherwise: Some(vec![
                                                 Statement::Expression {
@@ -1014,6 +1022,7 @@ mod tests {
                                                         args: vec![],
                                                     }
                                                 },
+                                                Statement::Expression {expr: Expression::UnitLiteral},
                                             ]),
                                         },
                                     },
@@ -1047,6 +1056,7 @@ mod tests {
                                 args: vec![],
                             },
                         },
+                        Statement::Expression {expr: Expression::UnitLiteral},
                     ],
                     otherwise: Some(vec![
                         Statement::Expression {
@@ -1059,6 +1069,7 @@ mod tests {
                                             args: vec![],
                                         },
                                     },
+                                    Statement::Expression {expr: Expression::UnitLiteral},
                                 ],
                                 otherwise: Some(vec![
                                     Statement::Expression {
@@ -1071,6 +1082,7 @@ mod tests {
                                                         args: vec![],
                                                     },
                                                 },
+                                                Statement::Expression {expr: Expression::UnitLiteral},
                                             ],
                                             otherwise: None,
                                         },

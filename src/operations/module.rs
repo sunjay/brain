@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn empty_module() {
         let mut scope = ScopeStack::new();
-        let module = Module::new();
+        let module = Module::empty();
 
         let ops = into_operations(&mut scope, module).unwrap();
         assert_eq!(ops.len(), 1);

@@ -14,9 +14,9 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn new() -> Program {
+    pub fn empty() -> Program {
         Program {
-            root_mod: Module::new(),
+            root_mod: Module::empty(),
         }
     }
 
@@ -54,9 +54,9 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new() -> Module {
+    pub fn empty() -> Module {
         Module {
-            body: Block::new(),
+            body: vec![Statement::Expression {expr: Expression::UnitLiteral}],
         }
     }
 }

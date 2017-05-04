@@ -35,33 +35,38 @@ pub fn into_operations(scope: &mut ScopeStack, mut block: Block, target: Target)
 #[cfg(test)]
 mod tests {
     use super::*;
-    use parser::Block;
+    use parser::{Statement, Expression};
+    use memory::MemoryBlock;
 
     #[test]
     fn empty_block() {
         let mut scope = ScopeStack::new();
-        let block = Block::new();
+        let unit_type = scope.primitives().unit();
+        let block = vec![Statement::Expression {expr: Expression::UnitLiteral}];
 
-        let ops = into_operations(&mut scope, block).unwrap();
+        let ops = into_operations(&mut scope, block, Target::TypedBlock {
+            type_id: unit_type,
+            memory: MemoryBlock::default(),
+        }).unwrap();
         assert_eq!(ops.len(), 1);
     }
 
     #[test]
     #[ignore]
     fn nested_scopes() {
-        let mut scope = ScopeStack::new();
-        let block: Block = vec![
-            //TODO: Test something like this
-            // {
-            //     {
-            //          let foo: u8 = 5;
-            //     }
-            //     // This should fail:
-            //     foo
-            // }
-        ];
-
-        let ops = into_operations(&mut scope, block).unwrap();
-        assert_eq!(ops.len(), 1);
+        //let mut scope = ScopeStack::new();
+        //let block: Block = vec![
+        //    //TODO: Test something like this
+        //    // {
+        //    //     {
+        //    //          let foo: u8 = 5;
+        //    //     }
+        //    //     // This should fail:
+        //    //     foo
+        //    // }
+        //];
+        //
+        //let ops = into_operations(&mut scope, block).unwrap();
+        //assert_eq!(ops.len(), 1);
     }
 }
