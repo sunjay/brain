@@ -7,7 +7,7 @@ pub type CellIndex = usize;
 
 // Represents a contiguous block of brainfuck memory cells starting at the given position.
 // This position directly maps to a cell in the brainfuck tape.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Cells {
     position: CellIndex,
     size: MemSize,
@@ -50,13 +50,8 @@ impl MemoryLayout {
     /// to you.
     pub fn remove(&mut self, mem: &MemoryBlock) {
         let cells = self.table.remove(&mem.id()).expect("Removed memory block that was already removed or never present");
-        // We currently just free up that space for reuse if its at the end of the buffer
-        // Ideally this memory layout would be implemented as some sort of efficient memory pool
-        // where we could find the nearest space and put the cells there
-        // Then this remove operation would just remove that item in the memory pool
-        if cells.position() + cells.size() == self.size {
-            self.size -= cells.size();
-        }
+
+        self.remove_cells(cells);
     }
 
     /// Gets the brainfuck cells associated to the given memory block
@@ -72,14 +67,14 @@ impl MemoryLayout {
         cells.position() + pos.offset()
     }
 
-    /// Allocates a temporary cell which is only valid to use up to the next call to get() or position()
-    pub fn temporary(&self, size: MemSize) -> Cells {
-        //TODO: Do we need a better way to implement this?
-        // This seems like it's just asking for trouble...
-        Cells {
-            position: self.size,
-            size: size,
-        }
+    /// Allocates a temporary cell which is only valid to use until the end of the given callback
+    pub fn temporary<F, T>(&mut self, size: MemSize, callback: F) -> T
+        where F: FnOnce(Cells) -> T {
+        let position = self.allocate(size);
+        let cells = Cells {position, size};
+        let res = callback(cells);
+        self.remove_cells(cells);
+        res
     }
 
     fn maybe_layout(&mut self, mem: &MemoryBlock) {
@@ -90,14 +85,27 @@ impl MemoryLayout {
             debug_assert!(self.table.get(&key).unwrap().size() == mem.size());
         }
         else {
-            let mem_size = mem.size();
-            self.table.insert(key, Cells {
-                position: self.size,
-                size: mem_size,
-            });
-
+            let size = mem.size();
             // This should ONLY be incremented the **first** time this is inserted
-            self.size += mem_size;
+            let position = self.allocate(size);
+            self.table.insert(key, Cells {position, size});
+        }
+    }
+
+    fn allocate(&mut self, size: MemSize) -> CellIndex {
+        let position = self.size;
+        self.size += size;
+        position
+    }
+
+    fn remove_cells(&mut self, cells: Cells) {
+        // We currently just free up that space for reuse if its at the end of the buffer
+        // This means that there can be "holes" leftover in the layout after the removal
+        // Ideally this memory layout would be implemented as some sort of efficient memory pool
+        // where we could find the nearest space and put the cells there
+        // Then this remove operation would just remove that item in the memory pool
+        if cells.position() + cells.size() == self.size {
+            self.size -= cells.size();
         }
     }
 }

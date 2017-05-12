@@ -153,6 +153,30 @@ fn into_instructions_index(
                 .chain(consecutive(vec![Instruction::Write], current_cell, target.size())).collect()
         },
         Zero {target} => zero(current_cell, layout, target),
+        Branch {cond, if_body, else_body} => {
+            // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#if_.28x.29_.7B_code1_.7D_else_.7B_code2_.7D
+            //
+            // temp0 and temp1 are consecutive in memory following cond
+            // temp0[-]+
+            // temp1[-]
+            // cond[
+            //  if_block
+            //  cond>-]>
+            // [<
+            //  else_block
+            //  cond>->]
+
+            // Three consecutive temporary cells:
+            // 1. the boolean result of the condition expression
+            // 2. temp0 - used to go into the else block when necessary
+            // 3. temp1 - used *not* to go into the else block when necessary
+            //
+            // The basic idea of the algorithm is that you can control which of two adjacent loops run
+            // by "sending" them either temp0 or temp1 based on the condition result
+            //let temp0 = scope.allocate(bool_type);
+            //let temp1 = scope.allocate(bool_type);
+            unimplemented!();
+        },
         Loop {cond, body} => {
             move_to(current_cell, layout.position(&cond)).into_iter()
                 .chain(once(Instruction::JumpForwardIfZero))
@@ -174,8 +198,7 @@ fn into_instructions_index(
 
             let source = layout.position(&source);
             let target = layout.position(&target);
-            let temp = layout.temporary(1);
-            (0..size).flat_map(|i| {
+            layout.temporary(1, |temp| (0..size).flat_map(|i| {
                 move_to(current_cell, source + i).into_iter()
                     // Fill the target and the temporary with the value of the source cell
                     .chain(once(Instruction::JumpForwardIfZero))
@@ -202,7 +225,7 @@ fn into_instructions_index(
                     .chain(once(Instruction::Decrement))
 
                     .chain(once(Instruction::JumpBackwardUnlessZero))
-            }).collect()
+            }).collect())
         },
         Relocate {source, target} => {
             debug_assert!(source.size() == target.size());

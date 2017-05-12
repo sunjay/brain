@@ -65,6 +65,16 @@ pub enum Operation {
         target: MemoryBlock,
     },
 
+    /// Executes either if_body or else_body depending on the value of cond_mem
+    Branch {
+        /// A memory block allocated using the bool primitive
+        cond: MemoryBlock,
+        /// Operations executed if cond_mem is non-zero (true)
+        if_body: Operations,
+        /// Operations executed if cond_mem is zero (false)
+        else_body: Operations,
+    },
+
     /// Loop with the given operations as the loop body
     /// cond is the cell position that represents the loop condition
     /// This will be moved to before the loop and at the end of the loop body
