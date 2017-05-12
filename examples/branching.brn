@@ -1,24 +1,24 @@
 if false {
-    stdout.writeln(b"a");
+    stdout.println(b"a");
 }
 else if false {
-    stdout.writeln(b"b");
+    stdout.println(b"b");
 }
 else if true {
-    stdout.writeln(b"c");
+    stdout.println(b"c");
     if true {
-        stdout.writeln(b"ca");
+        stdout.println(b"ca");
     }
     else if false {
-        stdout.writeln(b"cb");
+        stdout.println(b"cb");
     }
     else if true {
-        stdout.writeln(b"cc");
+        stdout.println(b"cc");
     }
     else {
-        stdout.writeln(b"cd");
+        stdout.println(b"cd");
     }
 }
 else {
-    stdout.writeln(b"d");
+    stdout.println(b"d");
 }
