@@ -38,17 +38,43 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
             args: vec![FuncArgType::Arg(bool_type)],
             return_type: unit_type,
         },
-        move |_, args, _| {
-            let mem = match args[0] {
-                ScopeItem::TypedBlock {memory, ..} => memory,
-                _ => unreachable!(),
-            };
+        move |scope, args, _| {
+            match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => Ok(vec![
+                    Operation::Write {
+                        target: memory,
+                    }
+                ]),
+                ScopeItem::Constant {type_id, ref bytes} => {
+                    let bool_type = scope.primitives().bool();
+                    debug_assert_eq!(type_id, bool_type);
 
-            Ok(vec![
-                Operation::Write {
-                    target: mem,
-                }
-            ])
+                    let u8_type = scope.primitives().u8();
+                    let mem = scope.allocate(u8_type);
+
+                    // This code assumes that this is 1
+                    debug_assert_eq!(bytes.len(), 1);
+                    let value = b'0' + bytes[0];
+                    Ok(vec![Operation::TempAllocate {
+                        temp: mem,
+                        body: vec![
+                            Operation::Increment {
+                                target: mem.position(),
+                                amount: value,
+                            },
+                            Operation::Write {
+                                target: mem,
+                            },
+                            Operation::Decrement {
+                                target: mem.position(),
+                                amount: value,
+                            },
+                        ],
+                        should_zero: false,
+                    }])
+                },
+                _ => unreachable!(),
+            }
         }
     );
 

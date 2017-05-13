@@ -88,14 +88,14 @@ pub fn define_stdout(scope: &mut ScopeStack) -> TypeId {
             ],
             return_type: unit_type,
         },
-        move |scope, args, _| {
+        move |scope, args, result| {
             let mut ops = expression::call(
                 scope,
                 print_method_name.clone(),
                 args,
                 Target::TypedBlock {
                     type_id: unit_type,
-                    memory: MemoryBlock::default(),
+                    memory: result,
                 }
             )?;
 
