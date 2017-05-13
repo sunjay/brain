@@ -199,6 +199,8 @@ fn into_instructions_index(
                     .chain(once(Instruction::Right))
 
                     .chain(once(Instruction::JumpBackwardUnlessZero))
+                    .chain(once(Instruction::Left))
+                    .chain(once(Instruction::Left))
 
                     .collect()
             })
@@ -250,12 +252,6 @@ fn into_instructions_index(
                     .chain(move_to(current_cell, temp.position()))
                     .chain(once(Instruction::Decrement))
 
-                    .chain(once(Instruction::JumpBackwardUnlessZero))
-
-                    // Need to zero the temporary cell so that it doesn't interfere with later code
-                    .chain(move_to(current_cell, temp.position()))
-                    .chain(once(Instruction::JumpForwardIfZero))
-                    .chain(once(Instruction::Decrement))
                     .chain(once(Instruction::JumpBackwardUnlessZero))
             }).collect())
         },
