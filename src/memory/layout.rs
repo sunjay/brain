@@ -18,6 +18,13 @@ impl Cells {
         self.position
     }
 
+    pub fn position_at(&self, index: CellIndex) -> CellIndex {
+        debug_assert!(index < self.size,
+            "Attempt to access a position outside of the bounds of the given Cells");
+
+        self.position + index
+    }
+
     pub fn size(&self) -> MemSize {
         self.size
     }
@@ -73,6 +80,26 @@ impl MemoryLayout {
         let position = self.allocate(size);
         let cells = Cells {position, size};
         let res = callback(cells);
+        self.remove_cells(cells);
+        res
+    }
+
+    /// Allocates temporary cells that are placed consecutively after the given memory block
+    pub fn consecutive<F, T>(&mut self, target: &MemoryBlock, size: MemSize, callback: F) -> T
+        where F: FnOnce(&mut MemoryLayout, CellIndex, Cells) -> T {
+        // allocate the target first, if it hasn't already been allocated
+        let (target_position, target_size) = {
+            let target_cells = self.get(target);
+            (target_cells.position(), target_cells.size())
+        };
+        // allocate the requested temporary cells
+        let position = self.allocate(size);
+        // assert that the cells are consecutive
+        //TODO: See if there is a better way to deal with the cells not being consecutive
+        assert_eq!(position - target_position, target_size);
+
+        let cells = Cells {position, size};
+        let res = callback(self, target_position, cells);
         self.remove_cells(cells);
         res
     }

@@ -165,17 +165,43 @@ fn into_instructions_index(
             // [<
             //  else_block
             //  cond>->]
-
+            //
             // Three consecutive temporary cells:
-            // 1. the boolean result of the condition expression
+            // 1. cond - the boolean result of the condition expression
             // 2. temp0 - used to go into the else block when necessary
             // 3. temp1 - used *not* to go into the else block when necessary
             //
             // The basic idea of the algorithm is that you can control which of two adjacent loops run
             // by "sending" them either temp0 or temp1 based on the condition result
-            //let temp0 = scope.allocate(bool_type);
-            //let temp1 = scope.allocate(bool_type);
-            unimplemented!();
+            layout.consecutive(&cond, 2, |layout, cond, temp| {
+                move_to(current_cell, temp.position()).into_iter()
+                    .chain(once(Instruction::Increment))
+
+                    .chain(move_to(current_cell, cond))
+                    .chain(once(Instruction::JumpForwardIfZero))
+
+                    .chain(into_instructions_index(if_body, layout, current_cell))
+                    .chain(move_to(current_cell, cond))
+                    .chain(once(Instruction::Right))
+                    .chain(once(Instruction::Decrement))
+
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+
+                    .chain(once(Instruction::Right))
+
+                    .chain(once(Instruction::JumpForwardIfZero))
+                    .chain(once(Instruction::Left))
+
+                    .chain(into_instructions_index(else_body, layout, current_cell))
+                    .chain(move_to(current_cell, cond))
+                    .chain(once(Instruction::Right))
+                    .chain(once(Instruction::Decrement))
+                    .chain(once(Instruction::Right))
+
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+
+                    .collect()
+            })
         },
         Loop {cond, body} => {
             move_to(current_cell, layout.position(&cond)).into_iter()
@@ -224,6 +250,12 @@ fn into_instructions_index(
                     .chain(move_to(current_cell, temp.position()))
                     .chain(once(Instruction::Decrement))
 
+                    .chain(once(Instruction::JumpBackwardUnlessZero))
+
+                    // Need to zero the temporary cell so that it doesn't interfere with later code
+                    .chain(move_to(current_cell, temp.position()))
+                    .chain(once(Instruction::JumpForwardIfZero))
+                    .chain(once(Instruction::Decrement))
                     .chain(once(Instruction::JumpBackwardUnlessZero))
             }).collect())
         },
