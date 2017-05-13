@@ -1,24 +1,134 @@
 if false {
-    stdout.println(b"a");
+    stdout.print(b"a");
 }
 else if false {
-    stdout.println(b"b");
+    stdout.print(b"b");
 }
 else if true {
-    stdout.println(b"c");
+    stdout.print(b"c");
     if true {
-        stdout.println(b"ca");
+        stdout.print(b"a");
+        if false {
+            stdout.print(b"a");
+        }
+        else if false {
+            stdout.print(b"b");
+            if false {
+                stdout.print(b"a");
+                if false {
+                    stdout.print(b"a");
+                }
+                else if false {
+                    stdout.print(b"b");
+                }
+                else if true {
+                    stdout.print(b"c");
+                    if false {
+                        stdout.print(b"a");
+                    }
+                    else if false {
+                        stdout.print(b"b");
+                    }
+                    else if true {
+                        stdout.print(b"c");
+                    }
+                    else {
+                        stdout.print(b"d");
+                    }
+                }
+                else {
+                    stdout.print(b"d");
+                    if false {
+                        stdout.print(b"a");
+                    }
+                    else if false {
+                        stdout.print(b"b");
+                    }
+                    else if true {
+                        stdout.print(b"c");
+                    }
+                    else {
+                        stdout.print(b"d");
+                    }
+                }
+            }
+            else if false {
+                stdout.print(b"b");
+            }
+            else if true {
+                stdout.print(b"c");
+            }
+            else {
+                stdout.print(b"d");
+            }
+        }
+        else if true {
+            stdout.print(b"c");
+            if false {
+                stdout.print(b"a");
+            }
+            else if false {
+                stdout.print(b"b");
+            }
+            else if true {
+                stdout.print(b"c");
+            }
+            else {
+                stdout.print(b"d");
+            }
+        }
+        else {
+            stdout.print(b"d");
+        }
     }
     else if false {
-        stdout.println(b"cb");
+        stdout.print(b"b");
+        if false {
+            stdout.print(b"a");
+            if false {
+                stdout.print(b"a");
+            }
+            else if false {
+                stdout.print(b"b");
+            }
+            else if true {
+                stdout.print(b"c");
+            }
+            else {
+                stdout.print(b"d");
+            }
+        }
+        else if false {
+            stdout.print(b"b");
+        }
+        else if true {
+            stdout.print(b"c");
+        }
+        else {
+            stdout.print(b"d");
+        }
     }
     else if true {
-        stdout.println(b"cc");
+        stdout.print(b"c");
+        if false {
+            stdout.print(b"a");
+        }
+        else if false {
+            stdout.print(b"b");
+        }
+        else if true {
+            stdout.print(b"c");
+        }
+        else {
+            stdout.print(b"d");
+        }
     }
     else {
-        stdout.println(b"cd");
+        stdout.print(b"d");
     }
 }
 else {
-    stdout.println(b"d");
+    stdout.print(b"d");
 }
+
+stdout.println();
