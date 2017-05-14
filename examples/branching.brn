@@ -4,7 +4,7 @@ if false {
 else if false {
     stdout.print(b"b");
 }
-else if true {
+else if !false {
     stdout.print(b"c");
     if true {
         stdout.print(b"a");
