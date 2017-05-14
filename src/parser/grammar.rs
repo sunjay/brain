@@ -180,7 +180,7 @@ impl_rdp! {
         _expr(&self) -> Expression {
             (_: op_bool_not, _:expr, expr: _expr()) => {
                 Expression::Call {
-                    method: Box::new(Expression::Identifier(Identifier::from("operator!"))),
+                    method: Box::new(Expression::Identifier(Identifier::from("std::ops::Not"))),
                     args: vec![expr],
                 }
             },

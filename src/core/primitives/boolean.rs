@@ -78,6 +78,91 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
         }
     );
 
+    scope.declare_builtin_function(
+        Identifier::from("std::ops::Not"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(bool_type)],
+            return_type: bool_type,
+        },
+        move |scope, args, target| {
+            let bool_type = scope.primitives().bool();
+            match args[0] {
+                ScopeItem::TypedBlock {memory, ..} => {
+                    let temp0 = scope.allocate(bool_type);
+                    Ok(vec![Operation::TempAllocate {
+                        temp: temp0,
+                        body: vec![
+                            // Need to copy to the destination because the algorithm consumes
+                            // the operand
+                            // After this copy the operand becomes `target` (x in the algorithm)
+                            Operation::Copy {
+                                source: memory.position(),
+                                target: target.position(),
+                                size: target.size(),
+                            },
+
+                            // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#x_.3D_not_x_.28boolean.2C_logical.29
+                            //
+                            // temp0[-]+
+                            // x[-temp0-]temp0[x+temp0-]
+                            //
+                            // Results in x = !x and temp0 = 0
+                            Operation::Increment {
+                                target: temp0.position(),
+                                amount: 1,
+                            },
+                            Operation::Loop {
+                                cond: target.position(),
+                                body: vec![
+                                    Operation::Decrement {
+                                        target: target.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Decrement {
+                                        target: temp0.position(),
+                                        amount: 1,
+                                    },
+                                ],
+                            },
+                            Operation::Loop {
+                                cond: temp0.position(),
+                                body: vec![
+                                    Operation::Increment {
+                                        target: target.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Decrement {
+                                        target: temp0.position(),
+                                        amount: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                        should_zero: false,
+                    }])
+                },
+                ScopeItem::Constant {type_id, ref bytes} => {
+                    debug_assert_eq!(type_id, bool_type);
+                    // This code assumes that this is 1
+                    debug_assert_eq!(bytes.len(), 1);
+
+                    Ok(match bytes[0] {
+                        //TODO: Verify if this makes sense or if we should explicitly zero
+                        1 => Vec::new(),
+                        0 => vec![
+                            Operation::Increment {
+                                target: target.position(),
+                                amount: 1,
+                            },
+                        ],
+                        _ => unreachable!(),
+                    })
+                },
+                _ => unreachable!(),
+            }
+        }
+    );
+
     // boolean and operator (operator&&) and boolean or operator (operator||)
     // These operations have special names because they are not regular functions
     // that can be defined or overloaded
