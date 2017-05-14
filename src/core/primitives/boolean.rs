@@ -41,9 +41,19 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
         move |scope, args, _| {
             match args[0] {
                 ScopeItem::TypedBlock {memory, ..} => Ok(vec![
+                    Operation::Increment {
+                        target: memory.position(),
+                        amount: b'0',
+                    },
                     Operation::Write {
                         target: memory,
-                    }
+                    },
+                    // Need to make sure we reverse the operation after so this function has no
+                    // side effects
+                    Operation::Decrement {
+                        target: memory.position(),
+                        amount: b'0',
+                    },
                 ]),
                 ScopeItem::Constant {type_id, ref bytes} => {
                     let bool_type = scope.primitives().bool();
