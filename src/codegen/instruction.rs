@@ -1,5 +1,5 @@
 use std::fmt;
-use std::iter::{once, repeat, FromIterator};
+use std::iter::{once, repeat, empty, FromIterator};
 use std::ops::Index;
 
 use memory::{MemoryLayout, MemoryBlock, CellIndex, MemSize};
@@ -214,6 +214,11 @@ fn into_instructions_index(
                 .collect()
         },
         Copy {source, target, size} => {
+            // Copying to the same position is a no-op
+            if source == target {
+                return empty().collect();
+            }
+
             debug_assert!(source.associated_memory().size() - source.offset() == size);
             debug_assert!(target.associated_memory().size() - target.offset() == size);
 
