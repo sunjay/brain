@@ -31,7 +31,7 @@ impl_rdp! {
         while_loop = { ["while"] ~ expr ~ block }
 
         expr = {
-            { func_call | field_access | string_literal | bool_literal | identifier | conditional | number }
+            { bool_not | func_call | field_access | string_literal | bool_literal | identifier | conditional | number }
 
             // Ordered from lowest precedence to highest precedence
             bool_or = { op_bool_or }
@@ -47,6 +47,9 @@ impl_rdp! {
         op_le = { ["<="] }
         op_gt = { [">"] }
         op_lt = { ["<"] }
+
+        bool_not = _{ op_bool_not ~ expr }
+        op_bool_not = { ["!"] }
 
         conditional = { ["if"] ~ expr ~ block ~ (op_else_if ~ expr ~ block)* ~ (op_else ~ block)? }
         op_else_if = { ["else if"] }
@@ -175,6 +178,12 @@ impl_rdp! {
         }
 
         _expr(&self) -> Expression {
+            (_: op_bool_not, _:expr, expr: _expr()) => {
+                Expression::Call {
+                    method: Box::new(Expression::Identifier(Identifier::from("operator!"))),
+                    args: vec![expr],
+                }
+            },
             (_: func_call, method: _identifier(), args: _call_args()) => {
                 Expression::Call {
                     method: Box::new(Expression::Identifier(method)),
@@ -438,6 +447,7 @@ impl fmt::Display for Rule {
             op_assign => "`=`",
             op_bool_or => "`||`",
             op_bool_and => "`&&`",
+            op_bool_not => "`!`",
             op_eq => "`==`",
             op_ne => "`!=`",
             op_ge => "`>=`",
