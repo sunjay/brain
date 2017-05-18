@@ -15,8 +15,8 @@ license = "MIT"
 travis-ci = { repository = "brain-lang/brain" }
 
 [dependencies]
-clap = "^2.0"
-pest = "0.4"
+clap = "*"
+pest = "*"
 
 [[bin]]
 name = "brain"
