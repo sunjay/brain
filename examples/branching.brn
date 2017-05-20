@@ -1,11 +1,11 @@
 // Change these variables to output different combinations of the letters a, b, c, and d
 
-let a1: bool = false; let b1: bool = false; let c1: bool = false;
-let a2: bool = false; let b2: bool = false; let c2: bool = false;
-let a3: bool = false; let b3: bool = false; let c3: bool = false;
-let a4: bool = false; let b4: bool = false; let c4: bool = false;
+let a1: bool = false; let b1: bool = false; let c1: bool = true;
+let a2: bool = true; let b2: bool = false; let c2: bool = false;
+let a3: bool = false; let b3: bool = true; let c3: bool = false;
+let a4: bool = true; let b4: bool = false; let c4: bool = false;
 let a5: bool = false; let b5: bool = false; let c5: bool = false;
-let a6: bool = false; let b6: bool = false; let c6: bool = false;
+let a6: bool = false; let b6: bool = false; let c6: bool = true;
 
 if a1 {
     stdout.print(b"a");
