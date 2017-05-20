@@ -179,7 +179,127 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
     // The reason these are not definable is because they have to support short
     // circuiting. This behaviour cannot be modelled by a trait, so these special
     // operators are not definable by the user.
-    //TODO
+    scope.declare_builtin_function(
+        Identifier::from("operator||"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(bool_type), FuncArgType::Arg(bool_type)],
+            return_type: bool_type,
+        },
+        move |scope, args, target| {
+            let bool_type = scope.primitives().bool();
+
+            Ok(match (&args[0], &args[1]) {
+                (&ScopeItem::Constant {type_id: xt, bytes: ref xb}, &ScopeItem::Constant {type_id: yt, bytes: ref yb}) => {
+                    debug_assert_eq!(xt, bool_type);
+                    debug_assert_eq!(yt, bool_type);
+                    // This code assumes that this is 1
+                    debug_assert_eq!(xb.len(), 1);
+                    debug_assert_eq!(yb.len(), 1);
+
+                    // The `> 0` converts the byte-representation into a Rust boolean
+                    let x = xb[0] > 0;
+                    let y = yb[0] > 0;
+
+                    match x || y {
+                        false => Vec::new(),
+                        true => vec![Operation::Increment {
+                            target: target.position(),
+                            amount: 1,
+                        }],
+                    }
+                },
+                /// Thanks to certain properties of booleans, we can evaluate certain things during
+                /// compilation and avoid a lot of extra computation.
+                (&ScopeItem::Constant {type_id: const_type, ref bytes}, &ScopeItem::TypedBlock {type_id: other_type, memory}) |
+                (&ScopeItem::TypedBlock {type_id: other_type, memory}, &ScopeItem::Constant {type_id: const_type, ref bytes}) => {
+                    debug_assert_eq!(const_type, bool_type);
+                    debug_assert_eq!(other_type, bool_type);
+                    // This code assumes that this is 1
+                    debug_assert_eq!(bytes.len(), 1);
+
+                    match bytes[0] {
+                        // If either operand is true, the || operator always returns true
+                        1 => vec![Operation::Increment {
+                            target: target.position(),
+                            amount: 1,
+                        }],
+                        // If either operand is false, the || operator always returns its other operand
+                        0 => vec![Operation::Copy {
+                            source: memory.position(),
+                            target: target.position(),
+                            size: memory.size(),
+                        }],
+                        _ => unreachable!(),
+                    }
+                },
+                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => {
+                    let temp0 = scope.allocate(bool_type);
+                    vec![Operation::TempAllocate {
+                        temp: temp0,
+                        body: vec![
+                            // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_or_y_.28boolean.2C_logical.29
+                            //
+                            // z[-]
+                            // temp0[-]+
+                            // x[z+temp0-x-]
+                            // temp0[-
+                            //  y[z+y-]
+                            // ]
+                            // y[-]
+                            Operation::Increment {
+                                target: temp0.position(),
+                                amount: 1,
+                            },
+                            Operation::Loop {
+                                cond: x.position(),
+                                body: vec![
+                                    Operation::Increment {
+                                        target: target.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Decrement {
+                                        target: temp0.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Decrement {
+                                        target: x.position(),
+                                        amount: 1,
+                                    },
+                                ],
+                            },
+                            Operation::Loop {
+                                cond: temp0.position(),
+                                body: vec![
+                                    Operation::Decrement {
+                                        target: temp0.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Loop {
+                                        cond: y.position(),
+                                        body: vec![
+                                            Operation::Increment {
+                                                target: target.position(),
+                                                amount: 1,
+                                            },
+                                            Operation::Decrement {
+                                                target: y.position(),
+                                                amount: 1,
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            Operation::Zero {
+                                target: y,
+                            }
+                        ],
+                        should_zero: false,
+                    }]
+                },
+                _ => unreachable!(),
+            })
+        }
+    );
 
     bool_type
 }
