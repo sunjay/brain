@@ -1,35 +1,44 @@
-if false {
+// Change these variables to output different combinations of the letters a, b, c, and d
+
+let a1: bool = false; let b1: bool = false; let c1: bool = false;
+let a2: bool = false; let b2: bool = false; let c2: bool = false;
+let a3: bool = false; let b3: bool = false; let c3: bool = false;
+let a4: bool = false; let b4: bool = false; let c4: bool = false;
+let a5: bool = false; let b5: bool = false; let c5: bool = false;
+let a6: bool = false; let b6: bool = false; let c6: bool = false;
+
+if a1 {
     stdout.print(b"a");
 }
-else if false {
+else if b1 {
     stdout.print(b"b");
 }
-else if !false {
+else if c1 {
     stdout.print(b"c");
-    if true {
+    if a2 {
         stdout.print(b"a");
-        if false {
+        if a3 {
             stdout.print(b"a");
         }
-        else if false {
+        else if b3 {
             stdout.print(b"b");
-            if false {
+            if a4 {
                 stdout.print(b"a");
-                if false {
+                if a5 {
                     stdout.print(b"a");
                 }
-                else if false {
+                else if b5 {
                     stdout.print(b"b");
                 }
-                else if true {
+                else if c5 {
                     stdout.print(b"c");
-                    if false {
+                    if a6 {
                         stdout.print(b"a");
                     }
-                    else if false {
+                    else if b6 {
                         stdout.print(b"b");
                     }
-                    else if true {
+                    else if c6 {
                         stdout.print(b"c");
                     }
                     else {
@@ -38,13 +47,13 @@ else if !false {
                 }
                 else {
                     stdout.print(b"d");
-                    if false {
+                    if a6 {
                         stdout.print(b"a");
                     }
-                    else if false {
+                    else if b6 {
                         stdout.print(b"b");
                     }
-                    else if true {
+                    else if c6 {
                         stdout.print(b"c");
                     }
                     else {
@@ -52,25 +61,25 @@ else if !false {
                     }
                 }
             }
-            else if false {
+            else if b4 {
                 stdout.print(b"b");
             }
-            else if true {
+            else if c4 {
                 stdout.print(b"c");
             }
             else {
                 stdout.print(b"d");
             }
         }
-        else if true {
+        else if c3 {
             stdout.print(b"c");
-            if false {
+            if a4 {
                 stdout.print(b"a");
             }
-            else if false {
+            else if b4 {
                 stdout.print(b"b");
             }
-            else if true {
+            else if c4 {
                 stdout.print(b"c");
             }
             else {
@@ -81,42 +90,42 @@ else if !false {
             stdout.print(b"d");
         }
     }
-    else if false {
+    else if b2 {
         stdout.print(b"b");
-        if false {
+        if a3 {
             stdout.print(b"a");
-            if false {
+            if a4 {
                 stdout.print(b"a");
             }
-            else if false {
+            else if b4 {
                 stdout.print(b"b");
             }
-            else if true {
+            else if c4 {
                 stdout.print(b"c");
             }
             else {
                 stdout.print(b"d");
             }
         }
-        else if false {
+        else if b3 {
             stdout.print(b"b");
         }
-        else if true {
+        else if c3 {
             stdout.print(b"c");
         }
         else {
             stdout.print(b"d");
         }
     }
-    else if true {
+    else if c2 {
         stdout.print(b"c");
-        if false {
+        if a3 {
             stdout.print(b"a");
         }
-        else if false {
+        else if b3 {
             stdout.print(b"b");
         }
-        else if true {
+        else if c3 {
             stdout.print(b"c");
         }
         else {
