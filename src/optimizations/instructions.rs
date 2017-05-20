@@ -96,5 +96,10 @@ fn remove_opposites(instructions: &mut Instructions) {
             // Otherwise just move on
             _ => i += 1,
         }
+
+        // Sometimes this can result in getting back to the start
+        if i == 0 {
+            i = 1;
+        }
     }
 }
