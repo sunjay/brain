@@ -234,65 +234,90 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
                 },
                 (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => {
                     let temp0 = scope.allocate(bool_type);
+                    let temp_x = scope.allocate(bool_type);
+                    let temp_y = scope.allocate(bool_type);
+                    let ops = vec![
+                        // The algorithm below consumes x and y so we need to copy them first to
+                        // avoid any problems with that
+                        Operation::Copy {
+                            source: x.position(),
+                            target: temp_x.position(),
+                            size: x.size(),
+                        },
+                        Operation::Copy {
+                            source: y.position(),
+                            target: temp_y.position(),
+                            size: y.size(),
+                        },
+
+                        // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_or_y_.28boolean.2C_logical.29
+                        //
+                        // z[-]
+                        // temp0[-]+
+                        // x[z+temp0-x-]
+                        // temp0[-
+                        //  y[z+y-]
+                        // ]
+                        // y[-]
+                        Operation::Increment {
+                            target: temp0.position(),
+                            amount: 1,
+                        },
+                        Operation::Loop {
+                            cond: temp_x.position(),
+                            body: vec![
+                                Operation::Increment {
+                                    target: target.position(),
+                                    amount: 1,
+                                },
+                                Operation::Decrement {
+                                    target: temp0.position(),
+                                    amount: 1,
+                                },
+                                Operation::Decrement {
+                                    target: temp_x.position(),
+                                    amount: 1,
+                                },
+                            ],
+                        },
+                        Operation::Loop {
+                            cond: temp0.position(),
+                            body: vec![
+                                Operation::Decrement {
+                                    target: temp0.position(),
+                                    amount: 1,
+                                },
+                                Operation::Loop {
+                                    cond: temp_y.position(),
+                                    body: vec![
+                                        Operation::Increment {
+                                            target: target.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Decrement {
+                                            target: temp_y.position(),
+                                            amount: 1,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        Operation::Zero {
+                            target: temp_y,
+                        },
+                    ];
+
                     vec![Operation::TempAllocate {
                         temp: temp0,
-                        body: vec![
-                            // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_or_y_.28boolean.2C_logical.29
-                            //
-                            // z[-]
-                            // temp0[-]+
-                            // x[z+temp0-x-]
-                            // temp0[-
-                            //  y[z+y-]
-                            // ]
-                            // y[-]
-                            Operation::Increment {
-                                target: temp0.position(),
-                                amount: 1,
-                            },
-                            Operation::Loop {
-                                cond: x.position(),
-                                body: vec![
-                                    Operation::Increment {
-                                        target: target.position(),
-                                        amount: 1,
-                                    },
-                                    Operation::Decrement {
-                                        target: temp0.position(),
-                                        amount: 1,
-                                    },
-                                    Operation::Decrement {
-                                        target: x.position(),
-                                        amount: 1,
-                                    },
-                                ],
-                            },
-                            Operation::Loop {
-                                cond: temp0.position(),
-                                body: vec![
-                                    Operation::Decrement {
-                                        target: temp0.position(),
-                                        amount: 1,
-                                    },
-                                    Operation::Loop {
-                                        cond: y.position(),
-                                        body: vec![
-                                            Operation::Increment {
-                                                target: target.position(),
-                                                amount: 1,
-                                            },
-                                            Operation::Decrement {
-                                                target: y.position(),
-                                                amount: 1,
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                            Operation::Zero {
-                                target: y,
-                            }
-                        ],
+                        body: vec![Operation::TempAllocate {
+                            temp: temp_x,
+                            body: vec![Operation::TempAllocate {
+                                temp: temp_y,
+                                body: ops,
+                                should_zero: false,
+                            }],
+                            should_zero: false,
+                        }],
                         should_zero: false,
                     }]
                 },
@@ -351,41 +376,69 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
                         _ => unreachable!(),
                     }
                 },
-                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => vec![
-                    // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_and_y_.28boolean.2C_logical.29
-                    //
-                    // z[-]
-                    // x[
-                    //  y[z+y-]
-                    //  x-
-                    // ]
-                    // y[-]
-                    Operation::Loop {
-                        cond: x.position(),
-                        body: vec![
-                            Operation::Loop {
-                                cond: y.position(),
-                                body: vec![
-                                    Operation::Increment {
-                                        target: target.position(),
-                                        amount: 1,
-                                    },
-                                    Operation::Decrement {
-                                        target: y.position(),
-                                        amount: 1,
-                                    },
-                                ],
-                            },
-                            Operation::Decrement {
-                                target: x.position(),
-                                amount: 1,
-                            },
-                        ],
-                    },
-                    Operation::Zero {
-                        target: y,
-                    },
-                ],
+                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => {
+                    let temp_x = scope.allocate(bool_type);
+                    let temp_y = scope.allocate(bool_type);
+
+                    let ops = vec![
+                        // The algorithm below consumes x and y so we need to copy them first to
+                        // avoid any problems with that
+                        Operation::Copy {
+                            source: x.position(),
+                            target: temp_x.position(),
+                            size: x.size(),
+                        },
+                        Operation::Copy {
+                            source: y.position(),
+                            target: temp_y.position(),
+                            size: y.size(),
+                        },
+
+                        // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_and_y_.28boolean.2C_logical.29
+                        //
+                        // z[-]
+                        // x[
+                        //  y[z+y-]
+                        //  x-
+                        // ]
+                        // y[-]
+                        Operation::Loop {
+                            cond: temp_x.position(),
+                            body: vec![
+                                Operation::Loop {
+                                    cond: temp_y.position(),
+                                    body: vec![
+                                        Operation::Increment {
+                                            target: target.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Decrement {
+                                            target: temp_y.position(),
+                                            amount: 1,
+                                        },
+                                    ],
+                                },
+                                Operation::Decrement {
+                                    target: temp_x.position(),
+                                    amount: 1,
+                                },
+                            ],
+                        },
+                        Operation::Zero {
+                            target: temp_y,
+                        },
+                    ];
+
+                    vec![Operation::TempAllocate {
+                        temp: temp_x,
+                        body: vec![Operation::TempAllocate {
+                            temp: temp_y,
+                            body: ops,
+                            should_zero: false,
+                        }],
+                        should_zero: false,
+                    }]
+                },
                 _ => unreachable!(),
             })
         }
