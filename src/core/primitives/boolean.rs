@@ -301,6 +301,96 @@ pub fn define_boolean(scope: &mut ScopeStack) -> TypeId {
         }
     );
 
+    scope.declare_builtin_function(
+        Identifier::from("operator&&"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(bool_type), FuncArgType::Arg(bool_type)],
+            return_type: bool_type,
+        },
+        move |scope, args, target| {
+            let bool_type = scope.primitives().bool();
+
+            Ok(match (&args[0], &args[1]) {
+                (&ScopeItem::Constant {type_id: xt, bytes: ref xb}, &ScopeItem::Constant {type_id: yt, bytes: ref yb}) => {
+                    debug_assert_eq!(xt, bool_type);
+                    debug_assert_eq!(yt, bool_type);
+                    // This code assumes that this is 1
+                    debug_assert_eq!(xb.len(), 1);
+                    debug_assert_eq!(yb.len(), 1);
+
+                    // The `> 0` converts the byte-representation into a Rust boolean
+                    let x = xb[0] > 0;
+                    let y = yb[0] > 0;
+
+                    match x && y {
+                        false => Vec::new(),
+                        true => vec![Operation::Increment {
+                            target: target.position(),
+                            amount: 1,
+                        }],
+                    }
+                },
+                /// Thanks to certain properties of booleans, we can evaluate certain things during
+                /// compilation and avoid a lot of extra computation.
+                (&ScopeItem::Constant {type_id: const_type, ref bytes}, &ScopeItem::TypedBlock {type_id: other_type, memory}) |
+                (&ScopeItem::TypedBlock {type_id: other_type, memory}, &ScopeItem::Constant {type_id: const_type, ref bytes}) => {
+                    debug_assert_eq!(const_type, bool_type);
+                    debug_assert_eq!(other_type, bool_type);
+                    // This code assumes that this is 1
+                    debug_assert_eq!(bytes.len(), 1);
+
+                    match bytes[0] {
+                        // If either operand is false, the && operator always returns false
+                        0 => Vec::new(),
+                        // If either operand is true, the && operator always returns its other operand
+                        1 => vec![Operation::Copy {
+                            source: memory.position(),
+                            target: target.position(),
+                            size: memory.size(),
+                        }],
+                        _ => unreachable!(),
+                    }
+                },
+                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => vec![
+                    // Algorithm from: https://esolangs.org/wiki/Brainfuck_algorithms#z_.3D_x_and_y_.28boolean.2C_logical.29
+                    //
+                    // z[-]
+                    // x[
+                    //  y[z+y-]
+                    //  x-
+                    // ]
+                    // y[-]
+                    Operation::Loop {
+                        cond: x.position(),
+                        body: vec![
+                            Operation::Loop {
+                                cond: y.position(),
+                                body: vec![
+                                    Operation::Increment {
+                                        target: target.position(),
+                                        amount: 1,
+                                    },
+                                    Operation::Decrement {
+                                        target: y.position(),
+                                        amount: 1,
+                                    },
+                                ],
+                            },
+                            Operation::Decrement {
+                                target: x.position(),
+                                amount: 1,
+                            },
+                        ],
+                    },
+                    Operation::Zero {
+                        target: y,
+                    },
+                ],
+                _ => unreachable!(),
+            })
+        }
+    );
+
     bool_type
 }
 
