@@ -81,13 +81,7 @@ fn main() {
 /// Compile the provided source code to brainfuck
 fn compile(source: String) -> String {
     let program: Program = source.parse().unwrap_or_else(|e: ParseError| {
-        if e.expected.is_empty() {
-            exit_with_error!("Syntax Error: no token expected at line {} col {}", e.line, e.col);
-        } else {
-            exit_with_error!("Syntax Error: expected token(s): {} at line {} col {}",
-                e.expected.iter().map(|r| format!("{}", r)).collect::<Vec<String>>().join(", "),
-                e.line, e.col);
-        }
+        exit_with_error!("Syntax Error: {}", e);
     });
 
     let mut global_scope = ScopeStack::new();
