@@ -14,8 +14,8 @@ pub fn populate_scope(scope: &mut ScopeStack) {
 
     array::define_array(scope);
 
-    boolean::define_boolean(scope);
-    let u8_type = u8::define_u8(scope);
+    let bool_type = boolean::define_boolean(scope);
+    let u8_type = u8::define_u8(scope, bool_type);
 
     stdio::define_stdin(scope, u8_type);
     stdio::define_stdout(scope);

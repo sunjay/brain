@@ -3,7 +3,7 @@ use operations::{Operation, Error};
 use operations::item_type::{ItemType, FuncArgType};
 use operations::scope::{ScopeStack, ScopeItem, TypeId};
 
-pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
+pub fn define_u8(scope: &mut ScopeStack, bool_type: TypeId) -> TypeId {
     // Taking advantage of the scope system to simulate modules
     // This will be replaced with something better in:
     // https://github.com/brain-lang/brain/issues/37
@@ -129,6 +129,150 @@ pub fn define_u8(scope: &mut ScopeStack) -> TypeId {
                     amount: 1,
                 }
             ])
+        }
+    );
+
+    scope.declare_builtin_function(
+        Identifier::from("std::cmp::PartialEq::eq"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(u8_type), FuncArgType::Arg(u8_type)],
+            return_type: bool_type,
+        },
+        move |scope, args, target| {
+            let u8_type = scope.primitives().u8();
+
+            Ok(match (&args[0], &args[1]) {
+                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => {
+                    let temp_x = scope.allocate(u8_type);
+                    let temp_y = scope.allocate(u8_type);
+
+                    vec![Operation::TempAllocate {
+                        temp: temp_x,
+                        body: vec![Operation::TempAllocate {
+                            temp: temp_y,
+                            body: vec![
+                                Operation::Copy {
+                                    source: x.position(),
+                                    target: temp_x.position(),
+                                    size: x.size(),
+                                },
+                                Operation::Copy {
+                                    source: y.position(),
+                                    target: temp_y.position(),
+                                    size: y.size(),
+                                },
+
+                                // Algorithm:
+                                //
+                                // z = x == y
+                                // x[y-x-]z+y[z-y[-]]
+                                Operation::Loop {
+                                    cond: temp_x.position(),
+                                    body: vec![
+                                        Operation::Decrement {
+                                            target: temp_y.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Decrement {
+                                            target: temp_x.position(),
+                                            amount: 1,
+                                        },
+                                    ],
+                                },
+                                Operation::Increment {
+                                    target: target.position(),
+                                    amount: 1,
+                                },
+                                Operation::Loop {
+                                    cond: temp_y.position(),
+                                    body: vec![
+                                        Operation::Decrement {
+                                            target: target.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Zero {
+                                            target: temp_y,
+                                        },
+                                    ],
+                                },
+                            ],
+                            should_zero: false,
+                        }],
+                        should_zero: false,
+                    }]
+                },
+                _ => unreachable!(),
+            })
+        }
+    );
+
+    scope.declare_builtin_function(
+        Identifier::from("std::cmp::PartialEq::ne"),
+        ItemType::Function {
+            args: vec![FuncArgType::Arg(u8_type), FuncArgType::Arg(u8_type)],
+            return_type: bool_type,
+        },
+        move |scope, args, target| {
+            let u8_type = scope.primitives().bool();
+
+            Ok(match (&args[0], &args[1]) {
+                (&ScopeItem::TypedBlock {memory: x, ..}, &ScopeItem::TypedBlock {memory: y, ..}) => {
+                    let temp_x = scope.allocate(u8_type);
+                    let temp_y = scope.allocate(u8_type);
+
+                    vec![Operation::TempAllocate {
+                        temp: temp_x,
+                        body: vec![Operation::TempAllocate {
+                            temp: temp_y,
+                            body: vec![
+                                Operation::Copy {
+                                    source: x.position(),
+                                    target: temp_x.position(),
+                                    size: x.size(),
+                                },
+                                Operation::Copy {
+                                    source: y.position(),
+                                    target: temp_y.position(),
+                                    size: y.size(),
+                                },
+
+                                // Algorithm:
+                                //
+                                // z = x != y
+                                // x[y-x-]y[z+y[-]]
+                                Operation::Loop {
+                                    cond: temp_x.position(),
+                                    body: vec![
+                                        Operation::Decrement {
+                                            target: temp_y.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Decrement {
+                                            target: temp_x.position(),
+                                            amount: 1,
+                                        },
+                                    ],
+                                },
+                                Operation::Loop {
+                                    cond: temp_y.position(),
+                                    body: vec![
+                                        Operation::Increment {
+                                            target: target.position(),
+                                            amount: 1,
+                                        },
+                                        Operation::Zero {
+                                            target: temp_y,
+                                        },
+                                    ],
+                                },
+                            ],
+                            should_zero: false,
+                        }],
+                        should_zero: false,
+                    }]
+                },
+                _ => unreachable!(),
+            })
         }
     );
 
