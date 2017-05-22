@@ -337,7 +337,8 @@ mod tests {
     #[test]
     fn defines_primitive() {
         let mut scope = ScopeStack::new();
-        define_u8(&mut scope);
+        // Just put a random type ID for bool_type argument since it doesn't matter for this test
+        define_u8(&mut scope, 1000);
 
         let u8_type_id = match **scope.lookup_type(&Identifier::from("u8")).first().unwrap() {
             ScopeType::Type(id) => id,
