@@ -49,91 +49,81 @@ become more expressed in the compiled output of the program.
 For full examples, please see the `examples/` directory. Some examples aren't
 fully implemented yet in the compiler.
 
-The following examples are all working syntax:
-
 ### `cat` program (examples/cat.brn)
 
-```brain
+```rust
 // cat program
-// while condition can be an `in` statement, or valid expression of size 1 byte
-// Continues so long as the given byte is not zero
-while in ch[1] {
-    out ch;
+let mut ch: [u8; 1];
+
+while true {
+  // stdin.read_exact() panics if EOF is reached
+  stdin.read_exact(ch);
+  stdout.print(ch);
 }
 ```
 
 Compile this with `brain examples/cat.brn`.
 
-This compiles to the following brainfuck:
-
-```brainfuck
-,[.,]
-```
-
 Run this with `brainfuck cat.bf < someinputfile.txt`.
 
 ### Reading Input (examples/input.brn)
 
-```brain
+```rust
 // input requires explicit sizing
 // always reads exactly this many characters or panics if EOF is reached before then
 // if this many characters aren't available yet, it waits for you to send that many
-in b[5];
-out "b = " b "\n";
+let mut b: [u8; 5];
+stdin.read_exact(b);
+stdout.print(b"b = ", b, b"\n");
 
-c[1] = "c";
-in c;
-out "c = " c "\n";
+let mut c: [u8; 1];
+stdin.read_exact(c);
+stdout.print(b"c = ", c, b"\n");
 
 // You can reuse allocated space again
-in b;
-out "b = " b "\n";
-
-// Error because we don't support dynamic length strings
-//in input[];
-
-// Error because you can't redeclare an existing name
-//in b[5];
-
-// Error because you aren't requesting any characters
-//in zero[0];
+stdin.read_exact(b);
+stdout.print(b"b = ", b, b"\n");
 ```
+
+Compile this with `brain examples/input.brn`.
 
 This compiles into the following brainfuck:
 
 ```brainfuck
-,>,>,>,>,>++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++.-----------
-----------------------------------------
----------------.++++++++++++++++++++++++
-+++++.-----------------------------.----
-----------------------------<<<<<.>.>.>.
->.>++++++++++.++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++
-+++++++++++++++++++++++,>+++++++++++++++
-++++++++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++
-++++.-----------------------------------
---------------------------------.+++++++
-++++++++++++++++++++++.-----------------
-------------.---------------------------
------<.>++++++++++.----------<<<<<<,>,>,
->,>,>>++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++.---------------
-----------------------------------------
------------.++++++++++++++++++++++++++++
-+.-----------------------------.--------
-------------------------<<<<<<.>.>.>.>.>
->++++++++++.----------<<<<<<
+,>,>,>,>,>+++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++.--------------------
+-------------------------------------------
+---.+++++++++++++++++++++++++++++.---------
+--------------------.----------------------
+----------<<<<<.>.>.>.>.>++++++++++.-------
+---,>++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++.------------------------
+-------------------------------------------
+.+++++++++++++++++++++++++++++.------------
+-----------------.-------------------------
+-------<.>++++++++++.----------<<<<<<,>,>,>
+,>,>>++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++.-------------------------
+-----------------------------------------.+
+++++++++++++++++++++++++++++.--------------
+---------------.---------------------------
+-----<<<<<<.>.>.>.>.>>++++++++++.----------
 ```
+
+Run this after compiling with `brainfuck input.bf < someinputfile.txt`.
 
 ## Installation
 
 For people just looking to use brain, the easiest way to get brain right now
 is to first install the [Cargo package manager][cargo-install] for the
 Rust programming language.
+
+**NOTE: Until this version is released, these instructions will NOT work. Please
+see the Usage instructions below for how to manually install the compiler from the
+source code.**
 
 Then in your terminal run:
 
@@ -170,18 +160,25 @@ Make sure you have [Rust][rust] and cargo (comes with Rust) installed.
 
 To compile a brain (.brn) file into brainfuck (.bf)
 ```
-cargo run --bin brain -- filename.brn
+cargo run filename.brn
 ```
 where `filename.brn` is the brain program you want to compile
 
 Use `--help` to see further options and additional information
 ```
-cargo run --bin brain -- --help
+cargo run -- --help
 ```
 
 **If the brain compiler seems to be taking too long or "hanging", try running
 `cargo build` first to see if the Rust compiler is just taking too long for
 some reason.**
+
+You can also install the compiler from the source code using this command in the
+repository's root directory:
+
+```
+cargo install --path .
+```
 
 ## Examples
 
@@ -192,8 +189,9 @@ compile into brainfuck using the usage instructions above.
 
 This project would not be possible without the brilliant work of the many
 authors of the [Esolang Brainfuck Algorithms][bf-algorithms] page. The entire
-wiki has been invaluable. That page in particular is the basis for a lot of
-the code generation in this compiler.
+wiki has been invaluable. That page in particular is the basis for a lot of the
+code generation in this compiler. I have contributed many novel brainfuck
+algorithms to that page as I come up with them for use in this compiler.
 
 [brainfuck]: http://www.muppetlabs.com/~breadbox/bf/
 [rust]: https://www.rust-lang.org/
