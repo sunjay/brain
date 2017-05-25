@@ -3,7 +3,7 @@ use memory::{MemoryBlock};
 
 use operations::{Operation, expression, Target};
 use operations::item_type::{ItemType, FuncArgType};
-use operations::scope::{ScopeStack, TypeId};
+use operations::scope::{ScopeStack, ScopeItem, TypeId};
 
 pub fn define_stdin(scope: &mut ScopeStack, u8_type: TypeId) -> TypeId {
     // Taking advantage of the scope system to simulate modules
@@ -31,7 +31,15 @@ pub fn define_stdin(scope: &mut ScopeStack, u8_type: TypeId) -> TypeId {
             return_type: unit_type,
         },
         |scope, args, _| {
-            unimplemented!();
+            match args[1] {
+                ScopeItem::Array {item, memory: target, ..} => {
+                    debug_assert_eq!(scope.primitives().u8(), item);
+
+                    //TODO: This is currently an unchecked operation but it really shouldn't be
+                    Ok(vec![Operation::Read {target}])
+                },
+                _ => unreachable!(),
+            }
         }
     );
 
