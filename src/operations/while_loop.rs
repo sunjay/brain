@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use parser::{Expression, Block};
 use memory::MemoryBlock;
 
@@ -28,7 +30,9 @@ pub fn into_operations(
     ops.extend(cond_ops.clone());
     ops.push(Operation::Loop {
         cond: cond_mem.position(),
-        body: loop_body.into_iter().chain(cond_ops).collect(),
+        body: loop_body.into_iter().chain(once(Operation::Zero {
+            target: cond_mem,
+        })).chain(cond_ops).collect(),
     });
 
     Ok(vec![Operation::TempAllocate {
