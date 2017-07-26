@@ -1,8 +1,7 @@
-where_indent = "Tabbed"
-where_pred_indent = "Tabbed"
-generics_indent = "Tabbed"
-fn_arg_indent = "Tabbed"
-fn_args_layout = "Block"
-struct_lit_style = "Block"
-chain_base_indent = "Tabbed"
-chain_indent = "Tabbed"
+match_block_trailing_comma = true
+where_layout = "HorizontalVertical"
+where_style = "Legacy"
+fn_brace_style = "PreferSameLine"
+control_brace_style = "ClosingNextLine"
+closure_block_indent_threshold = 0
+take_source_hints = true
