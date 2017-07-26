@@ -2,6 +2,7 @@ match_block_trailing_comma = true
 where_layout = "HorizontalVertical"
 where_style = "Legacy"
 fn_brace_style = "PreferSameLine"
+control_style = "Legacy"
 control_brace_style = "ClosingNextLine"
 closure_block_indent_threshold = 0
 take_source_hints = true
