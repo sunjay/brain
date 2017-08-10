@@ -18,8 +18,7 @@ use brain::prelude;
 
 macro_rules! exit_with_error(
     ($($arg:tt)*) => { {
-        writeln!(&mut ::std::io::stderr(), $($arg)*)
-            .expect("Failed while printing to stderr");
+        eprintln!($($arg)*);
         process::exit(1);
     } }
 );
